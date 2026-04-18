@@ -1,0 +1,145 @@
+/* PromoSection.css */
+.promo-section {
+  display: flex;
+  flex-wrap: wrap;
+  background: linear-gradient(to right, #ffffff, #e6f7ff);
+  padding: 20px;
+  align-items: center;
+  margin-top: 20px;
+  gap: 20px;
+}
+
+.promo-video {
+  flex: 1;
+  min-width: 300px;
+}
+
+.promo-video iframe {
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.promo-content {
+  flex: 2;
+  min-width: 300px;
+}
+
+.promo-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.promo-header h2 {
+  font-size: clamp(18px, 2.5vw, 22px);
+  margin: 0;
+  flex: 1;
+  min-width: 250px;
+}
+
+.megaphone-gif {
+  width: 40px;
+  height: auto;
+}
+
+.promo-content a {
+  color: #ff6600;
+  font-weight: bold;
+  text-decoration: none;
+  margin-left: 10px;
+  white-space: nowrap;
+}
+
+.benefits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.benefit-item {
+  flex: 1;
+  min-width: 200px;
+  background: white;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.benefit-item h4 {
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.benefit-item h4::before {
+  margin-right: 8px;
+  font-size: 20px;
+}
+
+.benefit-item.reliable h4::before {
+  content: "🎖️";
+}
+
+.benefit-item.secure h4::before {
+  content: "🛡️";
+}
+
+.benefit-item.affordable h4::before {
+  content: "🏅";
+}
+
+.benefit-item.effective h4::before {
+  content: "✅";
+}
+
+.benefit-item p {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+  line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+  .promo-section {
+    flex-direction: column;
+  }
+
+  .promo-video {
+    width: 100%;
+  }
+
+  .promo-video iframe {
+    height: 200px;
+  }
+
+  .promo-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .promo-header h2 {
+    min-width: 100%;
+  }
+
+  .benefit-item {
+    min-width: 100%;
+  }
+}
+
+@media (max-width: 500px) {
+  .promo-content a {
+    display: inline-block;
+    margin-left: 0;
+    margin-top: 5px;
+  }
+
+  .benefitsMarginText {
+    text-align: start !important;
+    margin-left: 30px;
+  }
+}

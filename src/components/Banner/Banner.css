@@ -1,0 +1,42 @@
+.banner-slider-container {
+    width: 100%;
+    overflow: hidden;
+    padding: 20px 0;
+    background-color: transparent;
+    position: relative;
+}
+
+.banner-slide {
+    flex-shrink: 0;
+    padding: 0 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.banner-image1 {
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+    object-fit: contain;
+    border-radius: 8px;
+    display: block;
+    margin: 0 auto;
+}
+
+.banner-slide:hover .cd-image {
+    transform: scale(1.05);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+    
+}
+
+.banner-slider-container .slick-list {
+    width: 100% !important;
+}
+
+@media (max-width: 768px) {
+    .banner-image1 {
+        min-height: 120px;
+        object-fit: initial;
+    }
+}

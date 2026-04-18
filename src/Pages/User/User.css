@@ -1,0 +1,224 @@
+/* User.css */
+
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.user-content {
+  padding: 20px;
+  /* margin-left: -1200px!important; 
+  margin-right: 120px!important; */
+  background-color: #fff;
+  /* margin-top: 80px; */
+}
+
+/* Header Styles */
+.user-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.user-header h2 {
+  font-size: 1.5rem;
+  color: #2c3e50;
+  margin: 0;
+}
+
+.btn-add {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-add:hover {
+  background-color: #0056b3;
+  transform: translateY(-2px);
+}
+
+/* Table Container */
+.user-table-container {
+  width: 100%;
+  overflow: hidden;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Table Styles */
+.user-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: white;
+}
+
+.user-table th,
+.user-table td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.user-table th {
+  background-color: #2c3e50;
+  color: white;
+  font-weight: 600;
+}
+
+.user-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+/* Status Badges */
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-block;
+  min-width: 70px;
+  text-align: center;
+}
+
+.status-badge.active {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.status-badge.deleted {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+/* Action Buttons */
+.btn-action {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin: 2px;
+}
+
+.btn-edit {
+  background-color: #17a2b8;
+  color: white;
+}
+
+.btn-edit:hover {
+  background-color: #138496;
+  transform: translateY(-2px);
+}
+
+.btn-delete {
+  background-color: #dc3545;
+  color: white;
+}
+
+.btn-delete:hover {
+  background-color: #c82333;
+  transform: translateY(-2px);
+}
+
+/* ---------------------- Mobile Responsive Styles ---------------------- */
+@media (max-width: 992px) {
+  .user-content {
+    margin-left: 0px!important;
+    padding: 15px;
+  }
+}
+
+@media (max-width: 768px) {
+  .user-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .btn-add {
+    width: 100%;
+  }
+
+  .user-table {
+    display: block;
+  }
+
+  .user-table thead {
+    display: none;
+  }
+
+  .user-table tr {
+    display: block;
+    margin-bottom: 15px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 10px;
+    width: 100%; /* Changed from fixed 300px to 100% */
+  }
+
+  .user-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px !important;
+    text-align: right;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .user-table td:last-child {
+    border-bottom: none;
+  }
+
+  .user-table td::before {
+    content: attr(data-label);
+    font-weight: bold;
+    margin-right: auto;
+    padding-right: 10px;
+    text-align: left;
+  }
+
+  .actions-cell {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px; /* Increased gap for better spacing */
+    width: 100%;
+  }
+
+  .actions-cell::before {
+    display: none;
+  }
+
+  .btn-action {
+    display: inline-flex; /* Changed from flex to inline-flex */
+    align-items: center;
+    justify-content: center;
+    padding: 8px 12px;
+    min-width: 70px; /* Added minimum width for consistency */
+    box-sizing: border-box;
+    margin: 0; /* Removed any default margins */
+  }
+}
+
+@media (max-width: 480px) {
+  .actions-cell {
+    justify-content: flex-start; /* Align buttons to start on smallest screens */
+    flex-wrap: wrap; /* Allow wrapping if needed */
+  }
+  
+  .btn-action {
+    flex: 1; /* Make buttons take equal space */
+    min-width: 60px; /* Smaller minimum width for small screens */
+    padding: 6px 8px; /* Slightly smaller padding */
+    font-size: 0.75rem; /* Smaller font size */
+  }
+}

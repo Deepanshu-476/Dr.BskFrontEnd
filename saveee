@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  
+  <!-- Favicon for the website -->
+  <link rel="icon" type="image/jpg" href="/logo1.jpg" />
+  
+  <!-- Viewport settings for responsiveness -->
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  
+  <!-- Razorpay Checkout Script -->
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  
+  <!-- Theme color for mobile browsers -->
+  <meta name="theme-color" content="#000000" />
+  
+  <!-- SEO Optimization -->
+  <meta name="description" content="BSK Pharma offers pharmaceutical products with excellent service and customer satisfaction." />
+  
+  <!-- Apple touch icon for iOS devices -->
+  <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+  
+  <!-- Manifest for PWA (Progressive Web App) -->
+  <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+
+  <!-- Website Title -->
+  <title>BSK Pharma | Pharmaceutical Excellence</title>
+
+  
+
+<!-- Meta Pixel Code -->
+<script>
+  !function(f,b,e,v,n,t,s)
+  {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+  n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+  if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+  n.queue=[];t=b.createElement(e);t.async=!0;
+  t.src=v;s=b.getElementsByTagName(e)[0];
+  s.parentNode.insertBefore(t,s)}(window, document,'script',
+  'https://connect.facebook.net/en_US/fbevents.js');
+
+  fbq('init', '1481471263987992');   // ✅ Your Pixel ID
+ 
+</script>
+
+<noscript>
+  <img height="1" width="1" style="display:none"
+    src="https://www.facebook.com/tr?id=1481471263987992&ev=PageView&noscript=1"/>
+</noscript>
+<!-- End Meta Pixel Code -->
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-QB5QXWS1LT');
+  </script>
+
+</head>
+
+<body>
+
+  <!-- In case JavaScript is disabled, provide a message to enable it -->
+  <noscript>You need to enable JavaScript to run this app.</noscript>
+  
+  <!-- Root element for React to inject the app content -->
+  <div id="root"></div>
+
+</body>
+
+</html>

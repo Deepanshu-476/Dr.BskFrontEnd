@@ -1,0 +1,336 @@
+/* Popup.css */
+.herbal-form-container {
+  /* margin-left: 250px; */
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  /* width: calc(100% - 240px); */
+  /* margin-right: 20px; */
+}
+
+.herbal-form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.herbal-form-container h2 {
+  color: #2e7d32;
+  margin: 0;
+  font-size: 24px;
+}
+
+.herbal-cancel-btn {
+  background-color: #f5f5f5;
+  color: #333;
+  border: 1px solid #ddd;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.herbal-cancel-btn:hover {
+  background-color: #e0e0e0;
+}
+
+.herbal-form-section {
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #eee;
+}
+
+.herbal-form-section h3 {
+  color: #333;
+  margin-bottom: 15px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.herbal-form-row {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.herbal-form-group {
+  flex: 1;
+  min-width: 0;
+}
+
+.herbal-form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+  color: #555;
+  font-size: 14px;
+}
+
+.herbal-form-group input[type="text"],
+.herbal-form-group input[type="number"],
+.herbal-form-group input[type="date"],
+.herbal-form-group input[type="url"],
+.herbal-form-group select,
+.herbal-form-group textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: border-color 0.3s;
+}
+
+.herbal-form-group input:focus,
+.herbal-form-group select:focus,
+.herbal-form-group textarea:focus {
+  border-color: #2e7d32;
+  outline: none;
+}
+
+.herbal-form-group textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+.media-upload-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.media-upload-btn {
+  background-color: #f5f5f5;
+  color: #333;
+  border: 1px solid #ddd;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  text-align: center;
+  width: 150px;
+}
+
+.media-upload-btn:hover {
+  background-color: #e0e0e0;
+}
+
+.media-upload-hint {
+  font-size: 12px;
+  color: #666;
+  margin-top: -5px;
+  margin-bottom: 10px;
+}
+
+.media-preview-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  min-height: 60px;
+  padding: 10px 0;
+}
+
+.no-media-placeholder {
+  color: #999;
+  font-style: italic;
+  font-size: 14px;
+}
+
+.media-preview-item {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  overflow: hidden;
+  background-color: #f9f9f9;
+}
+
+.media-preview-item img,
+.media-preview-item video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.media-preview-item video {
+  background-color: #000;
+}
+
+.remove-media-btn {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background-color: rgba(255, 0, 0, 0.7);
+  color: white;
+  border: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0;
+  line-height: 1;
+  transition: background-color 0.2s;
+}
+
+.remove-media-btn:hover {
+  background-color: rgba(255, 0, 0, 0.9);
+}
+
+.media-info {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 5px;
+  font-size: 11px;
+  display: flex;
+  flex-direction: column;
+  max-height: 50%;
+  overflow: hidden;
+}
+
+.media-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 2px;
+}
+
+.media-size {
+  opacity: 0.8;
+  font-size: 10px;
+}
+
+.herbal-error {
+  color: #d32f2f;
+  font-size: 12px;
+  margin-top: 4px;
+  display: block;
+}
+
+.herbal-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid #eee;
+}
+
+.herbal-submit-btn {
+  background-color: #2e7d32;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.herbal-submit-btn:hover {
+  background-color: #1b5e20;
+}
+
+.herbal-reset-btn {
+  background-color: #f5f5f5;
+  color: #333;
+  border: 1px solid #ddd;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.herbal-reset-btn:hover {
+  background-color: #e0e0e0;
+}
+
+.herbal-success-message {
+  text-align: center;
+  padding: 20px;
+  background-color: #e8f5e9;
+  border-radius: 8px;
+  color: #2e7d32;
+}
+
+.herbal-success-message p {
+  font-size: 16px;
+  margin-bottom: 15px;
+}
+
+.herbal-success-message button {
+  background-color: #2e7d32;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+/* Responsive styles */
+@media (max-width: 992px) {
+  .herbal-form-row {
+    flex-wrap: wrap;
+    
+  }
+  
+  .herbal-form-group {
+    min-width: calc(50% - 8px);
+  }
+
+  .media-preview-item {
+    width: 120px;
+    height: 120px;
+  }
+}
+.css-74d805-MuiButtonBase-root-MuiButton-root.Mui-disabled{
+  color:white;
+}
+.center_modal{
+      top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+@media (max-width: 768px) {
+  .herbal-form-container {
+    margin-left: 0;
+    width: 100%;
+    padding: 15px;
+    /* margin-top: -850px!important; */
+  }
+  
+  .herbal-form-group {
+    min-width: 100%;
+  }
+  
+  .herbal-form-actions {
+    flex-direction: column;
+  }
+  
+  .herbal-submit-btn,
+  .herbal-reset-btn {
+    width: 100%;
+  }
+
+  .media-preview-item {
+    width: 100px;
+    height: 100px;
+  }
+}

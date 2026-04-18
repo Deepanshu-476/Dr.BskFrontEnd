@@ -1,0 +1,31 @@
+/* Slider.css */
+.cd-slider-container {
+  width: 100%;
+  overflow: hidden;
+  padding: 20px 0;
+  background-color: #fff;
+  position: relative;
+}
+
+.cd-slide {
+  flex-shrink: 0;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cd-image {
+  width: 500px;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+  aspect-ratio: 1 / 1;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.cd-slide:hover .cd-image {
+  transform: scale(1.05);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}

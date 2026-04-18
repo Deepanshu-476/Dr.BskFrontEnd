@@ -1,0 +1,129 @@
+/* src/components/Features.css */
+.featurs {
+  background-color: #f9f9f9;
+}
+
+.featurs-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.featurs-item {
+  background-color: #f4f6f9;
+  flex: 1 1 calc(25% - 20px);
+  min-width: 200px;
+  transition: all 0.3s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.featurs_item1 {
+  background-color: #f4f6f9;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.textDecorNone {
+  text-decoration: none;
+}
+
+.featurs-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.featurs-icon {
+  width: 100px;
+  height: 100px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.featurs-icon img {
+  width: 60px;
+  height: 60px;
+}
+
+.featurs-content h5 {
+  font-size: 18px;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.featurs-content p {
+  color: #666;
+  font-size: 14px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .featurs-item {
+    flex: 1 1 calc(50% - 20px);
+  }
+}
+
+@media (max-width: 768px) {
+  .featurs-row {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .featurs-item {
+    flex: 1 1 100%;
+    min-width: auto;
+    flex-direction: row;
+    text-align: left;
+    justify-content: flex-start;
+    padding: 15px;
+  }
+
+  .featurs_item1 {
+    flex-direction: row;
+  }
+
+  .featurs-icon {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 0;
+    margin-right: 15px;
+  }
+
+  .featurs-icon img {
+    width: 50px;
+    height: 50px;
+  }
+
+  .featurs-content h5 {
+    font-size: 16px;
+    margin-bottom: 5px;
+  }
+
+  .featurs-content p {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .featurs-item {
+    padding: 12px;
+  }
+
+  .featurs-icon {
+    width: 50px;
+    height: 50px;
+    margin-right: 10px;
+  }
+
+  .featurs-content {
+    text-align: 'start' !important;
+  }
+}

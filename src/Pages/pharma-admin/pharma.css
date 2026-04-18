@@ -1,0 +1,481 @@
+.pharmaAdminContainer {
+    display: flex;
+    /* gap: 40px; */
+    height: 100vh;
+}
+
+.pharmaSidebar {
+    width: 260px;
+    transition: transform 0.3s ease;
+    z-index: 1000;
+    /* background-color: red; */
+}
+
+.pharmaAdminContent {
+    width: calc(100% - 260px);
+}
+
+.pharmaAdminContent {
+    padding: 20px;
+}
+
+.tableWidth {
+    width: 1120px;
+}
+
+.tableOverflow {
+    overflow-x: auto;
+}
+
+.selectCss {
+    width: 100% !important;
+    border: 1px solid #ccc !important;
+    box-sizing: border-box !important;
+    margin-bottom: 10px !important;
+}
+
+select,
+input:focus {
+    outline: none;
+}
+
+.posRelative {
+    position: relative;
+    cursor: pointer;
+}
+
+.action-dropdown {
+    position: absolute;
+    width: 300px;
+    height: 200px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    border: 1px solid #ccc;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 10px;
+}
+
+.w_970 {
+    width: 970px;
+}
+
+.overflow_x_auto {
+    overflow-x: auto;
+}
+
+.actionFlex {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.dropdown-select {
+    width: 100%;
+    max-width: 200px;
+    padding: 10px 12px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background-color: #fff;
+    color: #333;
+    cursor: pointer;
+    appearance: none;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.dropdown-select:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.2);
+}
+
+.dropdown-select option {
+    padding: 10px;
+    background-color: #fff;
+    color: #333;
+}
+
+/* Optional: Style for disabled option */
+.dropdown-select option:disabled {
+    color: #aaa;
+}
+
+
+.bannerCard {
+    /* width: 32%; */
+    background-color: #68171b;
+    padding: 10px;
+}
+
+.bannerCard p {
+    color: white;
+    text-align: center;
+    margin-top: 10px;
+    font-size: 20px;
+}
+
+.bannerFlex {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    padding: 10px;
+}
+
+.clrOrange {
+    color: rgb(233, 156, 13);
+}
+
+.clrGreen {
+    color: green;
+}
+
+.css-1a7iywq-MuiTableHead-root {
+    background: #68171b !important;
+}
+
+.css-1orzuox-MuiTableCell-root {
+    color: white !important;
+}
+
+.css-bmnu5q-MuiTableCell-root {
+    color: white !important;
+}
+
+.bannerImg {
+    width: 100%;
+    height: 170px;
+    object-fit: cover;
+    border-radius: 5px;
+}
+
+.modalInput input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    margin-bottom: 10px;
+}
+
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.btn-add,
+.btn-edit,
+.btn-delete,
+.btn-view {
+    padding: 5px 10px;
+    margin: 0 3px;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+.css-w76bbz-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input.css-w76bbz-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input.css-w76bbz-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input {
+    width: 50px !important;
+}
+
+.herbal-form-header h2 {
+    font-weight: 600;
+    font-size: 30px;
+}
+
+.bannerTitlesize {
+    /* font-size: 30px; */
+    font-size: 2.125rem !important;
+}
+
+.BannerbtnFlex {
+    display: flex;
+    justify-content: end;
+    margin: 16px;
+}
+
+.admin-nav-link.active {
+    background-color: #68171b;
+}
+
+.logo-part {
+    color: #68171b;
+}
+
+.css-1sa5nso-MuiTableRow-root {
+    background-color: #68171b !important;
+}
+
+.css-74d805-MuiButtonBase-root-MuiButton-root {
+    background-color: #68171b !important;
+}
+
+.css-d3mwg2-MuiButtonBase-root-MuiIconButton-root {
+    color: #68171b !important;
+}
+
+.css-1svfwy9-MuiButtonBase-root-MuiIconButton-root {
+    color: #17b808 !important;
+}
+
+
+.css-zjhuaj-MuiGrid-root {
+    --Grid-rowSpacing: 25px;
+}
+
+.css-zjhuaj-MuiGrid-root {
+    justify-content: space-between;
+}
+
+.btn-add {
+    background-color: #28a745;
+    color: #fff;
+}
+
+.btn-edit {
+    background-color: #ffc107;
+    color: #000;
+}
+
+.btn-delete {
+    background-color: #dc3545;
+    color: #fff;
+}
+
+.btn-view {
+    background-color: #17a2b8;
+    color: #fff;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    width: 100%;
+    height: 100%
+}
+
+.modal-content {
+    background: #fff;
+    padding: 20px;
+    width: 500px !important;
+    max-height: 70vh;
+    overflow-y: auto;
+    border-radius: 8px;
+    position: relative;
+    background-color: white !important;
+}
+
+.close-button {
+    position: absolute;
+    right: 15px;
+    top: 10px;
+    font-size: 20px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.modal-image {
+    width: 100%;
+    height: 250px;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    object-fit: cover;
+}
+
+.modal-content h3 {
+    margin-bottom: 10px;
+    font-size: 20px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.modal-content form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.modal-content select,
+.modal-content input[type="text"],
+.modal-content input[type="file"] {
+    padding: 10px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+}
+
+.btn-save {
+    background-color: #68171b;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    flex: 1;
+    margin-right: 5px;
+}
+
+.btn-cancel {
+    background-color: #dc3545;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    flex: 1;
+    margin-left: 5px;
+}
+
+.close-button {
+    position: absolute;
+    right: 15px;
+    top: 10px;
+    font-size: 22px;
+    cursor: pointer;
+    font-weight: bold;
+    color: #333;
+}
+
+/* Root container */
+.pharmaAdminContainer {
+    display: flex;
+    min-height: 100vh;
+    position: relative;
+}
+
+/* Main content area */
+.pharmaAdminContent {
+    flex-grow: 1;
+    padding: 24px;
+    overflow-x: auto;
+}
+
+.stats-container1 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 30px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.chartWidth {
+    width: 450px;
+}
+
+/* Hide sidebar on mobile by default */
+@media screen and (max-width: 760px) {
+    .pharmaAdminContent {
+        width: calc(100% - 230px);
+    }
+
+    .smlWidth500 {
+        width: 500px;
+    }
+
+    .dashboard-container {
+        margin-top: 0 !important;
+    }
+
+    .pharmaSidebar {
+        width: 230px;
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100%;
+        transform: translateX(-100%);
+        box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+    }
+
+    .admin-sidebar {
+        width: 230px;
+    }
+
+    .css-19kzrtu {
+        padding: 0px !important;
+    }
+
+    .sidebar-header-mobile {
+        display: flex;
+        justify-content: space-around;
+    }
+
+    .fontSize25sml {
+        font-size: 25px !important;
+    }
+
+    .pharmaSidebar.open {
+        transform: translateX(0);
+    }
+
+    .mobileHeader {
+        /* display: flex;
+        align-items: center;
+        background-color: #68171b; */
+        padding: 10px;
+        color: #68171b;
+        position: sticky;
+        top: 0;
+        z-index: 999;
+    }
+
+    .mobileTitle {
+        margin-left: 10px;
+        font-size: 18px;
+        font-weight: bold;
+    }
+
+    .pharmaAdminContent {
+        width: 100%;
+        padding: 10px;
+    }
+
+}
+
+@media (min-width:768px) {
+    .close-icon {
+        display: none;
+    }
+
+    .mobileHeader {
+        display: none !important;
+    }
+
+    .css-17fpwt7-MuiGrid-root {
+        min-width: 28% !important;
+    }
+}
+
+@media (max-width:480px) {
+    .css-17fpwt7-MuiGrid-root {
+        min-width: 90% !important;
+    }
+}
+
+.admin-sidebar::-webkit-scrollbar {
+    display: none;
+}
