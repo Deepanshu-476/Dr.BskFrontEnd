@@ -532,8 +532,7 @@ const ProductPage = () => {
   const selectedMediaItem = mediaSafe[selectedImageIndex];
   const selectedImageUrl = selectedMediaItem ? JoinUrl(API_URL, selectedMediaItem.url) : "";
   const cssSafeUrl = selectedImageUrl ? encodeURI(selectedImageUrl) : "";
-
-  const savingsPercent =selectedVariant.discount
+  const savingsPercent = selectedVariant?.discount || 0;
 
 
 
@@ -721,7 +720,9 @@ const ProductPage = () => {
                   {unitMrp != null && unitMrp > unitPrice && (
                     <>
                       <span className="original-price-new">{money(unitMrp)}</span>
-                      <span className="save-badge">Save {savingsPercent}%</span>
+                      {savingsPercent > 0 && (
+                        <span className="save-badge">Save {savingsPercent}%</span>
+                      )}
                     </>
                   )}
                 </div>
