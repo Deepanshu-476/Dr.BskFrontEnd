@@ -32,7 +32,8 @@ import {
   Select,
   MenuItem,
   FormControl,
-  InputLabel
+  InputLabel,
+  Stack
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -40,6 +41,15 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import WarningIcon from '@mui/icons-material/Warning';
 import EditIcon from '@mui/icons-material/Edit';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import AutorenewIcon from '@mui/icons-material/Autorenew';
+import LocalShippingIcon from '@mui/icons-material/LocalShipping';
+import DoneAllIcon from '@mui/icons-material/DoneAll';
+import CancelIcon from '@mui/icons-material/Cancel';
+import ReplayIcon from '@mui/icons-material/Replay';
+import CurrencyRupeeIcon from '@mui/icons-material/CurrencyRupee';
 
 const StyledTableContainer = styled(TableContainer)(({ theme }) => ({
   marginTop: theme.spacing(3),
@@ -154,6 +164,15 @@ const PharmaOrder = () => {
     open: false,
     message: '',
     severity: 'success'
+  });
+
+  const [filters, setFilters] = useState({
+    search: '',
+    orderStatus: 'all',
+    paymentStatus: 'all',
+    refundStatus: 'all',
+    fromDate: '',
+    toDate: ''
   });
 
   useEffect(() => {
@@ -331,10 +350,72 @@ const PharmaOrder = () => {
     setPage(0);
   };
 
-  const currentOrders = orders.slice(
-    page * rowsPerPage,
-    page * rowsPerPage + rowsPerPage
+  const normalizedOrders = orders.map((order) => ({
+    ...order,
+    firstItem: order.items?.[0] || null,
+    totalQty: (order.items || []).reduce((sum, item) => sum + safeNumber(item.quantity, 0), 0)
+  }));
+
+  const filteredOrders = normalizedOrders.filter((order) => {
+    const search = filters.search.trim().toLowerCase();
+    const customer = safeString(order.userName || order.email, '').toLowerCase();
+    const orderId = safeString(order._id, '').toLowerCase();
+    const product = safeString(order.firstItem?.name, '').toLowerCase();
+
+    const matchesSearch = !search || [customer, orderId, product].some((val) => val.includes(search));
+    const matchesOrderStatus = filters.orderStatus === 'all' || safeString(order.status, '').toLowerCase() === filters.orderStatus;
+    const matchesPayment = filters.paymentStatus === 'all' || safeString(order.paymentInfo?.status, '').toLowerCase() === filters.paymentStatus;
+    const matchesRefund = filters.refundStatus === 'all' || safeString(order.refundInfo?.status, 'none').toLowerCase() === filters.refundStatus;
+
+    const createdAt = order.createdAt ? new Date(order.createdAt) : null;
+    const fromOk = !filters.fromDate || (createdAt && createdAt >= new Date(filters.fromDate));
+    const toOk = !filters.toDate || (createdAt && createdAt <= new Date(`${filters.toDate}T23:59:59`));
+
+    return matchesSearch && matchesOrderStatus && matchesPayment && matchesRefund && fromOk && toOk;
+  });
+
+  const orderStatusCounts = statusOptions.reduce((acc, status) => {
+    acc[status] = filteredOrders.filter(
+      (order) => safeString(order.status, '').toLowerCase() === status.toLowerCase()
+    ).length;
+    return acc;
+  }, {});
+
+  const paymentStatusOptions = Array.from(
+    new Set(
+      normalizedOrders
+        .map((order) => safeString(order.paymentInfo?.status, '').toLowerCase())
+        .filter(Boolean)
+    )
   );
+
+  const refundStatusOptions = Array.from(
+    new Set(
+      normalizedOrders
+        .map((order) => safeString(order.refundInfo?.status, 'none').toLowerCase())
+        .filter(Boolean)
+    )
+  );
+
+  const summary = {
+    total: filteredOrders.length,
+    pending: filteredOrders.filter((o) => safeString(o.status, '').toLowerCase() === 'pending').length,
+    completed: filteredOrders.filter((o) => ['delivered', 'confirmed'].includes(safeString(o.status, '').toLowerCase())).length,
+    cancelled: filteredOrders.filter((o) => safeString(o.status, '').toLowerCase() === 'cancelled').length,
+    revenue: filteredOrders.reduce((sum, o) => sum + safeNumber(o.totalAmount, 0), 0)
+  };
+
+  const statusIconMap = {
+    Pending: <AccessTimeIcon fontSize="small" />,
+    Confirmed: <CheckCircleIcon fontSize="small" />,
+    Processing: <AutorenewIcon fontSize="small" />,
+    Shipped: <LocalShippingIcon fontSize="small" />,
+    Delivered: <DoneAllIcon fontSize="small" />,
+    Cancelled: <CancelIcon fontSize="small" />,
+    Refunded: <ReplayIcon fontSize="small" />
+  };
+
+  const currentOrders = filteredOrders.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
   const capturePayment = async (orderId) => {
     setProcessingCapture(orderId);
@@ -529,6 +610,93 @@ const PharmaOrder = () => {
           </Box>
         </Box>
 
+        <Stack direction="row" spacing={1.5} sx={{ mb: 2, overflowX: 'auto', pb: 1 }}>
+          <Paper
+            onClick={() => setFilters((prev) => ({ ...prev, orderStatus: 'all' }))}
+            sx={{ p: 1.5, minWidth: 170, cursor: 'pointer', border: filters.orderStatus === 'all' ? '2px solid #1976d2' : '1px solid #e0e0e0' }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <ShoppingCartIcon fontSize="small" color="primary" />
+              <Typography variant="caption" color="text.secondary">Total Orders</Typography>
+            </Box>
+            <Typography variant="h6" fontWeight="bold">{summary.total}</Typography>
+          </Paper>
+          <Paper sx={{ p: 1.5, minWidth: 170, border: '1px solid #e0e0e0' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <CurrencyRupeeIcon fontSize="small" color="success" />
+              <Typography variant="caption" color="text.secondary">Total Revenue</Typography>
+            </Box>
+            <Typography variant="h6" fontWeight="bold">₹{summary.revenue.toFixed(2)}</Typography>
+          </Paper>
+          {statusOptions.map((status) => (
+            <Paper
+              key={status}
+              onClick={() => setFilters((prev) => ({ ...prev, orderStatus: status.toLowerCase() }))}
+              sx={{
+                p: 1.5,
+                minWidth: 160,
+                cursor: 'pointer',
+                border: filters.orderStatus === status.toLowerCase() ? '2px solid #1976d2' : '1px solid #e0e0e0'
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                {statusIconMap[status]}
+                <Typography variant="caption" color="text.secondary">{status}</Typography>
+              </Box>
+              <Typography variant="h6" fontWeight="bold">{orderStatusCounts[status] || 0}</Typography>
+            </Paper>
+          ))}
+        </Stack>
+
+        <Paper sx={{ p: 2, mb: 2 }}>
+          <Grid container spacing={2}>
+            <Grid item xs={12} md={3}>
+              <TextField fullWidth size="small" label="Search" value={filters.search} onChange={(e) => setFilters({ ...filters, search: e.target.value })} />
+            </Grid>
+            <Grid item xs={12} md={2}>
+              <FormControl fullWidth size="small"><InputLabel>Order Status</InputLabel>
+                <Select label="Order Status" value={filters.orderStatus} onChange={(e) => setFilters({ ...filters, orderStatus: e.target.value })}>
+                  <MenuItem value="all">All</MenuItem>{statusOptions.map((s) => <MenuItem key={s} value={s.toLowerCase()}>{s}</MenuItem>)}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} md={2}>
+              <FormControl fullWidth size="small"><InputLabel>Payment</InputLabel>
+                <Select label="Payment" value={filters.paymentStatus} onChange={(e) => setFilters({ ...filters, paymentStatus: e.target.value })}>
+                  <MenuItem value="all">All</MenuItem>
+                  {paymentStatusOptions.map((status) => (
+                    <MenuItem key={status} value={status}>
+                      {status.charAt(0).toUpperCase() + status.slice(1)}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} md={2}>
+              <FormControl fullWidth size="small"><InputLabel>Refund</InputLabel>
+                <Select label="Refund" value={filters.refundStatus} onChange={(e) => setFilters({ ...filters, refundStatus: e.target.value })}>
+                  <MenuItem value="all">All</MenuItem>
+                  {refundStatusOptions.map((status) => (
+                    <MenuItem key={status} value={status}>
+                      {status.charAt(0).toUpperCase() + status.slice(1)}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} md={1.5}>
+              <TextField fullWidth size="small" type="date" label="From" InputLabelProps={{ shrink: true }} value={filters.fromDate} onChange={(e) => setFilters({ ...filters, fromDate: e.target.value })} />
+            </Grid>
+            <Grid item xs={12} md={1.5}>
+              <TextField fullWidth size="small" type="date" label="To" InputLabelProps={{ shrink: true }} value={filters.toDate} onChange={(e) => setFilters({ ...filters, toDate: e.target.value })} />
+            </Grid>
+            <Grid item xs={12} sx={{ display: 'flex', gap: 1 }}>
+              <Button variant="outlined" onClick={() => setPage(0)}>Filter</Button>
+              <Button variant="text" color="inherit" onClick={() => setFilters({ search: '', orderStatus: 'all', paymentStatus: 'all', refundStatus: 'all', fromDate: '', toDate: '' })}>Reset</Button>
+            </Grid>
+          </Grid>
+        </Paper>
+
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
             <CircularProgress />
@@ -548,19 +716,22 @@ const PharmaOrder = () => {
                       />
                     </TableCell>
                   )}
-                  <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Product Name</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Order ID</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Customer</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Product</TableCell>
                   <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Price</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Quantity</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Qty</TableCell>
                   <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Order Status</TableCell>
                   <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Payment Status</TableCell>
                   <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Refund Status</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Order Date</TableCell>
                   <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {currentOrders.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={bulkDeleteMode ? 9 : 8} align="center">
+                    <TableCell colSpan={bulkDeleteMode ? 12 : 11} align="center">
                       <Typography>No orders found</Typography>
                     </TableCell>
                   </TableRow>
@@ -589,9 +760,15 @@ const PharmaOrder = () => {
                           </TableCell>
                         )}
                         
-                        <SafeTableCell>
-                          {getProductName(item)}
-                        </SafeTableCell>
+                        {index === 0 && (
+                          <TableCell rowSpan={items.length}>{safeString(order._id, '-')}</TableCell>
+                        )}
+
+                        {index === 0 && (
+                          <TableCell rowSpan={items.length}>{safeString(order.userName || order.email, '-')}</TableCell>
+                        )}
+
+                        <SafeTableCell>{getProductName(item)}</SafeTableCell>
 
                         {index === 0 && (
                           <TableCell rowSpan={items.length}>
@@ -670,6 +847,10 @@ const PharmaOrder = () => {
                               )}
                             </Box>
                           </TableCell>
+                        )}
+
+                        {index === 0 && (
+                          <TableCell rowSpan={items.length}>{formatDate(order.createdAt)}</TableCell>
                         )}
 
                         {index === 0 && (
