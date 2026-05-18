@@ -365,6 +365,29 @@ const PharmaOrder = () => {
     return matchesSearch && matchesOrderStatus && matchesPayment && matchesRefund && fromOk && toOk;
   });
 
+  const orderStatusCounts = statusOptions.reduce((acc, status) => {
+    acc[status] = filteredOrders.filter(
+      (order) => safeString(order.status, '').toLowerCase() === status.toLowerCase()
+    ).length;
+    return acc;
+  }, {});
+
+  const paymentStatusOptions = Array.from(
+    new Set(
+      normalizedOrders
+        .map((order) => safeString(order.paymentInfo?.status, '').toLowerCase())
+        .filter(Boolean)
+    )
+  );
+
+  const refundStatusOptions = Array.from(
+    new Set(
+      normalizedOrders
+        .map((order) => safeString(order.refundInfo?.status, 'none').toLowerCase())
+        .filter(Boolean)
+    )
+  );
+
   const summary = {
     total: filteredOrders.length,
     pending: filteredOrders.filter((o) => safeString(o.status, '').toLowerCase() === 'pending').length,
@@ -571,9 +594,6 @@ const PharmaOrder = () => {
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ mb: 2 }}>
           {[
             { label: 'Total Orders', value: summary.total },
-            { label: 'Pending Orders', value: summary.pending },
-            { label: 'Complete Orders', value: summary.completed },
-            { label: 'Cancelled Orders', value: summary.cancelled },
             { label: 'Total Revenue', value: `₹${summary.revenue.toFixed(2)}` }
           ].map((card) => (
             <Paper key={card.label} sx={{ p: 2, flex: 1 }}>
@@ -582,6 +602,19 @@ const PharmaOrder = () => {
             </Paper>
           ))}
         </Stack>
+
+        <Grid container spacing={2} sx={{ mb: 2 }}>
+          {statusOptions.map((status) => (
+            <Grid item xs={6} sm={4} md={3} lg={2} key={status}>
+              <Paper sx={{ p: 1.5, borderLeft: '4px solid', borderLeftColor: 'primary.main' }}>
+                <Typography variant="caption" color="text.secondary">{status}</Typography>
+                <Typography variant="h6" fontWeight="bold">
+                  {orderStatusCounts[status] || 0}
+                </Typography>
+              </Paper>
+            </Grid>
+          ))}
+        </Grid>
 
         <Paper sx={{ p: 2, mb: 2 }}>
           <Grid container spacing={2}>
@@ -598,14 +631,24 @@ const PharmaOrder = () => {
             <Grid item xs={12} md={2}>
               <FormControl fullWidth size="small"><InputLabel>Payment</InputLabel>
                 <Select label="Payment" value={filters.paymentStatus} onChange={(e) => setFilters({ ...filters, paymentStatus: e.target.value })}>
-                  <MenuItem value="all">All</MenuItem><MenuItem value="pending">Pending</MenuItem><MenuItem value="captured">Captured</MenuItem><MenuItem value="authorized">Authorized</MenuItem><MenuItem value="failed">Failed</MenuItem>
+                  <MenuItem value="all">All</MenuItem>
+                  {paymentStatusOptions.map((status) => (
+                    <MenuItem key={status} value={status}>
+                      {status.charAt(0).toUpperCase() + status.slice(1)}
+                    </MenuItem>
+                  ))}
                 </Select>
               </FormControl>
             </Grid>
             <Grid item xs={12} md={2}>
               <FormControl fullWidth size="small"><InputLabel>Refund</InputLabel>
                 <Select label="Refund" value={filters.refundStatus} onChange={(e) => setFilters({ ...filters, refundStatus: e.target.value })}>
-                  <MenuItem value="all">All</MenuItem><MenuItem value="none">None</MenuItem><MenuItem value="pending">Pending</MenuItem><MenuItem value="processed">Processed</MenuItem><MenuItem value="failed">Failed</MenuItem>
+                  <MenuItem value="all">All</MenuItem>
+                  {refundStatusOptions.map((status) => (
+                    <MenuItem key={status} value={status}>
+                      {status.charAt(0).toUpperCase() + status.slice(1)}
+                    </MenuItem>
+                  ))}
                 </Select>
               </FormControl>
             </Grid>
