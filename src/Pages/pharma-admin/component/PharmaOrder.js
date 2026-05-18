@@ -41,6 +41,15 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import WarningIcon from '@mui/icons-material/Warning';
 import EditIcon from '@mui/icons-material/Edit';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import AutorenewIcon from '@mui/icons-material/Autorenew';
+import LocalShippingIcon from '@mui/icons-material/LocalShipping';
+import DoneAllIcon from '@mui/icons-material/DoneAll';
+import CancelIcon from '@mui/icons-material/Cancel';
+import ReplayIcon from '@mui/icons-material/Replay';
+import CurrencyRupeeIcon from '@mui/icons-material/CurrencyRupee';
 
 const StyledTableContainer = styled(TableContainer)(({ theme }) => ({
   marginTop: theme.spacing(3),
@@ -396,6 +405,16 @@ const PharmaOrder = () => {
     revenue: filteredOrders.reduce((sum, o) => sum + safeNumber(o.totalAmount, 0), 0)
   };
 
+  const statusIconMap = {
+    Pending: <AccessTimeIcon fontSize="small" />,
+    Confirmed: <CheckCircleIcon fontSize="small" />,
+    Processing: <AutorenewIcon fontSize="small" />,
+    Shipped: <LocalShippingIcon fontSize="small" />,
+    Delivered: <DoneAllIcon fontSize="small" />,
+    Cancelled: <CancelIcon fontSize="small" />,
+    Refunded: <ReplayIcon fontSize="small" />
+  };
+
   const currentOrders = filteredOrders.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
   const capturePayment = async (orderId) => {
@@ -591,30 +610,43 @@ const PharmaOrder = () => {
           </Box>
         </Box>
 
-        <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ mb: 2 }}>
-          {[
-            { label: 'Total Orders', value: summary.total },
-            { label: 'Total Revenue', value: `₹${summary.revenue.toFixed(2)}` }
-          ].map((card) => (
-            <Paper key={card.label} sx={{ p: 2, flex: 1 }}>
-              <Typography variant="body2" color="text.secondary">{card.label}</Typography>
-              <Typography variant="h6" fontWeight="bold">{card.value}</Typography>
+        <Stack direction="row" spacing={1.5} sx={{ mb: 2, overflowX: 'auto', pb: 1 }}>
+          <Paper
+            onClick={() => setFilters((prev) => ({ ...prev, orderStatus: 'all' }))}
+            sx={{ p: 1.5, minWidth: 170, cursor: 'pointer', border: filters.orderStatus === 'all' ? '2px solid #1976d2' : '1px solid #e0e0e0' }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <ShoppingCartIcon fontSize="small" color="primary" />
+              <Typography variant="caption" color="text.secondary">Total Orders</Typography>
+            </Box>
+            <Typography variant="h6" fontWeight="bold">{summary.total}</Typography>
+          </Paper>
+          <Paper sx={{ p: 1.5, minWidth: 170, border: '1px solid #e0e0e0' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <CurrencyRupeeIcon fontSize="small" color="success" />
+              <Typography variant="caption" color="text.secondary">Total Revenue</Typography>
+            </Box>
+            <Typography variant="h6" fontWeight="bold">₹{summary.revenue.toFixed(2)}</Typography>
+          </Paper>
+          {statusOptions.map((status) => (
+            <Paper
+              key={status}
+              onClick={() => setFilters((prev) => ({ ...prev, orderStatus: status.toLowerCase() }))}
+              sx={{
+                p: 1.5,
+                minWidth: 160,
+                cursor: 'pointer',
+                border: filters.orderStatus === status.toLowerCase() ? '2px solid #1976d2' : '1px solid #e0e0e0'
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                {statusIconMap[status]}
+                <Typography variant="caption" color="text.secondary">{status}</Typography>
+              </Box>
+              <Typography variant="h6" fontWeight="bold">{orderStatusCounts[status] || 0}</Typography>
             </Paper>
           ))}
         </Stack>
-
-        <Grid container spacing={2} sx={{ mb: 2 }}>
-          {statusOptions.map((status) => (
-            <Grid item xs={6} sm={4} md={3} lg={2} key={status}>
-              <Paper sx={{ p: 1.5, borderLeft: '4px solid', borderLeftColor: 'primary.main' }}>
-                <Typography variant="caption" color="text.secondary">{status}</Typography>
-                <Typography variant="h6" fontWeight="bold">
-                  {orderStatusCounts[status] || 0}
-                </Typography>
-              </Paper>
-            </Grid>
-          ))}
-        </Grid>
 
         <Paper sx={{ p: 2, mb: 2 }}>
           <Grid container spacing={2}>
