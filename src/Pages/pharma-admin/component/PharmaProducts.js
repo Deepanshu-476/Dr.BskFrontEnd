@@ -71,11 +71,35 @@ const getFieldValue = (field) => {
   if (field === null || field === undefined) {
     return 'N/A';
   }
+  if (Array.isArray(field)) {
+    if (field.length === 0) return 'N/A';
+    const labels = field
+      .map((item) => item?.label || item?.name || item?.value || item)
+      .filter(Boolean);
+    if (labels.length === 0) return `${field.length} item${field.length === 1 ? '' : 's'}`;
+    return labels.join(', ');
+  }
   if (typeof field === 'object') {
-    // Try to get common property names for variant/pricing objects
     return field.label || field.name || field.value || JSON.stringify(field);
   }
   return field;
+};
+
+const getQuantityDisplay = (quantity) => {
+  if (quantity === null || quantity === undefined) return 'N/A';
+  if (Array.isArray(quantity)) {
+    if (quantity.length === 0) return 'N/A';
+    const labels = quantity
+      .map((item) => item?.label || item?.name || item?.value || '')
+      .filter(Boolean);
+    if (labels.length === 1) return labels[0];
+    if (labels.length > 1) return labels.slice(0, 2).join(', ') + (labels.length > 2 ? ` +${labels.length - 2} more` : '');
+    return `${quantity.length} variant${quantity.length === 1 ? '' : 's'}`;
+  }
+  if (typeof quantity === 'object') {
+    return quantity.label || quantity.name || quantity.value || 'N/A';
+  }
+  return String(quantity);
 };
 
 const PharmaProducts = () => {
@@ -267,7 +291,7 @@ const PharmaProducts = () => {
                       </TableCell>
                       <TableCell>
                         <Typography fontWeight="medium">
-                          {getFieldValue(product.quantity)}
+                          {getQuantityDisplay(product.quantity)}
                         </Typography>
                       </TableCell>
                       <TableCell>
@@ -414,20 +438,24 @@ const PharmaProducts = () => {
                   </Grid>
                   <Grid item xs={6}>
                     <Typography variant="subtitle2">Stock:</Typography>
-                    <Typography>{selectedProduct.stock || getFieldValue(selectedProduct.quantity) || "N/A"}</Typography>
+                    <Typography>{selectedProduct.stock || 'N/A'}</Typography>
                   </Grid>
                   <Grid item xs={6}>
                     <Typography variant="subtitle2">Quantity:</Typography>
                     <Typography
                       color={
-                        (typeof selectedProduct.quantity === 'object' 
-                          ? selectedProduct.quantity.value 
-                          : selectedProduct.quantity) > 0 
-                          ? 'success.main' 
-                          : 'error.main'
+                        Array.isArray(selectedProduct.quantity)
+                          ? selectedProduct.quantity.length > 0
+                            ? 'success.main'
+                            : 'error.main'
+                          : (typeof selectedProduct.quantity === 'object'
+                            ? selectedProduct.quantity.value
+                            : selectedProduct.quantity) > 0
+                              ? 'success.main'
+                              : 'error.main'
                       }
                     >
-                      {getFieldValue(selectedProduct.quantity)}
+                      {getQuantityDisplay(selectedProduct.quantity)}
                     </Typography>
                   </Grid>
                   <Grid item xs={6}>

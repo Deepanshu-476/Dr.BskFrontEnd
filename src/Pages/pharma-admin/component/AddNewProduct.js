@@ -71,21 +71,74 @@ const AddNewProduct = () => {
                         setSubCategoryList(subCategoryResponse.data);
                     }
 
-                    const normalizeRow = (r) => ({
-                        label: r?.label ?? (typeof r === 'string' ? r : ''),
-                        mrp: r?.mrp ?? "",
-                        discount: r?.discount ?? "",
-                        gst: r?.gst ?? "",
-                        retail_price: r?.retail_price ?? "",
-                        final_price: r?.final_price ?? "",
-                        in_stock: (r?.in_stock ?? 'yes').toLowerCase() === 'no' ? 'no' : 'yes'
-                    });
+                    const parseMaybeJson = (value) => {
+                        if (typeof value !== 'string') return value;
+                        const trimmed = value.trim();
+                        if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+                            try {
+                                return JSON.parse(trimmed);
+                            } catch {
+                                return value;
+                            }
+                        }
+                        return value;
+                    };
+
+                    const normalizeRow = (r) => {
+                        let value = parseMaybeJson(r);
+
+                        if (Array.isArray(value) && value.length > 0) {
+                            const first = value[0];
+                            if (typeof first === 'object' && first !== null) {
+                                value = first;
+                            }
+                        }
+
+                        if (typeof value === 'string') {
+                            return {
+                                label: value,
+                                mrp: "",
+                                discount: "",
+                                gst: "",
+                                retail_price: "",
+                                final_price: "",
+                                in_stock: 'yes'
+                            };
+                        }
+
+                        return {
+                            label: value?.label ?? value?.name ?? '',
+                            mrp: value?.mrp ?? "",
+                            discount: value?.discount ?? "",
+                            gst: value?.gst ?? "",
+                            retail_price: value?.retail_price ?? "",
+                            final_price: value?.final_price ?? "",
+                            in_stock: (value?.in_stock ?? 'yes').toLowerCase() === 'no' ? 'no' : 'yes'
+                        };
+                    };
+
+                    const parseQuantitySource = (source) => {
+                        if (!source) return [];
+                        if (typeof source === 'string') {
+                            try {
+                                const parsed = JSON.parse(source);
+                                return Array.isArray(parsed) ? parsed : [parsed];
+                            } catch {
+                                return [source];
+                            }
+                        }
+                        if (Array.isArray(source)) return source;
+                        return [source];
+                    };
 
                     let quantityRows = [];
-                    if (Array.isArray(product.quantity) && product.quantity.length > 0) {
-                        quantityRows = product.quantity.map(normalizeRow);
-                    } else if (Array.isArray(product.variants) && product.variants.length > 0) {
-                        quantityRows = product.variants.map(normalizeRow);
+                    const quantitySource = parseQuantitySource(product.quantity);
+                    const variantSource = parseQuantitySource(product.variants);
+
+                    if (quantitySource.length > 0) {
+                        quantityRows = quantitySource.map(normalizeRow);
+                    } else if (variantSource.length > 0) {
+                        quantityRows = variantSource.map(normalizeRow);
                     }
 
                     setFormData(prev => ({

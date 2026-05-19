@@ -397,12 +397,20 @@ const PharmaOrder = () => {
     )
   );
 
+  const isPaidPayment = (paymentInfo) => {
+    const status = safeString(paymentInfo?.status, '').toLowerCase();
+    return status === 'captured' || status === 'paid';
+  };
+
   const summary = {
     total: filteredOrders.length,
     pending: filteredOrders.filter((o) => safeString(o.status, '').toLowerCase() === 'pending').length,
     completed: filteredOrders.filter((o) => ['delivered', 'confirmed'].includes(safeString(o.status, '').toLowerCase())).length,
     cancelled: filteredOrders.filter((o) => safeString(o.status, '').toLowerCase() === 'cancelled').length,
-    revenue: filteredOrders.reduce((sum, o) => sum + safeNumber(o.totalAmount, 0), 0)
+    revenue: filteredOrders.reduce((sum, o) => 
+      isPaidPayment(o.paymentInfo) ? sum + safeNumber(o.totalAmount, 0) : sum,
+      0
+    )
   };
 
   const statusIconMap = {
@@ -610,7 +618,7 @@ const PharmaOrder = () => {
           </Box>
         </Box>
 
-        <Stack direction="row" spacing={1.5} sx={{ mb: 2, overflowX: 'auto', pb: 1 }}>
+        <Box sx={{ mb: 2, display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
           <Paper
             onClick={() => setFilters((prev) => ({ ...prev, orderStatus: 'all' }))}
             sx={{ p: 1.5, minWidth: 170, cursor: 'pointer', border: filters.orderStatus === 'all' ? '2px solid #1976d2' : '1px solid #e0e0e0' }}
@@ -646,7 +654,7 @@ const PharmaOrder = () => {
               <Typography variant="h6" fontWeight="bold">{orderStatusCounts[status] || 0}</Typography>
             </Paper>
           ))}
-        </Stack>
+        </Box>
 
         <Paper sx={{ p: 2, mb: 2 }}>
           <Grid container spacing={2}>
