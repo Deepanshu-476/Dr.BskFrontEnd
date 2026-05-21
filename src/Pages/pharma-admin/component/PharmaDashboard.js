@@ -1,229 +1,74 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, Area, AreaChart,
+  PieChart, Pie, Cell
+} from 'recharts';
 import axiosInstance from '../../../components/AxiosInstance';
 import CustomLoader from '../../../components/CustomLoader';
-import { Line, Bar } from 'react-chartjs-2';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler
-} from 'chart.js';
-
-import {
-  Container,
-  Grid,
-  Paper,
-  Typography,
-  Box,
-  Divider,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Chip,
-  Stack,
-  Alert,
-  AlertTitle,
-  Avatar,
-  Card,
-  CardContent,
-  IconButton,
-  Tooltip as MuiTooltip,
-  Button,
-  Menu,
-  ListItemIcon,
-  ListItemText,
-  Badge,
-  alpha,
-  useTheme,
-  LinearProgress,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Fade,
-  Zoom,
-  Grow
-} from '@mui/material';
-
-// Icons
-import GroupIcon from '@mui/icons-material/Group';
-import InventoryIcon from '@mui/icons-material/Inventory';
-import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
-import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
-import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-import TrendingDownIcon from '@mui/icons-material/TrendingDown';
-import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
-import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import DownloadIcon from '@mui/icons-material/Download';
-import PrintIcon from '@mui/icons-material/Print';
-import ShareIcon from '@mui/icons-material/Share';
-import LocalShippingIcon from '@mui/icons-material/LocalShipping';
-import PaymentIcon from '@mui/icons-material/Payment';
-import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
-import AssessmentIcon from '@mui/icons-material/Assessment';
-import DateRangeIcon from '@mui/icons-material/DateRange';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
-import TrendingFlatIcon from '@mui/icons-material/TrendingFlat';
-
-ChartJS.register(
-  CategoryScale, 
-  LinearScale, 
-  PointElement, 
-  LineElement, 
-  BarElement, 
-  Title, 
-  Tooltip, 
-  Legend,
-  Filler
-);
+import './PharmaDashboard.css';
 
 const PharmaDashboard = () => {
-  const theme = useTheme();
-  const [totalUsers, setTotalUsers] = useState({ totalAdmins: 0, createdDates: [] });
-  const [totalOrders, setTotalOrders] = useState({ totalOrders: 0 });
-  const [totalProducts, setTotalProducts] = useState({ total: 0 });
-  const [monthlyOrderTotals, setMonthlyOrderTotals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [chartType, setChartType] = useState('bar');
-  const [anchorEl, setAnchorEl] = useState(null);
-  const [showRevenueChart, setShowRevenueChart] = useState(true);
-  const [selectedMetric, setSelectedMetric] = useState('revenue');
   
-  // Month selector states
-  const [availableMonths, setAvailableMonths] = useState([]);
+  // API Data States
+  const [ordersData, setOrdersData] = useState([]);
+  const [usersData, setUsersData] = useState([]);
+  const [totalProducts, setTotalProducts] = useState({ total: 0 });
+  
+  // Selected month filter
   const [selectedMonth, setSelectedMonth] = useState('all');
-  const [selectedMonthData, setSelectedMonthData] = useState(null);
+  const [availableMonths, setAvailableMonths] = useState([]);
 
-  const open = Boolean(anchorEl);
-
-  // Group users by date
-  const groupUsersByDate = useCallback((createdDates) => {
-    if (!createdDates || createdDates.length === 0) {
-      return { labels: [], counts: [] };
+  // Filter orders based on selected month
+  const filteredOrders = useMemo(() => {
+    if (selectedMonth === 'all') {
+      return ordersData;
     }
-    
-    const dateMap = {};
-    createdDates.forEach(({ createdAt }) => {
-      const date = new Date(createdAt).toISOString().split('T')[0];
-      dateMap[date] = (dateMap[date] || 0) + 1;
+    return ordersData.filter(order => {
+      const date = new Date(order.createdAt);
+      const orderMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      return orderMonth === selectedMonth;
     });
-    const sortedDates = Object.keys(dateMap).sort();
-    return {
-      labels: sortedDates,
-      counts: sortedDates.map(date => dateMap[date])
-    };
-  }, []);
+  }, [ordersData, selectedMonth]);
 
-  // Process monthly order totals
-  const processMonthlyOrderTotals = useCallback((ordersData, filterMonth = 'all') => {
-    if (!ordersData || ordersData.length === 0) {
-      return { 
-        labels: [], 
-        totals: [], 
-        orderCounts: [], 
-        averageValues: [],
-        monthDetails: []
-      };
-    }
-
-    const monthMap = {};
-    const orderCountMap = {};
-    const averageMap = {};
-    const monthDetails = [];
-    
-    ordersData.forEach((item) => {
-      const [year, month] = item.month.split('-');
-      const date = new Date(year, month - 1);
-      const monthName = date.toLocaleString('default', { month: 'short' });
-      const formattedMonth = `${monthName} ${year}`;
-      const monthValue = `${year}-${month}`;
-      
-      monthMap[formattedMonth] = item.total || 0;
-      orderCountMap[formattedMonth] = item.orderCount || 0;
-      averageMap[formattedMonth] = item.averageOrderValue || 0;
-      
-      monthDetails.push({
-        label: formattedMonth,
-        value: monthValue,
-        total: item.total || 0,
-        orderCount: item.orderCount || 0,
-        averageOrderValue: item.averageOrderValue || 0,
-        codOrders: item.codOrders || 0,
-        onlineOrders: item.onlineOrders || 0
-      });
-    });
-
-    // Sort by date
-    const sortedMonths = Object.keys(monthMap).sort((a, b) => {
-      return new Date(a) - new Date(b);
-    });
-
-    // Filter by selected month if needed
-    let filteredLabels = sortedMonths;
-    let filteredTotals = sortedMonths.map(month => monthMap[month]);
-    let filteredOrderCounts = sortedMonths.map(month => orderCountMap[month]);
-    let filteredAverages = sortedMonths.map(month => averageMap[month]);
-
-    if (filterMonth !== 'all') {
-      const selectedMonthFormatted = monthDetails.find(m => m.value === filterMonth)?.label;
-      if (selectedMonthFormatted) {
-        filteredLabels = [selectedMonthFormatted];
-        filteredTotals = [monthMap[selectedMonthFormatted]];
-        filteredOrderCounts = [orderCountMap[selectedMonthFormatted]];
-        filteredAverages = [averageMap[selectedMonthFormatted]];
-        
-        const monthData = monthDetails.find(m => m.value === filterMonth);
-        if (monthData) {
-          setSelectedMonthData(monthData);
-        }
+  // Fetch Orders from /api/orders
+  const fetchOrders = async () => {
+    try {
+      const response = await axiosInstance.get('/api/orders');
+      if (response.data.success) {
+        setOrdersData(response.data.orders || []);
+        // Extract available months from orders
+        const months = [...new Set((response.data.orders || []).map(order => {
+          const date = new Date(order.createdAt);
+          return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        }))].sort().reverse();
+        setAvailableMonths(months.map(m => ({
+          value: m,
+          label: new Date(m.split('-')[0], parseInt(m.split('-')[1]) - 1).toLocaleString('default', { month: 'long', year: 'numeric' })
+        })));
       }
-    } else {
-      setSelectedMonthData(null);
-    }
-
-    return {
-      labels: filteredLabels,
-      totals: filteredTotals,
-      orderCounts: filteredOrderCounts,
-      averageValues: filteredAverages,
-      monthDetails: monthDetails.sort((a, b) => b.value.localeCompare(a.value))
-    };
-  }, []);
-
-  // API Calls
-  const fetchTotalUsers = async () => {
-    try {
-      const response = await axiosInstance.get('/admin/count');
-      setTotalUsers(response.data);
-    } catch (error) {
-      console.error("Error fetching users:", error);
-      setError("Failed to fetch users data");
-    }
-  };
-
-  const fetchTotalOrders = async () => {
-    try {
-      const response = await axiosInstance.get('/api/totalOrdercount');
-      setTotalOrders(response.data);
     } catch (error) {
       console.error("Error fetching orders:", error);
       setError("Failed to fetch orders data");
     }
   };
 
+  // Fetch Users from /admin/read-all
+  const fetchUsers = async () => {
+    try {
+      const response = await axiosInstance.get('/admin/read-all');
+      if (response.data.success) {
+        setUsersData(response.data.data || []);
+      }
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      setError("Failed to fetch users data");
+    }
+  };
+
+  // Fetch Total Products
   const fetchTotalProducts = async () => {
     try {
       const response = await axiosInstance.get('/user/totalProductcount');
@@ -234,54 +79,24 @@ const PharmaDashboard = () => {
     }
   };
 
-  const fetchMonthlyOrderTotals = async () => {
-    try {
-      const response = await axiosInstance.get('/api/monthly-order-totals');
-      setMonthlyOrderTotals(response.data);
-      
-      if (response.data && response.data.length > 0) {
-        const months = response.data.map(item => ({
-          value: item.month,
-          label: new Date(item.month.split('-')[0], item.month.split('-')[1] - 1)
-            .toLocaleString('default', { month: 'long', year: 'numeric' })
-        }));
-        setAvailableMonths(months);
-      }
-    } catch (error) {
-      console.error("Error fetching monthly order totals:", error);
-      setMonthlyOrderTotals([]);
-    }
-  };
-
   const handleRefresh = () => {
     setLoading(true);
     Promise.all([
-      fetchTotalUsers(),
-      fetchTotalOrders(),
-      fetchTotalProducts(),
-      fetchMonthlyOrderTotals()
+      fetchOrders(),
+      fetchUsers(),
+      fetchTotalProducts()
     ]).finally(() => setLoading(false));
   };
 
-  const handleMenuClick = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
-
-  // Initial data fetch
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       setError(null);
       try {
         await Promise.all([
-          fetchTotalUsers(),
-          fetchTotalOrders(),
-          fetchTotalProducts(),
-          fetchMonthlyOrderTotals()
+          fetchOrders(),
+          fetchUsers(),
+          fetchTotalProducts()
         ]);
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
@@ -293,768 +108,534 @@ const PharmaDashboard = () => {
     fetchData();
   }, []);
 
-  // Process data
-  const processedData = useMemo(() => {
-    return processMonthlyOrderTotals(monthlyOrderTotals, selectedMonth);
-  }, [monthlyOrderTotals, selectedMonth, processMonthlyOrderTotals]);
+  // Calculate Dashboard Metrics from Filtered Orders Data
+  const dashboardMetrics = useMemo(() => {
+    const orders = filteredOrders;
+    const totalOrders = orders.length;
+    
+    // Status counts
+    const delivered = orders.filter(o => o.status === 'Delivered').length;
+    const pending = orders.filter(o => o.status === 'Pending').length;
+    const cancelled = orders.filter(o => o.status === 'Cancelled').length;
+    const processing = orders.filter(o => o.status === 'Processing').length;
+    
+    // Payment method counts
+    const codOrders = orders.filter(o => o.paymentMethod === 'cod').length;
+    const onlineOrders = orders.filter(o => o.paymentMethod === 'online').length;
+    
+    // Revenue calculations
+    const todaysRevenue = orders
+      .filter(o => {
+        const today = new Date().toDateString();
+        return new Date(o.createdAt).toDateString() === today && o.status === 'Delivered';
+      })
+      .reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+    
+    const monthlyRevenue = orders
+      .filter(o => {
+        const now = new Date();
+        const orderDate = new Date(o.createdAt);
+        return orderDate.getMonth() === now.getMonth() && 
+               orderDate.getFullYear() === now.getFullYear() &&
+               o.status === 'Delivered';
+      })
+      .reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+    
+    // Refund requests (orders with refund status)
+    const refundRequests = orders.filter(o => o.refundInfo?.status === 'pending' || o.refundInfo?.status === 'processing').length;
+    
+    return {
+      totalOrders,
+      deliveredOrders: delivered,
+      pendingOrders: pending + processing,
+      cancelledOrders: cancelled,
+      codOrders,
+      onlineOrders,
+      todaysRevenue,
+      monthlyRevenue,
+      refundRequests,
+      totalUsers: usersData.length,
+      totalProducts: totalProducts.total || 0
+    };
+  }, [filteredOrders, usersData, totalProducts.total]);
 
-  const userData = useMemo(() => {
-    return groupUsersByDate(totalUsers.createdDates || []);
-  }, [totalUsers.createdDates, groupUsersByDate]);
+  // Recent Orders (last 5) from filtered orders
+  const recentOrders = useMemo(() => {
+    return filteredOrders
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, 5)
+      .map(order => ({
+        id: order._id?.slice(-8).toUpperCase(),
+        fullId: order._id,
+        customer: order.userName || order.userEmail?.split('@')[0] || 'Guest',
+        amount: order.totalAmount || 0,
+        payment: order.paymentMethod === 'cod' ? 'COD' : 'Online',
+        status: order.status,
+        date: new Date(order.createdAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+      }));
+  }, [filteredOrders]);
 
-  const { 
-    labels: monthlyLabels, 
-    totals: monthlyTotals, 
-    orderCounts, 
-    averageValues,
-    monthDetails 
-  } = processedData;
+  // Top Selling Products from filtered orders
+  const topProducts = useMemo(() => {
+    const productMap = new Map();
+    filteredOrders.forEach(order => {
+      order.items?.forEach(item => {
+        const name = item.name;
+        const quantity = item.quantity || 1;
+        const revenue = (item.price || 0) * quantity;
+        if (productMap.has(name)) {
+          productMap.set(name, {
+            name,
+            sold: productMap.get(name).sold + quantity,
+            revenue: productMap.get(name).revenue + revenue
+          });
+        } else {
+          productMap.set(name, { name, sold: quantity, revenue });
+        }
+      });
+    });
+    return Array.from(productMap.values())
+      .sort((a, b) => b.sold - a.sold)
+      .slice(0, 5)
+      .map((p, idx) => ({ ...p, image: ['🧴', '💊', '🔬', '🛡️', '🫒'][idx % 5] }));
+  }, [filteredOrders]);
 
-  const { labels: lineLabels, counts: lineCounts } = userData;
+  // Revenue Chart Data (Monthly) from filtered orders
+  const revenueChartData = useMemo(() => {
+    const monthlyMap = new Map();
+    filteredOrders.forEach(order => {
+      if (order.status !== 'Delivered' && order.status !== 'Processing') return;
+      const date = new Date(order.createdAt);
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      const monthName = date.toLocaleString('default', { month: 'short' });
+      const amount = order.totalAmount || 0;
+      
+      if (monthlyMap.has(monthKey)) {
+        monthlyMap.set(monthKey, {
+          month: monthName,
+          revenue: monthlyMap.get(monthKey).revenue + amount,
+          orders: monthlyMap.get(monthKey).orders + 1
+        });
+      } else {
+        monthlyMap.set(monthKey, { month: monthName, revenue: amount, orders: 1 });
+      }
+    });
+    return Array.from(monthlyMap.values()).slice(-8);
+  }, [filteredOrders]);
 
-  const totalRevenue = useMemo(() => {
-    return monthlyTotals.reduce((sum, val) => sum + val, 0);
-  }, [monthlyTotals]);
+  // Orders Analytics for Donut from filtered orders
+  const ordersAnalytics = useMemo(() => {
+    const total = dashboardMetrics.deliveredOrders + dashboardMetrics.pendingOrders + dashboardMetrics.cancelledOrders;
+    if (total === 0) return [];
+    return [
+      { name: 'Delivered', value: dashboardMetrics.deliveredOrders, color: '#10b981', percentage: ((dashboardMetrics.deliveredOrders / total) * 100).toFixed(1) },
+      { name: 'Pending', value: dashboardMetrics.pendingOrders, color: '#f59e0b', percentage: ((dashboardMetrics.pendingOrders / total) * 100).toFixed(1) },
+      { name: 'Cancelled', value: dashboardMetrics.cancelledOrders, color: '#ef4444', percentage: ((dashboardMetrics.cancelledOrders / total) * 100).toFixed(1) }
+    ];
+  }, [dashboardMetrics]);
 
-  const averageMonthlyRevenue = useMemo(() => {
-    return monthlyTotals.length > 0 ? totalRevenue / monthlyTotals.length : 0;
-  }, [monthlyTotals, totalRevenue]);
+  // Payment Methods for Donut from filtered orders
+  const paymentMethods = useMemo(() => {
+    const total = dashboardMetrics.codOrders + dashboardMetrics.onlineOrders;
+    if (total === 0) return [];
+    return [
+      { name: 'COD', value: dashboardMetrics.codOrders, color: '#8b5cf6', percentage: ((dashboardMetrics.codOrders / total) * 100).toFixed(1) },
+      { name: 'Online', value: dashboardMetrics.onlineOrders, color: '#3b82f6', percentage: ((dashboardMetrics.onlineOrders / total) * 100).toFixed(1) }
+    ];
+  }, [dashboardMetrics]);
 
-  const revenueGrowth = useMemo(() => {
-    if (monthlyTotals.length < 2) return 0;
-    const lastMonth = monthlyTotals[monthlyTotals.length - 1];
-    const previousMonth = monthlyTotals[monthlyTotals.length - 2];
-    if (previousMonth === 0) return 100;
-    return ((lastMonth - previousMonth) / previousMonth * 100).toFixed(1);
-  }, [monthlyTotals]);
+  // Recent Activities from filtered orders
+  const recentActivities = useMemo(() => {
+    return filteredOrders
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, 5)
+      .map(order => ({
+        id: order._id,
+        text: order.status === 'Delivered' 
+          ? `Order ${order._id?.slice(-8).toUpperCase()} delivered to ${order.userName || order.userEmail?.split('@')[0]}`
+          : order.status === 'Cancelled'
+          ? `Order ${order._id?.slice(-8).toUpperCase()} was cancelled`
+          : `New order ${order._id?.slice(-8).toUpperCase()} placed by ${order.userName || order.userEmail?.split('@')[0]}`,
+        time: new Date(order.createdAt).toLocaleString('en-IN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' }),
+        type: order.status === 'Delivered' ? 'delivered' : order.status === 'Cancelled' ? 'cancelled' : 'order'
+      }));
+  }, [filteredOrders]);
 
-  const getTrendIcon = (value) => {
-    if (value > 0) return <TrendingUpIcon sx={{ color: '#4caf50' }} />;
-    if (value < 0) return <TrendingDownIcon sx={{ color: '#f44336' }} />;
-    return <TrendingFlatIcon sx={{ color: '#ff9800' }} />;
+  // Alerts based on filtered data
+  const alerts = useMemo(() => [
+    { id: 1, text: `${dashboardMetrics.pendingOrders} Orders are pending`, type: 'warning', count: dashboardMetrics.pendingOrders },
+    { id: 2, text: `${dashboardMetrics.refundRequests} Refund requests`, type: 'danger', count: dashboardMetrics.refundRequests },
+    { id: 3, text: 'Check low stock products', type: 'warning', count: null },
+    { id: 4, text: `${dashboardMetrics.codOrders} COD orders pending verification`, type: 'info', count: dashboardMetrics.codOrders }
+  ], [dashboardMetrics]);
+
+  const DashboardStatCard = ({ title, value, icon, trend, trendValue, color }) => {
+    const isPositive = trendValue > 0;
+    const isNegative = trendValue < 0;
+    return (
+      <div className="dashboard-stat-card">
+        <div className="dashboard-stat-card-content">
+          <div className="dashboard-stat-card-left">
+            <div className="dashboard-stat-card-icon" style={{ backgroundColor: `${color}10`, color: color }}>
+              {icon}
+            </div>
+            <div>
+              <p className="dashboard-stat-card-title">{title}</p>
+              <h3 className="dashboard-stat-card-value">
+                {typeof value === 'number' ? value.toLocaleString('en-IN') : value}
+              </h3>
+            </div>
+          </div>
+          {trend && (
+            <div className={`dashboard-stat-card-trend ${isPositive ? 'positive' : isNegative ? 'negative' : ''}`}>
+              <span>{isPositive ? '▲' : isNegative ? '▼' : '►'} {Math.abs(trendValue)}%</span>
+              <span className="dashboard-trend-label">vs last month</span>
+            </div>
+          )}
+        </div>
+      </div>
+    );
   };
 
-  // Chart data
-  const lineChartData = useMemo(() => ({
-    labels: lineLabels,
-    datasets: [{
-      label: 'Users Signed Up',
-      data: lineCounts,
-      fill: true,
-      borderColor: theme.palette.primary.main,
-      backgroundColor: alpha(theme.palette.primary.main, 0.1),
-      tension: 0.4,
-      pointBackgroundColor: theme.palette.primary.main,
-      pointBorderColor: '#fff',
-      pointBorderWidth: 2,
-      pointRadius: 4,
-      pointHoverRadius: 6
-    }]
-  }), [lineLabels, lineCounts, theme]);
+  const getStatusBadge = (status) => {
+    const statusMap = {
+      'Pending': { class: 'dashboard-status-pending', label: 'Pending' },
+      'Processing': { class: 'dashboard-status-processing', label: 'Processing' },
+      'Delivered': { class: 'dashboard-status-delivered', label: 'Delivered' },
+      'Cancelled': { class: 'dashboard-status-canceled', label: 'Cancelled' }
+    };
+    const s = statusMap[status] || { class: 'dashboard-status-pending', label: status };
+    return <span className={`dashboard-status-badge ${s.class}`}>{s.label}</span>;
+  };
 
-  const barChartData = useMemo(() => ({
-    labels: ['Users', 'Orders', 'Products'],
-    datasets: [{
-      label: 'Totals',
-      data: [totalUsers.totalAdmins, totalOrders.totalOrders, totalProducts.total],
-      backgroundColor: [
-        alpha(theme.palette.primary.main, 0.8),
-        alpha(theme.palette.error.main, 0.8),
-        alpha(theme.palette.success.main, 0.8)
-      ],
-      borderRadius: 8,
-      barPercentage: 0.6,
-      categoryPercentage: 0.8
-    }]
-  }), [totalUsers.totalAdmins, totalOrders.totalOrders, totalProducts.total, theme]);
+  // Get selected month label for display
+  const getSelectedMonthLabel = () => {
+    if (selectedMonth === 'all') return 'All Months';
+    const month = availableMonths.find(m => m.value === selectedMonth);
+    return month ? month.label : 'All Months';
+  };
 
-  const monthlyRevenueChartData = useMemo(() => ({
-    labels: monthlyLabels,
-    datasets: [
-      {
-        label: selectedMonth === 'all' ? 'Monthly Revenue' : `Revenue - ${monthlyLabels[0] || ''}`,
-        data: monthlyTotals,
-        backgroundColor: alpha(theme.palette.warning.main, 0.8),
-        borderColor: theme.palette.warning.main,
-        borderWidth: 2,
-        borderRadius: 8,
-        barPercentage: 0.6,
-        categoryPercentage: 0.8,
-      }
-    ]
-  }), [monthlyLabels, monthlyTotals, selectedMonth, theme]);
-
-  // Chart options
-  const chartOptions = useMemo(() => ({
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'top',
-        labels: {
-          usePointStyle: true,
-          boxWidth: 8,
-          padding: 20,
-          font: {
-            size: 12,
-            weight: '500'
-          }
-        }
-      },
-      tooltip: {
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        titleFont: { size: 14, weight: 'bold' },
-        bodyFont: { size: 13 },
-        padding: 12,
-        cornerRadius: 8,
-        callbacks: {
-          label: function(context) {
-            let label = context.dataset.label || '';
-            if (label) {
-              label += ': ';
-            }
-            if (context.parsed.y !== null) {
-              if (context.dataset.label.includes('Revenue')) {
-                label += '₹' + context.parsed.y.toLocaleString('en-IN', {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2
-                });
-              } else {
-                label += context.parsed.y.toLocaleString('en-IN');
-              }
-            }
-            return label;
-          }
-        }
-      }
-    },
-    scales: {
-      x: {
-        grid: { display: false },
-        ticks: { 
-          autoSkip: true, 
-          maxTicksLimit: selectedMonth === 'all' ? 8 : 1,
-          maxRotation: 45,
-          minRotation: 45,
-          font: { size: 11 }
-        }
-      },
-      y: {
-        beginAtZero: true,
-        grid: { color: alpha('#000', 0.05) },
-        ticks: {
-          callback: function(value) {
-            return '₹' + value.toLocaleString('en-IN');
-          },
-          font: { size: 11 }
-        }
-      }
-    },
-  }), [selectedMonth, theme]);
-
-  const simpleChartOptions = useMemo(() => ({
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { display: false }
-    },
-    scales: {
-      x: { grid: { display: false } },
-      y: { grid: { color: alpha('#000', 0.05) } }
-    }
-  }), []);
-
-  // Enhanced Stat Card Component - Extra compact for 4 in a row
-const StatCard = ({
-  icon,
-  title,
-  value,
-  color,
-  subValue,
-  trend,
-  trendValue,
-  onClick
-}) => (
-  <Grow in timeout={500}>
-    <Paper
-      elevation={0}
-      onClick={onClick}
-      sx={{
-        width: "180%",
-        height: "100%",
-        p: 1.5,
-        borderRadius: 1.5,
-        cursor: onClick ? "pointer" : "default",
-        background: `linear-gradient(135deg, ${alpha(color, 0.1)} 0%, ${alpha(color, 0.05)} 100%)`,
-        border: `1px solid ${alpha(color, 0.2)}`,
-        transition: "0.3s ease",
-        "&:hover": {
-          transform: "translateY(-2px)",
-          boxShadow: `0 4px 10px ${alpha(color, 0.3)}`
-        }
-      }}
-    >
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-          mb: 0.5
-        }}
-      >
-        <Avatar
-          sx={{
-            bgcolor: alpha(color, 0.2),
-            color,
-            width: 32,
-            height: 32,
-            borderRadius: 1,
-            "& .MuiSvgIcon-root": { fontSize: "1rem" }
-          }}
-        >
-          {icon}
-        </Avatar>
-
-        {trend && (
-          <Chip
-            icon={getTrendIcon(trendValue)}
-            label={`${trendValue}%`}
-            size="small"
-            sx={{
-              fontSize: "0.6rem",
-              height: 18,
-              fontWeight: 600,
-              bgcolor: alpha(
-                trendValue > 0
-                  ? "#4caf50"
-                  : trendValue < 0
-                  ? "#f44336"
-                  : "#ff9800",
-                0.1
-              ),
-              color:
-                trendValue > 0
-                  ? "#4caf50"
-                  : trendValue < 0
-                  ? "#f44336"
-                  : "#ff9800"
-            }}
-          />
-        )}
-      </Box>
-
-      <Typography
-        variant="caption"
-        color="text.secondary"
-        sx={{ fontSize: "0.65rem" }}
-      >
-        {title}
-      </Typography>
-
-      <Typography
-        sx={{
-          fontSize: "1.1rem",
-          fontWeight: 700,
-          color,
-          lineHeight: 1.2,
-          my: 0.3
-        }}
-      >
-        {typeof value === "number"
-          ? value.toLocaleString("en-IN")
-          : value}
-      </Typography>
-
-      {subValue && (
-        <Typography
-          variant="caption"
-          color="text.secondary"
-          sx={{ fontSize: "0.6rem" }}
-        >
-          {subValue}
-        </Typography>
-      )}
-    </Paper>
-  </Grow>
-);
-
+  if (loading) return <CustomLoader />;
 
   return (
-    <>
-      {loading ? (
-        <CustomLoader />
-      ) : (
-        <Container maxWidth={false} disableGutters sx={{ py: 2, px: 1.5 }}> {/* Overall padding kam */}
-          {/* Header with Gradient Background */}
-          <Paper
-            elevation={0}
-            sx={{
-              p: 2,
-              mb: 2.5,
-              background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
-              borderRadius: 2,
-              color: 'white'
-            }}
-          >
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
-              <Box>
-                <Typography variant="h6" fontWeight="bold" sx={{ mb: 0.25 }}>
-                  Pharma Dashboard
-                </Typography>
-                <Typography variant="caption" sx={{ opacity: 0.9, fontSize: '0.65rem' }}>
-                  Welcome back! Here's your business overview
-                </Typography>
-              </Box>
-              
-              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                {/* Month Selector */}
-                <FormControl size="small" sx={{ minWidth: 140, bgcolor: 'rgba(255,255,255,0.1)', borderRadius: 1.5 }}>
-                  <InputLabel sx={{ color: 'white', fontSize: '0.75rem' }}>Select Month</InputLabel>
-                  <Select
-                    value={selectedMonth}
-                    label="Select Month"
-                    onChange={(e) => setSelectedMonth(e.target.value)}
-                    sx={{
-                      color: 'white',
-                      fontSize: '0.75rem',
-                      '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.3)' },
-                      '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.5)' },
-                      '& .MuiSvgIcon-root': { color: 'white', fontSize: '1rem' }
-                    }}
-                  >
-                    <MenuItem value="all">All Months</MenuItem>
-                    {availableMonths.map((month) => (
-                      <MenuItem key={month.value} value={month.value}>
-                        {month.label}
-                      </MenuItem>
+    <div className="dashboard-pharma-dashboard">
+      <div className="dashboard-dashboard-wrapper">
+        {/* Header */}
+        <div className="dashboard-dashboard-header-modern">
+          <div>
+            <h1 className="dashboard-dashboard-title-modern">Dashboard</h1>
+            <p className="dashboard-dashboard-subtitle-modern">
+              Welcome back! Here's your business overview
+              {selectedMonth !== 'all' && (
+                <span className="dashboard-filter-badge"> - Filtered by: {getSelectedMonthLabel()}</span>
+              )}
+            </p>
+          </div>
+          <div className="dashboard-header-actions">
+            <div className="dashboard-month-selector">
+              <select 
+                className="dashboard-month-select"
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+              >
+                <option value="all">All Months</option>
+                {availableMonths.map((month) => (
+                  <option key={month.value} value={month.value}>
+                    {month.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <button className="dashboard-refresh-btn" onClick={handleRefresh}>
+              🔄 Refresh
+            </button>
+          </div>
+        </div>
+
+        {/* Stats Cards Row - 10 cards */}
+        <div className="dashboard-stats-grid-modern">
+          <DashboardStatCard title="Total Users" value={dashboardMetrics.totalUsers} icon="👥" trend={true} trendValue={12} color="#3b82f6" />
+          <DashboardStatCard title="Total Products" value={dashboardMetrics.totalProducts} icon="📦" trend={true} trendValue={5} color="#10b981" />
+          <DashboardStatCard title="Total Orders" value={dashboardMetrics.totalOrders} icon="🛒" trend={true} trendValue={-3} color="#ef4444" />
+          <DashboardStatCard title="Pending Orders" value={dashboardMetrics.pendingOrders} icon="⏳" trend={true} trendValue={8} color="#f59e0b" />
+          <DashboardStatCard title="Today's Revenue" value={`₹${dashboardMetrics.todaysRevenue.toLocaleString('en-IN')}`} icon="💰" trend={true} trendValue={15} color="#8b5cf6" />
+          <DashboardStatCard title="Monthly Revenue" value={`₹${dashboardMetrics.monthlyRevenue.toLocaleString('en-IN')}`} icon="📈" trend={true} trendValue={12} color="#06b6d4" />
+          <DashboardStatCard title="Delivered Orders" value={dashboardMetrics.deliveredOrders} icon="✅" trend={true} trendValue={5} color="#10b981" />
+          <DashboardStatCard title="Cancelled Orders" value={dashboardMetrics.cancelledOrders} icon="❌" trend={true} trendValue={-2} color="#ef4444" />
+          <DashboardStatCard title="COD Orders" value={dashboardMetrics.codOrders} icon="💵" trend={true} trendValue={3} color="#8b5cf6" />
+          <DashboardStatCard title="Refund Requests" value={dashboardMetrics.refundRequests} icon="🔄" trend={true} trendValue={2} color="#f59e0b" />
+        </div>
+
+        {/* Main Content Grid */}
+        <div className="dashboard-dashboard-main-grid">
+          {/* Revenue Overview Chart */}
+          <div className="dashboard-chart-card-modern dashboard-revenue-chart">
+            <div className="dashboard-card-header">
+              <div>
+                <h3 className="dashboard-card-title">Revenue Overview</h3>
+                <p className="dashboard-card-subtitle">
+                  Monthly revenue trend 
+                  {selectedMonth !== 'all' && ` for ${getSelectedMonthLabel()}`}
+                </p>
+              </div>
+              <div className="dashboard-chart-legend">
+                <span className="dashboard-legend-dot dashboard-revenue"></span>
+                <span>Revenue (₹)</span>
+              </div>
+            </div>
+            <div className="dashboard-chart-container-modern">
+              {revenueChartData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={280}>
+                  <AreaChart data={revenueChartData}>
+                    <defs>
+                      <linearGradient id="dashboardRevenueGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                    <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#64748b' }} />
+                    <YAxis tick={{ fontSize: 11, fill: '#64748b' }} tickFormatter={(v) => `₹${v/1000}K`} />
+                    <Tooltip 
+                      contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontSize: '12px' }}
+                      formatter={(value) => [`₹${value.toLocaleString('en-IN')}`, 'Revenue']}
+                    />
+                    <Area type="monotone" dataKey="revenue" stroke="#8b5cf6" strokeWidth={2} fill="url(#dashboardRevenueGradient)" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="dashboard-no-data">
+                  <div className="dashboard-no-data-icon">📊</div>
+                  No revenue data available for {getSelectedMonthLabel()}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Orders Analytics Donut */}
+          <div className="dashboard-chart-card-modern dashboard-analytics-card">
+            <div className="dashboard-card-header">
+              <h3 className="dashboard-card-title">Orders Analytics</h3>
+              <span className="dashboard-badge-total">Total: {dashboardMetrics.totalOrders}</span>
+            </div>
+            <div className="dashboard-donut-container">
+              {ordersAnalytics.length > 0 ? (
+                <>
+                  <ResponsiveContainer width="100%" height={180}>
+                    <PieChart>
+                      <Pie
+                        data={ordersAnalytics}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={55}
+                        outerRadius={75}
+                        paddingAngle={4}
+                        dataKey="value"
+                        stroke="none"
+                      >
+                        {ordersAnalytics.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(value) => [`${value} orders`, '']} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="dashboard-donut-labels">
+                    {ordersAnalytics.map((item) => (
+                      <div key={item.name} className="dashboard-donut-label-item">
+                        <span className="dashboard-donut-dot" style={{ backgroundColor: item.color }}></span>
+                        <span className="dashboard-donut-label-text">{item.name}</span>
+                        <span className="dashboard-donut-label-value">{item.value} ({item.percentage}%)</span>
+                      </div>
                     ))}
-                  </Select>
-                </FormControl>
+                  </div>
+                </>
+              ) : (
+                <div className="dashboard-no-data">
+                  <div className="dashboard-no-data-icon">📦</div>
+                  No order data available for {getSelectedMonthLabel()}
+                </div>
+              )}
+            </div>
+          </div>
 
-                {/* Chart Type Selector */}
-                <FormControl size="small" sx={{ minWidth: 90, bgcolor: 'rgba(255,255,255,0.1)', borderRadius: 1.5 }}>
-                  <InputLabel sx={{ color: 'white', fontSize: '0.75rem' }}>Chart Type</InputLabel>
-                  <Select
-                    value={chartType}
-                    label="Chart Type"
-                    onChange={(e) => setChartType(e.target.value)}
-                    sx={{
-                      color: 'white',
-                      fontSize: '0.75rem',
-                      '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.3)' },
-                      '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.5)' },
-                      '& .MuiSvgIcon-root': { color: 'white', fontSize: '1rem' }
-                    }}
-                  >
-                    <MenuItem value="bar">Bar</MenuItem>
-                    <MenuItem value="line">Line</MenuItem>
-                  </Select>
-                </FormControl>
+          {/* Payment Methods Donut */}
+          <div className="dashboard-chart-card-modern dashboard-analytics-card">
+            <div className="dashboard-card-header">
+              <h3 className="dashboard-card-title">Payment Methods</h3>
+              <span className="dashboard-badge-total">Total: {dashboardMetrics.codOrders + dashboardMetrics.onlineOrders}</span>
+            </div>
+            <div className="dashboard-donut-container">
+              {paymentMethods.length > 0 ? (
+                <>
+                  <ResponsiveContainer width="100%" height={180}>
+                    <PieChart>
+                      <Pie
+                        data={paymentMethods}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={55}
+                        outerRadius={75}
+                        paddingAngle={4}
+                        dataKey="value"
+                        stroke="none"
+                      >
+                        {paymentMethods.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(value) => [`${value} orders`, '']} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="dashboard-donut-labels">
+                    {paymentMethods.map((item) => (
+                      <div key={item.name} className="dashboard-donut-label-item">
+                        <span className="dashboard-donut-dot" style={{ backgroundColor: item.color }}></span>
+                        <span className="dashboard-donut-label-text">{item.name}</span>
+                        <span className="dashboard-donut-label-value">{item.value} ({item.percentage}%)</span>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div className="dashboard-no-data">
+                  <div className="dashboard-no-data-icon">💳</div>
+                  No payment data available for {getSelectedMonthLabel()}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
 
-                {/* Actions Menu */}
-                <Button
-                  variant="contained"
-                  onClick={handleMenuClick}
-                  sx={{
-                    bgcolor: 'rgba(255,255,255,0.2)',
-                    color: 'white',
-                    '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' },
-                    borderRadius: 1.5,
-                    minWidth: 36,
-                    px: 1,
-                    py: 0.5
-                  }}
-                >
-                  <MoreVertIcon sx={{ fontSize: '1rem' }} />
-                </Button>
-                <Menu
-                  anchorEl={anchorEl}
-                  open={open}
-                  onClose={handleMenuClose}
-                  TransitionComponent={Fade}
-                >
-                  <MenuItem onClick={handleRefresh}>
-                    <ListItemIcon><RefreshIcon fontSize="small" /></ListItemIcon>
-                    <ListItemText primary="Refresh Data" primaryTypographyProps={{ fontSize: '0.8rem' }} />
-                  </MenuItem>
-                  <MenuItem onClick={() => setShowRevenueChart(!showRevenueChart)}>
-                    <ListItemIcon>
-                      {showRevenueChart ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
-                    </ListItemIcon>
-                    <ListItemText primary={showRevenueChart ? 'Hide Revenue Chart' : 'Show Revenue Chart'} primaryTypographyProps={{ fontSize: '0.8rem' }} />
-                  </MenuItem>
-                  <Divider />
-                  <MenuItem>
-                    <ListItemIcon><DownloadIcon fontSize="small" /></ListItemIcon>
-                    <ListItemText primary="Export Report" primaryTypographyProps={{ fontSize: '0.8rem' }} />
-                  </MenuItem>
-                  <MenuItem>
-                    <ListItemIcon><PrintIcon fontSize="small" /></ListItemIcon>
-                    <ListItemText primary="Print Dashboard" primaryTypographyProps={{ fontSize: '0.8rem' }} />
-                  </MenuItem>
-                  <MenuItem>
-                    <ListItemIcon><ShareIcon fontSize="small" /></ListItemIcon>
-                    <ListItemText primary="Share" primaryTypographyProps={{ fontSize: '0.8rem' }} />
-                  </MenuItem>
-                </Menu>
-              </Box>
-            </Box>
-          </Paper>
+        {/* Secondary Grid */}
+        <div className="dashboard-dashboard-secondary-grid">
+          {/* Top Selling Products */}
+          <div className="dashboard-products-card-modern">
+            <div className="dashboard-card-header">
+              <h3 className="dashboard-card-title">Top Selling Products</h3>
+            </div>
+            <div className="dashboard-products-list">
+              {topProducts.length > 0 ? (
+                topProducts.map((product, idx) => (
+                  <div key={idx} className="dashboard-product-item">
+                    <div className="dashboard-product-info">
+                      <div className="dashboard-product-icon">{product.image}</div>
+                      <div>
+                        <span className="dashboard-product-name">{product.name.length > 35 ? product.name.substring(0, 35) + '...' : product.name}</span>
+                        <span className="dashboard-product-revenue">₹{product.revenue.toLocaleString('en-IN')}</span>
+                      </div>
+                    </div>
+                    <span className="dashboard-product-sold">{product.sold} sold</span>
+                  </div>
+                ))
+              ) : (
+                <div className="dashboard-no-data">
+                  <div className="dashboard-no-data-icon">🏷️</div>
+                  No product data available for {getSelectedMonthLabel()}
+                </div>
+              )}
+            </div>
+          </div>
 
-          {/* Error message */}
-          {error && (
-            <Fade in={true}>
-              <Alert 
-                severity="error" 
-                sx={{ mb: 2, borderRadius: 1.5 }}
-                onClose={() => setError(null)}
-                action={
-                  <Button color="inherit" size="small" onClick={handleRefresh}>
-                    Retry
-                  </Button>
-                }
-              >
-                <AlertTitle>Error</AlertTitle>
-                {error}
-              </Alert>
-            </Fade>
-          )}
+          {/* Recent Orders Table */}
+          <div className="dashboard-recent-orders-card">
+            <div className="dashboard-card-header">
+              <h3 className="dashboard-card-title">Recent Orders</h3>
+          </div>
+            <div className="dashboard-table-wrapper-modern">
+              {recentOrders.length > 0 ? (
+                <table className="dashboard-orders-table">
+                  <thead>
+                    <tr>
+                      <th>Order ID</th>
+                      <th>Customer</th>
+                      <th>Amount</th>
+                      <th>Payment</th>
+                      <th>Status</th>
+                      <th>Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {recentOrders.map((order) => (
+                      <tr key={order.id}>
+                        <td className="dashboard-order-id">#{order.id}</td>
+                        <td>{order.customer}</td>
+                        <td className="dashboard-amount">₹{order.amount.toLocaleString('en-IN')}</td>
+                        <td>{order.payment}</td>
+                        <td>{getStatusBadge(order.status)}</td>
+                        <td className="dashboard-date-cell">{order.date}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <div className="dashboard-no-data">
+                  <div className="dashboard-no-data-icon">📋</div>
+                  No orders available for {getSelectedMonthLabel()}
+                </div>
+              )}
+            </div>
+          </div>
 
-          {/* 4 Cards in One Row - FIXED */}
-          <Grid container spacing={13} sx={{ mb: 2.5, flexWrap: 'nowrap' }}> {/* flexWrap: 'nowrap' se ek line mein rahenge */}
-  <Grid item xs={3} sx={{ minWidth: 0 }}> 
-    <StatCard
-      icon={<GroupIcon sx={{ fontSize: '1.2rem' }} />}
-      title="Total Users"
-      value={totalUsers.totalAdmins}
-      color={theme.palette.primary.main}
-      subValue="+12% from last month"
-      trend={true}
-      trendValue={12}
-    />
-  </Grid>
-  <Grid item xs={3} sx={{ minWidth: 0 }}>
-    <StatCard
-      icon={<InventoryIcon sx={{ fontSize: '1.2rem' }} />}
-      title="Total Products"
-      value={totalProducts.total}
-      color={theme.palette.success.main}
-      subValue="32 categories"
-      trend={true}
-      trendValue={5}
-    />
-  </Grid>
-  <Grid item xs={3} sx={{ minWidth: 0 }}>
-    <StatCard
-      icon={<ShoppingCartIcon sx={{ fontSize: '1.2rem' }} />}
-      title="Total Orders"
-      value={totalOrders.totalOrders}
-      color={theme.palette.error.main}
-      subValue={`${orderCounts.reduce((a, b) => a + b, 0)} this month`}
-      trend={true}
-      trendValue={-3}
-    />
-  </Grid>
-  <Grid item xs={3} sx={{ minWidth: 0 }}>
-    <StatCard
-      icon={<MonetizationOnIcon sx={{ fontSize: '1.2rem' }} />}
-      title={selectedMonth === 'all' ? "Total Revenue" : `Revenue (${monthlyLabels[0] || ''})`}
-      value={`₹${totalRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`}
-      color={theme.palette.warning.main}
-      subValue={
-        selectedMonth === 'all' 
-          ? `${monthlyLabels.length} months · Avg ₹${averageMonthlyRevenue.toLocaleString('en-IN', { minimumFractionDigits: 0 })}`
-          : `${selectedMonthData?.orderCount || 0} orders`
-      }
-      trend={true}
-      trendValue={revenueGrowth}
-    />
-  </Grid>
-</Grid>
+          {/* Recent Activities */}
+          <div className="dashboard-activities-card">
+            <div className="dashboard-card-header">
+              <h3 className="dashboard-card-title">Recent Activities</h3>
+            </div>
+            <div className="dashboard-activities-list">
+              {recentActivities.length > 0 ? (
+                recentActivities.map((activity) => (
+                  <div key={activity.id} className="dashboard-activity-item">
+                    <div className={`dashboard-activity-icon ${activity.type}`}>
+                      {activity.type === 'order' && '🛒'}
+                      {activity.type === 'delivered' && '✅'}
+                      {activity.type === 'cancelled' && '❌'}
+                    </div>
+                    <div className="dashboard-activity-content">
+                      <p className="dashboard-activity-text">{activity.text}</p>
+                      <span className="dashboard-activity-time">{activity.time}</span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="dashboard-no-data">
+                  <div className="dashboard-no-data-icon">⏰</div>
+                  No activities available for {getSelectedMonthLabel()}
+                </div>
+              )}
+            </div>
+          </div>
 
+          {/* Alerts Panel */}
+          <div className="dashboard-alerts-card">
+            <div className="dashboard-card-header">
+              <h3 className="dashboard-card-title">Alerts & Notifications</h3>
+            </div>
+            <div className="dashboard-alerts-list">
+              {alerts.map((alert) => (
+                <div key={alert.id} className={`dashboard-alert-item ${alert.type}`}>
+                  <div className="dashboard-alert-content">
+                    <span className="dashboard-alert-icon">
+                      {alert.type === 'warning' && '⚠️'}
+                      {alert.type === 'danger' && '🔴'}
+                      {alert.type === 'info' && 'ℹ️'}
+                    </span>
+                    <span className="dashboard-alert-text">{alert.text}</span>
+                  </div>
+                  
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
 
-          {/* Selected Month Details */}
-          {selectedMonthData && selectedMonth !== 'all' && (
-            <Fade in={true}>
-              <Paper 
-                elevation={0}
-                sx={{ 
-                  p: 2, 
-                  mb: 2.5, 
-                  bgcolor: alpha(theme.palette.warning.main, 0.05),
-                  border: `1px solid ${alpha(theme.palette.warning.main, 0.2)}`,
-                  borderRadius: 2
-                }}
-              >
-                <Typography variant="caption" fontWeight="bold" sx={{ mb: 1, color: theme.palette.warning.main }}>
-                  Month Details: {monthlyLabels[0]}
-                </Typography>
-                <Grid container spacing={1.5}>
-                  <Grid item xs={6} sm={3}>
-                    <Box>
-                      <Typography variant="caption" color="textSecondary">Total Orders</Typography>
-                      <Typography variant="body2" fontWeight="bold">{selectedMonthData.orderCount}</Typography>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Box>
-                      <Typography variant="caption" color="textSecondary">COD Orders</Typography>
-                      <Typography variant="body2" fontWeight="bold" sx={{ color: theme.palette.info.main }}>
-                        {selectedMonthData.codOrders || 0}
-                      </Typography>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Box>
-                      <Typography variant="caption" color="textSecondary">Online Orders</Typography>
-                      <Typography variant="body2" fontWeight="bold" sx={{ color: theme.palette.success.main }}>
-                        {selectedMonthData.onlineOrders || 0}
-                      </Typography>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Box>
-                      <Typography variant="caption" color="textSecondary">Avg Order Value</Typography>
-                      <Typography variant="body2" fontWeight="bold">
-                        ₹{selectedMonthData.averageOrderValue?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                      </Typography>
-                    </Box>
-                  </Grid>
-                </Grid>
-              </Paper>
-            </Fade>
-          )}
-
-          {/* First Row - Original Charts */}
-          <Grid container spacing={1.5} sx={{ mb: 2.5 }}>
-            <Grid item xs={12} lg={6}>
-              <Zoom in={true} style={{ transitionDelay: '100ms' }}>
-                <Paper 
-                  elevation={0}
-                  sx={{ 
-                    p: 2, 
-                    height: '100%',
-                    border: '1px solid',
-                    borderColor: alpha(theme.palette.divider, 0.1),
-                    borderRadius: 2,
-                    transition: 'box-shadow 0.3s',
-                    '&:hover': { boxShadow: theme.shadows[1] }
-                  }}
-                >
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                    <Typography variant="body2" fontWeight="bold" sx={{ color: theme.palette.primary.main }}>
-                      User Signups Trend
-                    </Typography>
-                    <Chip 
-                      icon={<GroupIcon />} 
-                      label={`${lineCounts.length} days`}
-                      size="small"
-                      variant="outlined"
-                      sx={{ height: 20, fontSize: '0.6rem' }}
-                    />
-                  </Box>
-                  <Divider sx={{ mb: 1.5 }} />
-                  <Box sx={{ height: 200, position: 'relative' }}>
-                    {lineLabels && lineLabels.length > 0 ? (
-                      <Line data={lineChartData} options={simpleChartOptions} />
-                    ) : (
-                      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-                        <Typography color="textSecondary">No data</Typography>
-                      </Box>
-                    )}
-                  </Box>
-                </Paper>
-              </Zoom>
-            </Grid>
-
-            <Grid item xs={12} lg={6}>
-              <Zoom in={true} style={{ transitionDelay: '200ms' }}>
-                <Paper 
-                  elevation={0}
-                  sx={{ 
-                    p: 2, 
-                    height: '100%',
-                    border: '1px solid',
-                    borderColor: alpha(theme.palette.divider, 0.1),
-                    borderRadius: 2,
-                    transition: 'box-shadow 0.3s',
-                    '&:hover': { boxShadow: theme.shadows[1] }
-                  }}
-                >
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                    <Typography variant="body2" fontWeight="bold" sx={{ color: theme.palette.error.main }}>
-                      Key Metrics
-                    </Typography>
-                    <Chip 
-                      icon={<AssessmentIcon />} 
-                      label="Overview"
-                      size="small"
-                      variant="outlined"
-                      sx={{ height: 20, fontSize: '0.6rem' }}
-                    />
-                  </Box>
-                  <Divider sx={{ mb: 1.5 }} />
-                  <Box sx={{ height: 200, position: 'relative' }}>
-                    <Bar data={barChartData} options={simpleChartOptions} />
-                  </Box>
-                </Paper>
-              </Zoom>
-            </Grid>
-          </Grid>
-
-          {/* Second Row - Monthly Revenue Chart */}
-          {showRevenueChart && (
-            <Grid container spacing={1.5}>
-              <Grid item xs={12}>
-                <Grow in={true} timeout={500}>
-                  <Paper 
-                    elevation={0}
-                    sx={{ 
-                      p: 2,
-                      border: '1px solid',
-                      borderColor: alpha(theme.palette.divider, 0.1),
-                      borderRadius: 2,
-                      transition: 'box-shadow 0.3s',
-                      '&:hover': { boxShadow: theme.shadows[1] }
-                    }}
-                  >
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1, flexWrap: 'wrap', gap: 1 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        <MonetizationOnIcon sx={{ color: theme.palette.warning.main, fontSize: 20 }} />
-                        <Typography variant="body2" fontWeight="bold" sx={{ color: theme.palette.warning.main }}>
-                          {selectedMonth === 'all' ? 'Revenue Analysis' : `Revenue - ${monthlyLabels[0] || ''}`}
-                        </Typography>
-                      </Box>
-                      
-                      {/* Revenue Summary Chips */}
-                      <Stack direction="row" spacing={0.5} sx={{ flexWrap: 'wrap', gap: 0.5 }}>
-                        <Chip 
-                          icon={<MonetizationOnIcon />} 
-                          label={`₹${totalRevenue.toLocaleString('en-IN', { minimumFractionDigits: 0 })}`}
-                          color="warning"
-                          size="small"
-                          sx={{ height: 20, fontSize: '0.6rem' }}
-                        />
-                        {selectedMonth === 'all' && (
-                          <Chip 
-                            icon={<TrendingUpIcon />} 
-                            label={`Avg ₹${averageMonthlyRevenue.toLocaleString('en-IN', { minimumFractionDigits: 0 })}`}
-                            color="info"
-                            size="small"
-                            sx={{ height: 20, fontSize: '0.6rem' }}
-                          />
-                        )}
-                        <Chip 
-                          icon={<LocalShippingIcon />} 
-                          label={`${orderCounts.reduce((a, b) => a + b, 0)} orders`}
-                          color="success"
-                          size="small"
-                          sx={{ height: 20, fontSize: '0.6rem' }}
-                        />
-                      </Stack>
-                    </Box>
-                    
-                    <Divider sx={{ mb: 1.5 }} />
-                    
-                    {/* Revenue Chart */}
-                    <Box sx={{ height: 280, position: 'relative' }}>
-                      {monthlyLabels && monthlyLabels.length > 0 ? (
-                        chartType === 'bar' ? (
-                          <Bar data={monthlyRevenueChartData} options={chartOptions} />
-                        ) : (
-                          <Line 
-                            data={{
-                              labels: monthlyLabels,
-                              datasets: [{
-                                label: selectedMonth === 'all' ? 'Monthly Revenue' : `Revenue - ${monthlyLabels[0]}`,
-                                data: monthlyTotals,
-                                borderColor: theme.palette.warning.main,
-                                backgroundColor: alpha(theme.palette.warning.main, 0.1),
-                                borderWidth: 2,
-                                pointBackgroundColor: theme.palette.warning.main,
-                                pointBorderColor: '#fff',
-                                pointBorderWidth: 1,
-                                pointRadius: selectedMonth === 'all' ? 3 : 6,
-                                pointHoverRadius: selectedMonth === 'all' ? 5 : 8,
-                                tension: 0.4,
-                                fill: true
-                              }]
-                            }} 
-                            options={chartOptions} 
-                          />
-                        )
-                      ) : (
-                        <Box sx={{ 
-                          height: '100%', 
-                          display: 'flex', 
-                          flexDirection: 'column',
-                          alignItems: 'center', 
-                          justifyContent: 'center',
-                          gap: 1,
-                          bgcolor: alpha(theme.palette.grey[500], 0.05),
-                          borderRadius: 1.5
-                        }}>
-                          <MonetizationOnIcon sx={{ fontSize: 40, color: alpha(theme.palette.grey[500], 0.5) }} />
-                          <Typography variant="body2" color="textSecondary">
-                            No revenue data
-                          </Typography>
-                        </Box>
-                      )}
-                    </Box>
-
-                    {/* Revenue Table for All Months */}
-                    {selectedMonth === 'all' && monthDetails.length > 0 && (
-                      <Box sx={{ mt: 2.5 }}>
-                        <Typography variant="caption" fontWeight="bold" sx={{ mb: 1 }}>
-                          Monthly Breakdown
-                        </Typography>
-                        <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 1.5, maxHeight: 250 }}>
-                          <Table size="small" stickyHeader>
-                            <TableHead sx={{ bgcolor: alpha(theme.palette.primary.main, 0.05) }}>
-                              <TableRow>
-                                <TableCell sx={{ fontSize: '0.65rem', py: 0.5 }}><strong>Month</strong></TableCell>
-                                <TableCell align="right" sx={{ fontSize: '0.65rem', py: 0.5 }}><strong>Orders</strong></TableCell>
-                                <TableCell align="right" sx={{ fontSize: '0.65rem', py: 0.5 }}><strong>COD</strong></TableCell>
-                                <TableCell align="right" sx={{ fontSize: '0.65rem', py: 0.5 }}><strong>Online</strong></TableCell>
-                                <TableCell align="right" sx={{ fontSize: '0.65rem', py: 0.5 }}><strong>Avg</strong></TableCell>
-                                <TableCell align="right" sx={{ fontSize: '0.65rem', py: 0.5 }}><strong>Revenue</strong></TableCell>
-                              </TableRow>
-                            </TableHead>
-                            <TableBody>
-                              {monthDetails.map((month) => (
-                                <TableRow 
-                                  key={month.value}
-                                  sx={{ 
-                                    '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.02) }
-                                  }}
-                                >
-                                  <TableCell component="th" scope="row" sx={{ fontSize: '0.65rem', py: 0.5 }}>
-                                    {month.label}
-                                  </TableCell>
-                                  <TableCell align="right" sx={{ fontSize: '0.65rem', py: 0.5 }}>{month.orderCount}</TableCell>
-                                  <TableCell align="right" sx={{ fontSize: '0.65rem', py: 0.5 }}>{month.codOrders}</TableCell>
-                                  <TableCell align="right" sx={{ fontSize: '0.65rem', py: 0.5 }}>{month.onlineOrders}</TableCell>
-                                  <TableCell align="right" sx={{ fontSize: '0.65rem', py: 0.5 }}>
-                                    ₹{month.averageOrderValue.toLocaleString('en-IN', { minimumFractionDigits: 0 })}
-                                  </TableCell>
-                                  <TableCell align="right" sx={{ fontWeight: 600, color: theme.palette.success.main, fontSize: '0.65rem', py: 0.5 }}>
-                                    ₹{month.total.toLocaleString('en-IN', { minimumFractionDigits: 0 })}
-                                  </TableCell>
-                                </TableRow>
-                              ))}
-                            </TableBody>
-                          </Table>
-                        </TableContainer>
-                      </Box>
-                    )}
-                  </Paper>
-                </Grow>
-              </Grid>
-            </Grid>
-          )}
-        </Container>
-      )}
-    </>
+        {/* Footer */}
+        <div className="dashboard-dashboard-footer">
+          <span>© 2024 DR BSK Healthcare. All rights reserved.</span>
+          <span>Version 1.0.0</span>
+        </div>
+      </div>
+    </div>
   );
 };
 
