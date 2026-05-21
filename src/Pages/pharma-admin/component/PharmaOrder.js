@@ -26,75 +26,133 @@ import {
   AlertTitle,
   IconButton,
   Tooltip,
-  Checkbox,
-  FormControlLabel,
   Snackbar,
   Select,
   MenuItem,
   FormControl,
-  InputLabel,
-  Stack
+  Stack,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
-import WarningIcon from '@mui/icons-material/Warning';
-import EditIcon from '@mui/icons-material/Edit';
-import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import AutorenewIcon from '@mui/icons-material/Autorenew';
-import LocalShippingIcon from '@mui/icons-material/LocalShipping';
-import DoneAllIcon from '@mui/icons-material/DoneAll';
-import CancelIcon from '@mui/icons-material/Cancel';
-import ReplayIcon from '@mui/icons-material/Replay';
-import CurrencyRupeeIcon from '@mui/icons-material/CurrencyRupee';
+import SearchIcon from '@mui/icons-material/Search';
+import GetAppIcon from '@mui/icons-material/GetApp';
+import AddIcon from '@mui/icons-material/Add';
+import InventoryIcon from '@mui/icons-material/Inventory';
+import PendingActionsIcon from '@mui/icons-material/PendingActions';
+import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
+import RemoveShoppingCartIcon from '@mui/icons-material/RemoveShoppingCart';
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
+
+// Styled components
+const PageContainer = styled(Box)(({ theme }) => ({
+  backgroundColor: '#f5f7fa',
+  minHeight: '100vh',
+  padding: theme.spacing(2),
+}));
+
+const HeaderSection = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  marginBottom: theme.spacing(2),
+  flexWrap: 'wrap',
+  gap: theme.spacing(1),
+}));
+
+const FilterBar = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(1.5),
+  marginBottom: theme.spacing(2),
+  borderRadius: '10px',
+  display: 'flex',
+  flexWrap: 'wrap',
+  alignItems: 'center',
+  gap: theme.spacing(1.5),
+  boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
+  border: '1px solid #e2e8f0',
+}));
 
 const StyledTableContainer = styled(TableContainer)(({ theme }) => ({
-  marginTop: theme.spacing(3),
-  boxShadow: theme.shadows[3],
-  borderRadius: theme.shape.borderRadius,
+  borderRadius: '10px',
+  boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
+  overflowX: 'auto',
+  border: '1px solid #e2e8f0',
 }));
 
-const StatusChip = styled(Chip)(({ theme, status }) => ({
-  fontWeight: 600,
-  minWidth: '90px',
+const StatusChip = styled(Chip)(({ theme, statuscolor }) => ({
+  fontSize: '10px',
+  fontWeight: 500,
+  height: '22px',
+  borderRadius: '16px',
   backgroundColor:
-    status === 'delivered' ? theme.palette.success.light :
-    status === 'confirmed' ? theme.palette.info.light :
-    status === 'processing' ? theme.palette.warning.light :
-    status === 'shipped' ? theme.palette.primary.light :
-    status === 'pending' ? theme.palette.warning.light :
-    status === 'cancelled' ? theme.palette.error.light :
-    status === 'refunded' ? theme.palette.secondary.light :
-    status === 'captured' || status === 'paid' ? theme.palette.success.light :
-    status === 'authorized' ? theme.palette.info.light :
-    status === 'failed' ? theme.palette.error.light :
-    status === 'processed' ? theme.palette.success.light :
-    status === 'initiated' ? theme.palette.warning.light :
-    status === 'created' ? theme.palette.grey.light :
-    status === 'none' ? theme.palette.grey.light :
-    theme.palette.grey.light,
+    statuscolor === 'delivered' ? '#e8f5e9' :
+    statuscolor === 'confirmed' ? '#e3f2fd' :
+    statuscolor === 'processing' ? '#fff3e0' :
+    statuscolor === 'shipped' ? '#e8eaf6' :
+    statuscolor === 'pending' ? '#fff8e1' :
+    statuscolor === 'cancelled' ? '#ffebee' :
+    statuscolor === 'refunded' ? '#f3e5f5' :
+    statuscolor === 'captured' || statuscolor === 'paid' ? '#e8f5e9' :
+    statuscolor === 'authorized' ? '#e3f2fd' :
+    statuscolor === 'failed' ? '#ffebee' :
+    '#f5f5f5',
   color:
-    status === 'delivered' ? theme.palette.success.dark :
-    status === 'confirmed' ? theme.palette.info.dark :
-    status === 'processing' ? theme.palette.warning.dark :
-    status === 'shipped' ? theme.palette.primary.dark :
-    status === 'pending' ? theme.palette.warning.dark :
-    status === 'cancelled' ? theme.palette.error.dark :
-    status === 'refunded' ? theme.palette.secondary.dark :
-    status === 'captured' || status === 'paid' ? theme.palette.success.dark :
-    status === 'authorized' ? theme.palette.info.dark :
-    status === 'failed' ? theme.palette.error.dark :
-    status === 'processed' ? theme.palette.success.dark :
-    status === 'initiated' ? theme.palette.warning.dark :
-    status === 'created' ? theme.palette.grey.dark :
-    status === 'none' ? theme.palette.grey.dark :
-    theme.palette.grey.dark,
+    statuscolor === 'delivered' ? '#2e7d32' :
+    statuscolor === 'confirmed' ? '#1565c0' :
+    statuscolor === 'processing' ? '#ef6c00' :
+    statuscolor === 'shipped' ? '#3949ab' :
+    statuscolor === 'pending' ? '#f57c00' :
+    statuscolor === 'cancelled' ? '#c62828' :
+    statuscolor === 'refunded' ? '#7b1fa2' :
+    statuscolor === 'captured' || statuscolor === 'paid' ? '#2e7d32' :
+    statuscolor === 'authorized' ? '#1565c0' :
+    statuscolor === 'failed' ? '#c62828' :
+    '#616161',
+  '& .MuiChip-label': {
+    padding: '0 6px',
+  },
 }));
 
-// All 7 status options from your schema
+const OrderIdCell = styled(Typography)({
+  fontFamily: 'monospace',
+  fontSize: '11px',
+  fontWeight: 600,
+  color: '#1976d2',
+  cursor: 'pointer',
+  '&:hover': {
+    textDecoration: 'underline',
+  },
+});
+
+const CustomerName = styled(Typography)({
+  fontSize: '12px',
+  fontWeight: 500,
+  color: '#1e293b',
+});
+
+const ProductCell = styled(Box)({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '2px',
+});
+
+const ProductName = styled(Typography)({
+  fontSize: '11px',
+  fontWeight: 500,
+  color: '#1e293b',
+});
+
+const ProductSku = styled(Typography)({
+  fontSize: '9px',
+  color: '#94a3b8',
+});
+
+const PriceCell = styled(Typography)({
+  fontSize: '12px',
+  fontWeight: 600,
+  color: '#0f172a',
+});
+
 const statusOptions = [
   'Pending',
   'Confirmed',
@@ -105,21 +163,17 @@ const statusOptions = [
   'Refunded'
 ];
 
-// Safe rendering utilities
+const paymentStatusOptions = [
+  'Pending',
+  'Paid',
+  'COD'
+];
+
+// Helper functions
 const safeString = (value, defaultValue = '') => {
   if (value === null || value === undefined) return defaultValue;
   if (typeof value === 'string') return value;
   if (typeof value === 'number' || typeof value === 'boolean') return String(value);
-  if (typeof value === 'object') {
-    if (value.name) return safeString(value.name, defaultValue);
-    if (value.title) return safeString(value.title, defaultValue);
-    if (value.productName) return safeString(value.productName, defaultValue);
-    try {
-      return JSON.stringify(value);
-    } catch {
-      return defaultValue;
-    }
-  }
   return defaultValue;
 };
 
@@ -134,38 +188,35 @@ const getProductName = (item) => {
   return safeString(item.name, 'Unknown Product');
 };
 
+const getCustomerName = (order) => {
+  if (order.userName && order.userName !== 'null' && order.userName !== 'undefined') {
+    return order.userName;
+  }
+  if (order.name && order.name !== 'null' && order.name !== 'undefined') {
+    return order.name;
+  }
+  if (order.email && order.email !== 'null' && order.email !== 'undefined') {
+    return order.email.split('@')[0];
+  }
+  return 'Guest User';
+};
+
 const PharmaOrder = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [updatingStatusId, setUpdatingStatusId] = useState(null);
+  const [updatingPaymentId, setUpdatingPaymentId] = useState(null);
   const [cancelReason, setCancelReason] = useState('');
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [orderToCancel, setOrderToCancel] = useState(null);
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [refreshing, setRefreshing] = useState(false);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
   const [processingCapture, setProcessingCapture] = useState(null);
-  
-  // New state for delete functionality
-  const [deleteDialog, setDeleteDialog] = useState({
-    open: false,
-    orderId: null,
-    orderDetails: null
-  });
-  const [bulkDeleteMode, setBulkDeleteMode] = useState(false);
+  const [deleteDialog, setDeleteDialog] = useState({ open: false, orderId: null, orderDetails: null });
   const [selectedOrders, setSelectedOrders] = useState([]);
-  const [bulkDeleteDialog, setBulkDeleteDialog] = useState({
-    open: false,
-    count: 0
-  });
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: '',
-    severity: 'success'
-  });
-
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [filters, setFilters] = useState({
     search: '',
     orderStatus: 'all',
@@ -175,13 +226,76 @@ const PharmaOrder = () => {
     toDate: ''
   });
 
+  // ==================== PAYMENT STATUS HELPER FUNCTIONS (FIXED) ====================
+  
+  const getPaymentStatusValue = (order) => {
+    // First check if there's a display status set (from API response)
+    if (order.paymentInfo?.displayStatus) {
+      return order.paymentInfo.displayStatus;
+    }
+    
+    // Then check payment status
+    const status = safeString(order.paymentInfo?.status, '').toLowerCase();
+    if (status === 'captured' || status === 'paid') {
+      return 'Paid';
+    }
+    
+    // Then check if it's COD order (only if no displayStatus and not captured)
+    if (order.paymentMethod === 'cod') {
+      return 'COD';
+    }
+    
+    if (status === 'cod') {
+      return 'COD';
+    }
+    
+    return 'Pending';
+  };
+
+  const isPaidPayment = (order) => {
+    // Count both online captured payments and COD orders as revenue
+    if (order.paymentMethod === 'online' && order.paymentInfo?.status === 'captured') {
+      return true;
+    }
+    if (order.paymentMethod === 'cod') {
+      return true;
+    }
+    return false;
+  };
+
+  const getPaymentStatusLabel = (paymentInfo) => {
+    if (!paymentInfo || typeof paymentInfo !== 'object') return 'Pending';
+    if (paymentInfo.displayStatus) {
+      return paymentInfo.displayStatus;
+    }
+    const status = safeString(paymentInfo.status, '').toLowerCase();
+    if (status === 'captured' || status === 'paid') {
+      return 'Paid';
+    }
+    if (status === 'cod') {
+      return 'COD';
+    }
+    return 'Pending';
+  };
+
+  const getRefundStatusText = (refundInfo) => {
+    if (!refundInfo || typeof refundInfo !== 'object') return 'No Refund';
+    if (!refundInfo.refundId && refundInfo.status === 'none') return 'No Refund';
+    if (!refundInfo.refundId) return 'No Refund';
+    const status = safeString(refundInfo.status, '');
+    if (status === 'processed') return 'Refund Processed';
+    if (status === 'failed') return 'Refund Failed';
+    if (status === 'pending') return 'Refund Pending';
+    if (status === 'initiated') return 'Refund Initiated';
+    return `Refund ${status}`;
+  };
+
+  const needsPaymentCapture = (paymentInfo) => {
+    return paymentInfo?.status === 'authorized';
+  };
+
   useEffect(() => {
     fetchData();
-    const interval = setInterval(() => {
-      fetchDataSilently();
-    }, 30000);
-
-    return () => clearInterval(interval);
   }, []);
 
   const fetchData = async () => {
@@ -197,125 +311,32 @@ const PharmaOrder = () => {
     }
   };
 
-  const fetchDataSilently = async () => {
-    setRefreshing(true);
-    try {
-      const response = await axiosInstance.get('/api/orders');
-      setOrders(response.data.orders || []);
-    } catch (error) {
-      console.error("Error fetching data silently:", error);
-    } finally {
-      setRefreshing(false);
-    }
-  };
-
   const showSnackbar = (message, severity = 'success') => {
-    setSnackbar({
-      open: true,
-      message,
-      severity
-    });
+    setSnackbar({ open: true, message, severity });
   };
 
   const handleCloseSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
   };
 
-  // ==================== DELETE SINGLE ORDER ====================
   const handleDeleteClick = (order) => {
-    setDeleteDialog({
-      open: true,
-      orderId: order._id,
-      orderDetails: order
-    });
+    setDeleteDialog({ open: true, orderId: order._id, orderDetails: order });
   };
 
   const confirmDeleteOrder = async () => {
     if (!deleteDialog.orderId) return;
-
     try {
-      const response = await axiosInstance.delete(`/api/orders/${deleteDialog.orderId}`);
-      
-      // Remove order from state
+      await axiosInstance.delete(`/api/orders/${deleteDialog.orderId}`);
       setOrders(prevOrders => prevOrders.filter(order => order._id !== deleteDialog.orderId));
-      
-      // Also remove from selected orders if present
       setSelectedOrders(prev => prev.filter(id => id !== deleteDialog.orderId));
-      
-      showSnackbar(response.data.message || 'Order deleted successfully');
-      
-      // Close the delete dialog
+      showSnackbar('Order deleted successfully');
       setDeleteDialog({ open: false, orderId: null, orderDetails: null });
-      
     } catch (error) {
       console.error("Failed to delete order:", error);
-      showSnackbar(
-        error.response?.data?.message || 'Failed to delete order',
-        'error'
-      );
+      showSnackbar(error.response?.data?.message || 'Failed to delete order', 'error');
     }
   };
 
-  // ==================== BULK DELETE ====================
-  const handleSelectOrder = (orderId) => {
-    setSelectedOrders(prev => {
-      if (prev.includes(orderId)) {
-        return prev.filter(id => id !== orderId);
-      } else {
-        return [...prev, orderId];
-      }
-    });
-  };
-
-  const handleSelectAll = () => {
-    if (selectedOrders.length === currentOrders.length) {
-      setSelectedOrders([]);
-    } else {
-      setSelectedOrders(currentOrders.map(order => order._id));
-    }
-  };
-
-  const handleBulkDeleteClick = () => {
-    if (selectedOrders.length === 0) {
-      showSnackbar('Please select at least one order to delete', 'warning');
-      return;
-    }
-    
-    setBulkDeleteDialog({
-      open: true,
-      count: selectedOrders.length
-    });
-  };
-
-  const confirmBulkDelete = async () => {
-    try {
-      const response = await axiosInstance.post('/api/orders/bulk-delete', {
-        orderIds: selectedOrders
-      });
-
-      // Remove all deleted orders from state
-      setOrders(prevOrders => 
-        prevOrders.filter(order => !selectedOrders.includes(order._id))
-      );
-      
-      // Clear selection
-      setSelectedOrders([]);
-      setBulkDeleteMode(false);
-      
-      showSnackbar(response.data.message || `Successfully deleted ${response.data.deletedCount} orders`);
-      setBulkDeleteDialog({ open: false, count: 0 });
-      
-    } catch (error) {
-      console.error("Failed to bulk delete orders:", error);
-      showSnackbar(
-        error.response?.data?.message || 'Failed to delete orders',
-        'error'
-      );
-      setBulkDeleteDialog({ open: false, count: 0 });
-    }
-  };
-
-  // Check if order can be deleted
   const canDeleteOrder = (order) => {
     return ['Pending', 'Cancelled', 'Delivered', 'Refunded'].includes(order.status);
   };
@@ -323,14 +344,9 @@ const PharmaOrder = () => {
   const handleViewOrder = async (order) => {
     try {
       const paymentResponse = await axiosInstance.get(`/api/paymentStatus/${order._id}`);
-      const updatedOrder = {
-        ...order,
-        paymentInfo: paymentResponse.data.paymentInfo,
-        refundInfo: paymentResponse.data.refundInfo
-      };
+      const updatedOrder = { ...order, paymentInfo: paymentResponse.data.paymentInfo, refundInfo: paymentResponse.data.refundInfo };
       setSelectedOrder(updatedOrder);
     } catch (error) {
-      console.error("Error fetching latest payment status:", error);
       setSelectedOrder(order);
     }
     setOpenDialog(true);
@@ -358,69 +374,113 @@ const PharmaOrder = () => {
 
   const filteredOrders = normalizedOrders.filter((order) => {
     const search = filters.search.trim().toLowerCase();
-    const customer = safeString(order.userName || order.email, '').toLowerCase();
+    const customer = getCustomerName(order).toLowerCase();
     const orderId = safeString(order._id, '').toLowerCase();
     const product = safeString(order.firstItem?.name, '').toLowerCase();
 
     const matchesSearch = !search || [customer, orderId, product].some((val) => val.includes(search));
-    const matchesOrderStatus = filters.orderStatus === 'all' || safeString(order.status, '').toLowerCase() === filters.orderStatus;
-    const matchesPayment = filters.paymentStatus === 'all' || safeString(order.paymentInfo?.status, '').toLowerCase() === filters.paymentStatus;
+const matchesOrderStatus =
+  filters.orderStatus === 'all'
+    ? true
+    : filters.orderStatus === 'completed'
+    ? ['delivered', 'confirmed'].includes(
+        safeString(order.status, '').toLowerCase()
+      )
+    : safeString(order.status, '').toLowerCase() === filters.orderStatus;    const matchesPayment = filters.paymentStatus === 'all' || getPaymentStatusValue(order).toLowerCase() === filters.paymentStatus;
     const matchesRefund = filters.refundStatus === 'all' || safeString(order.refundInfo?.status, 'none').toLowerCase() === filters.refundStatus;
 
     const createdAt = order.createdAt ? new Date(order.createdAt) : null;
     const fromOk = !filters.fromDate || (createdAt && createdAt >= new Date(filters.fromDate));
-    const toOk = !filters.toDate || (createdAt && createdAt <= new Date(`${filters.toDate}T23:59:59`));
+    const toOk = !filters.toDate || (createdAt && createdAt <= new Date(filters.toDate));
 
     return matchesSearch && matchesOrderStatus && matchesPayment && matchesRefund && fromOk && toOk;
   });
 
-  const orderStatusCounts = statusOptions.reduce((acc, status) => {
-    acc[status] = filteredOrders.filter(
-      (order) => safeString(order.status, '').toLowerCase() === status.toLowerCase()
-    ).length;
-    return acc;
-  }, {});
+  const paymentStatusFilterOptions = ['Pending', 'Paid', 'COD'];
 
-  const paymentStatusOptions = Array.from(
-    new Set(
-      normalizedOrders
-        .map((order) => safeString(order.paymentInfo?.status, '').toLowerCase())
-        .filter(Boolean)
-    )
-  );
+  const refundStatusOptions = Array.from(new Set(normalizedOrders.map((order) => safeString(order.refundInfo?.status, 'none').toLowerCase()).filter(Boolean)));
 
-  const refundStatusOptions = Array.from(
-    new Set(
-      normalizedOrders
-        .map((order) => safeString(order.refundInfo?.status, 'none').toLowerCase())
-        .filter(Boolean)
-    )
-  );
-
-  const isPaidPayment = (paymentInfo) => {
-    const status = safeString(paymentInfo?.status, '').toLowerCase();
-    return status === 'captured' || status === 'paid';
+  // ==================== CALCULATE REVENUE FOR DIFFERENT FILTER TYPES (BASED ON ALL ORDERS) ====================
+  const calculateRevenue = (ordersList) => {
+    return ordersList.reduce((sum, o) => {
+      // Count revenue for both online captured payments AND COD orders
+      const isPaidOrder = (o.paymentMethod === 'online' && o.paymentInfo?.status === 'captured') || o.paymentMethod === 'cod';
+      if (isPaidOrder) {
+        return sum + (o.totalAmount || 0);
+      }
+      return sum;
+    }, 0);
   };
 
+  // Calculate revenue for different order statuses from ALL orders (not filtered)
+  const allOrdersRevenue = calculateRevenue(normalizedOrders);
+  const pendingOrdersRevenue = calculateRevenue(normalizedOrders.filter(o => o.status === 'Pending'));
+  const completedOrdersRevenue = calculateRevenue(normalizedOrders.filter(o => ['Delivered', 'Confirmed'].includes(o.status)));
+  const cancelledOrdersRevenue = calculateRevenue(normalizedOrders.filter(o => o.status === 'Cancelled'));
+
+  // ==================== STAT CARD CLICK HANDLERS ====================
+  const handleStatCardClick = (filterType) => {
+    // Reset filters first
+    setFilters({
+      search: '',
+      orderStatus: 'all',
+      paymentStatus: 'all',
+      refundStatus: 'all',
+      fromDate: '',
+      toDate: ''
+    });
+    
+    let revenueMessage = '';
+    
+    // Apply the corresponding filter and set revenue message
+    if (filterType === 'total') {
+      setFilters(prev => ({
+        ...prev,
+        orderStatus: 'all' // Show all orders
+      }));
+      revenueMessage = `Total Orders Revenue (Paid + COD): ₹${allOrdersRevenue.toLocaleString('en-IN')}`;
+      showSnackbar(revenueMessage, 'info');
+    } else if (filterType === 'pending') {
+      setFilters(prev => ({
+        ...prev,
+        orderStatus: 'pending'
+      }));
+      revenueMessage = `Pending Orders Revenue (Paid + COD): ₹${pendingOrdersRevenue.toLocaleString('en-IN')}`;
+      showSnackbar(revenueMessage, 'info');
+    } else if (filterType === 'completed') {
+      setFilters(prev => ({
+        ...prev,
+        orderStatus: 'completed'
+      }));
+      revenueMessage = `Completed Orders Revenue (Paid + COD): ₹${completedOrdersRevenue.toLocaleString('en-IN')}`;
+      showSnackbar(revenueMessage, 'info');
+    } else if (filterType === 'cancelled') {
+      setFilters(prev => ({
+        ...prev,
+        orderStatus: 'cancelled'
+      }));
+      revenueMessage = `Cancelled Orders Revenue (Paid + COD): ₹${cancelledOrdersRevenue.toLocaleString('en-IN')}`;
+      showSnackbar(revenueMessage, 'info');
+    }
+    
+    // Reset to first page
+    setPage(0);
+  };
+
+  // ==================== SUMMARY WITH DYNAMIC REVENUE ====================
   const summary = {
     total: filteredOrders.length,
-    pending: filteredOrders.filter((o) => safeString(o.status, '').toLowerCase() === 'pending').length,
-    completed: filteredOrders.filter((o) => ['delivered', 'confirmed'].includes(safeString(o.status, '').toLowerCase())).length,
-    cancelled: filteredOrders.filter((o) => safeString(o.status, '').toLowerCase() === 'cancelled').length,
-    revenue: filteredOrders.reduce((sum, o) => 
-      isPaidPayment(o.paymentInfo) ? sum + safeNumber(o.totalAmount, 0) : sum,
-      0
-    )
-  };
-
-  const statusIconMap = {
-    Pending: <AccessTimeIcon fontSize="small" />,
-    Confirmed: <CheckCircleIcon fontSize="small" />,
-    Processing: <AutorenewIcon fontSize="small" />,
-    Shipped: <LocalShippingIcon fontSize="small" />,
-    Delivered: <DoneAllIcon fontSize="small" />,
-    Cancelled: <CancelIcon fontSize="small" />,
-    Refunded: <ReplayIcon fontSize="small" />
+    pending: filteredOrders.filter((o) => o.status === 'Pending').length,
+    completed: filteredOrders.filter((o) => ['Delivered', 'Confirmed'].includes(o.status)).length,
+    cancelled: filteredOrders.filter((o) => o.status === 'Cancelled').length,
+    revenue: filteredOrders.reduce((sum, o) => {
+      // Count revenue for both online captured payments AND COD orders
+      const isPaidOrder = (o.paymentMethod === 'online' && o.paymentInfo?.status === 'captured') || o.paymentMethod === 'cod';
+      if (isPaidOrder) {
+        return sum + (o.totalAmount || 0);
+      }
+      return sum;
+    }, 0)
   };
 
   const currentOrders = filteredOrders.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
@@ -429,13 +489,7 @@ const PharmaOrder = () => {
     setProcessingCapture(orderId);
     try {
       const response = await axiosInstance.post(`/api/capturePayment/${orderId}`);
-      setOrders(prevOrders =>
-        prevOrders.map(order =>
-          order._id === orderId
-            ? { ...order, paymentInfo: response.data.paymentInfo }
-            : order
-        )
-      );
+      setOrders(prevOrders => prevOrders.map(order => order._id === orderId ? { ...order, paymentInfo: response.data.paymentInfo } : order));
       showSnackbar('Payment captured successfully!');
       fetchData();
     } catch (error) {
@@ -455,16 +509,8 @@ const PharmaOrder = () => {
 
     setUpdatingStatusId(orderId);
     try {
-      const response = await axiosInstance.put(`/api/orders/${orderId}/status`, {
-        status: newStatus,
-      });
-
-      setOrders(prevOrders =>
-        prevOrders.map(order =>
-          order._id === orderId ? { ...order, status: newStatus } : order
-        )
-      );
-
+      await axiosInstance.put(`/api/orders/${orderId}/status`, { status: newStatus });
+      setOrders(prevOrders => prevOrders.map(order => order._id === orderId ? { ...order, status: newStatus } : order));
       showSnackbar(`Order status updated to ${newStatus} successfully!`);
     } catch (error) {
       console.error("Failed to update order status:", error);
@@ -474,37 +520,80 @@ const PharmaOrder = () => {
     }
   };
 
+  // ==================== UPDATED PAYMENT STATUS UPDATE FUNCTION WITH UI FIX ====================
+  const updatePaymentStatus = async (orderId, newPaymentStatus) => {
+    setUpdatingPaymentId(orderId);
+    try {
+      let backendStatus = newPaymentStatus;
+      let displayStatus = newPaymentStatus;
+      
+      if (newPaymentStatus === 'Paid') {
+        backendStatus = 'captured';
+      } else if (newPaymentStatus === 'COD') {
+        backendStatus = 'cod';
+        displayStatus = 'COD';
+      } else if (newPaymentStatus === 'Pending') {
+        backendStatus = 'pending';
+      }
+
+      console.log("Updating payment status:", { orderId, newPaymentStatus, backendStatus, displayStatus });
+      
+      const response = await axiosInstance.put(`/api/orders/${orderId}/payment-status`, { 
+        paymentStatus: backendStatus,
+        displayStatus: displayStatus
+      });
+      
+      console.log("API Response:", response.data);
+      
+      // Update local state immediately with the new values
+      setOrders(prevOrders => prevOrders.map(order => {
+        if (order._id === orderId) {
+          const updatedOrder = {
+            ...order,
+            paymentInfo: {
+              ...order.paymentInfo,
+              status: backendStatus,
+              displayStatus: displayStatus,
+              updatedAt: new Date().toISOString()
+            }
+            // IMPORTANT: Do NOT change paymentMethod - keep it as 'cod' for COD orders
+          };
+          console.log("Updated order in state:", updatedOrder);
+          return updatedOrder;
+        }
+        return order;
+      }));
+      
+      // Refresh data from server to ensure consistency
+      await fetchData();
+      
+      showSnackbar(`Payment status updated to ${newPaymentStatus} successfully!`);
+    } catch (error) {
+      console.error("Failed to update payment status:", error);
+      showSnackbar(error.response?.data?.message || "Failed to update payment status", 'error');
+    } finally {
+      setUpdatingPaymentId(null);
+    }
+  };
+
   const confirmCancelOrder = async () => {
     if (!orderToCancel) return;
-
     setUpdatingStatusId(orderToCancel.orderId);
     try {
       const response = await axiosInstance.put(`/api/orders/${orderToCancel.orderId}/status`, {
         status: orderToCancel.newStatus,
         cancelReason: cancelReason || `${orderToCancel.newStatus} by admin`
       });
-
-      setOrders(prevOrders =>
-        prevOrders.map(order =>
-          order._id === orderToCancel.orderId ? {
-            ...order,
-            status: orderToCancel.newStatus,
-            cancelReason: cancelReason || `${orderToCancel.newStatus} by admin`,
-            cancelledAt: new Date(),
-            refundInfo: response.data.refundDetails || response.data.order?.refundInfo
-          } : order
-        )
-      );
-
-      const message = orderToCancel.newStatus === 'Refunded'
-        ? 'Order refunded successfully!'
-        : response.data.refundProcessed
-          ? `Order cancelled and refund initiated! Refund will be processed within 5-7 business days.`
-          : 'Order cancelled successfully! No refund needed.';
-
+      setOrders(prevOrders => prevOrders.map(order => order._id === orderToCancel.orderId ? {
+        ...order,
+        status: orderToCancel.newStatus,
+        cancelReason: cancelReason || `${orderToCancel.newStatus} by admin`,
+        cancelledAt: new Date(),
+        refundInfo: response.data.refundDetails || response.data.order?.refundInfo
+      } : order));
+      const message = orderToCancel.newStatus === 'Refunded' ? 'Order refunded successfully!' : response.data.refundProcessed ? `Order cancelled and refund initiated!` : 'Order cancelled successfully!';
       showSnackbar(message);
       await fetchData();
-
     } catch (error) {
       console.error(`Failed to ${orderToCancel.newStatus.toLowerCase()} order:`, error);
       showSnackbar(`Failed to ${orderToCancel.newStatus.toLowerCase()} order. Please try again.`, 'error');
@@ -518,587 +607,475 @@ const PharmaOrder = () => {
 
   const formatDate = (dateString) => {
     if (!dateString) return '-';
-    return new Date(dateString).toLocaleString('en-IN', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return new Date(dateString).toLocaleString('en-IN', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  };
+
+  const resetFilters = () => {
+    setFilters({
+      search: '',
+      orderStatus: 'all',
+      paymentStatus: 'all',
+      refundStatus: 'all',
+      fromDate: '',
+      toDate: ''
     });
+    setPage(0);
   };
 
-  const getPaymentStatusLabel = (paymentInfo) => {
-    if (!paymentInfo || typeof paymentInfo !== 'object') return 'Unknown';
-    const status = safeString(paymentInfo.status, 'Unknown');
-    return status === 'captured' ? 'Paid' : status.charAt(0).toUpperCase() + status.slice(1);
-  };
-
-  const getRefundStatusText = (refundInfo) => {
-    if (!refundInfo || typeof refundInfo !== 'object') return 'No Refund';
-    if (!refundInfo.refundId && refundInfo.status === 'none') return 'No Refund';
-    if (!refundInfo.refundId) return 'No Refund';
-
-    const status = safeString(refundInfo.status, '');
-    if (status === 'processed') return 'Refund Processed';
-    if (status === 'failed') return 'Refund Failed';
-    if (status === 'pending') return 'Refund Pending';
-    if (status === 'initiated') return 'Refund Initiated';
-    return `Refund ${status}`;
-  };
-
-  const getEstimatedRefundDays = (refundInfo) => {
-    if (!refundInfo || !refundInfo.estimatedSettlement) return null;
-    const now = new Date();
-    const settlement = new Date(refundInfo.estimatedSettlement);
-    const diffTime = settlement - now;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    if (diffDays <= 0) return 'Should be settled';
-    if (diffDays === 1) return 'Expected tomorrow';
-    return `Expected in ${diffDays} days`;
-  };
-
-  const canCancelOrder = (order) => {
-    return !['Cancelled', 'Delivered', 'Refunded'].includes(order.status);
-  };
-
-  const needsPaymentCapture = (paymentInfo) => {
-    return paymentInfo?.status === 'authorized';
-  };
-
-  // Safe render component that prevents object rendering
-  const SafeTableCell = ({ children, ...props }) => {
-    let safeChildren = children;
-    
-    if (children !== null && children !== undefined) {
-      if (typeof children === 'object' && !Array.isArray(children)) {
-        safeChildren = safeString(children);
-      }
+  // Card data with icons and colors - Updated with click handlers showing revenue
+  const statCards = [
+    {
+      title: 'Total Orders',
+      value: normalizedOrders.length, // Total count from all orders
+      revenue: `₹${allOrdersRevenue.toLocaleString('en-IN')}`,
+      change: '+12% from last month',
+      changeColor: 'success.main',
+      icon: <InventoryIcon sx={{ fontSize: 20, color: '#1976d2' }} />,
+      iconCircleBg: '#e3f2fd',
+      filterType: 'total',
+      clickable: true
+    },
+    {
+      title: 'Pending Orders',
+      value: normalizedOrders.filter(o => o.status === 'Pending').length, // Pending count from all orders
+      revenue: `₹${pendingOrdersRevenue.toLocaleString('en-IN')}`,
+      change: '+8% from last month',
+      changeColor: 'success.main',
+      icon: <PendingActionsIcon sx={{ fontSize: 20, color: '#ed6c02' }} />,
+      iconCircleBg: '#fff3e0',
+      filterType: 'pending',
+      clickable: true
+    },
+    {
+      title: 'Completed Orders',
+      value: normalizedOrders.filter(o => ['Delivered', 'Confirmed'].includes(o.status)).length, // Completed count from all orders
+      revenue: `₹${completedOrdersRevenue.toLocaleString('en-IN')}`,
+      change: '+15% from last month',
+      changeColor: 'success.main',
+      icon: <AssignmentTurnedInIcon sx={{ fontSize: 20, color: '#2e7d32' }} />,
+      iconCircleBg: '#e8f5e9',
+      filterType: 'completed',
+      clickable: true
+    },
+    {
+      title: 'Cancelled Orders',
+      value: normalizedOrders.filter(o => o.status === 'Cancelled').length, // Cancelled count from all orders
+      revenue: `₹${cancelledOrdersRevenue.toLocaleString('en-IN')}`,
+      change: '-5% from last month',
+      changeColor: 'error.main',
+      icon: <RemoveShoppingCartIcon sx={{ fontSize: 20, color: '#c62828' }} />,
+      iconCircleBg: '#ffebee',
+      filterType: 'cancelled',
+      clickable: true
+    },
+    {
+      title: 'Total Revenue',
+      value: `₹${allOrdersRevenue.toLocaleString('en-IN')}`, // Show total revenue (Paid + COD)
+      change: '+18% from last month',
+      changeColor: 'success.main',
+      icon: <AccountBalanceWalletIcon sx={{ fontSize: 20, color: '#9c27b0' }} />,
+      iconCircleBg: '#f3e5f5',
+      filterType: null,
+      clickable: false
     }
-    
-    return <TableCell {...props}>{safeChildren}</TableCell>;
-  };
+  ];
 
   return (
-    <Container maxWidth="xl">
-      <Box sx={{ my: 4 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Typography variant="h4" component="h1" className='fontSize25sml' gutterBottom sx={{ fontWeight: 'bold' }}>
+    <PageContainer>
+      <Container maxWidth="xl" disableGutters>
+        {/* Header */}
+        <HeaderSection>
+          <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '18px', color: '#1e293b' }}>
             Orders Management
           </Typography>
-          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-            {refreshing && <CircularProgress size={20} />}
-            <Button variant="outlined" onClick={fetchData} disabled={loading}>
-              Refresh Orders
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button variant="outlined" size="small" startIcon={<GetAppIcon />} sx={{ fontSize: '11px', textTransform: 'none', py: 0.5 }}>
+              Export
             </Button>
-            
-            {/* Bulk Delete Toggle Button */}
-            <Button
-              variant={bulkDeleteMode ? "contained" : "outlined"}
-              color={bulkDeleteMode ? "error" : "primary"}
-              startIcon={<DeleteSweepIcon />}
-              onClick={() => {
-                setBulkDeleteMode(!bulkDeleteMode);
-                setSelectedOrders([]);
-              }}
-            >
-              {bulkDeleteMode ? 'Exit Bulk Delete' : 'Bulk Delete'}
+            <Button variant="contained" size="small" startIcon={<AddIcon />} sx={{ fontSize: '11px', textTransform: 'none', bgcolor: '#1976d2', py: 0.5 }}>
+              Add Order
             </Button>
-            
-            {/* Bulk Delete Action Button */}
-            {bulkDeleteMode && selectedOrders.length > 0 && (
-              <Button
-                variant="contained"
-                color="error"
-                startIcon={<DeleteIcon />}
-                onClick={handleBulkDeleteClick}
-              >
-                Delete {selectedOrders.length} Selected
-              </Button>
-            )}
           </Box>
-        </Box>
+        </HeaderSection>
 
-        <Box sx={{ mb: 2, display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
-          <Paper
-            onClick={() => setFilters((prev) => ({ ...prev, orderStatus: 'all' }))}
-            sx={{ p: 1.5, minWidth: 170, cursor: 'pointer', border: filters.orderStatus === 'all' ? '2px solid #1976d2' : '1px solid #e0e0e0' }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <ShoppingCartIcon fontSize="small" color="primary" />
-              <Typography variant="caption" color="text.secondary">Total Orders</Typography>
-            </Box>
-            <Typography variant="h6" fontWeight="bold">{summary.total}</Typography>
-          </Paper>
-          <Paper sx={{ p: 1.5, minWidth: 170, border: '1px solid #e0e0e0' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <CurrencyRupeeIcon fontSize="small" color="success" />
-              <Typography variant="caption" color="text.secondary">Total Revenue</Typography>
-            </Box>
-            <Typography variant="h6" fontWeight="bold">₹{summary.revenue.toFixed(2)}</Typography>
-          </Paper>
-          {statusOptions.map((status) => (
-            <Paper
-              key={status}
-              onClick={() => setFilters((prev) => ({ ...prev, orderStatus: status.toLowerCase() }))}
+        {/* Stats Cards - 5 cards in one row with click functionality */}
+        <Box sx={{ display: 'flex', gap: 1.5, mb: 2, flexWrap: 'wrap' }}>
+          {statCards.map((card, index) => (
+            <Box
+              key={index}
+              onClick={() => card.clickable && handleStatCardClick(card.filterType)}
               sx={{
+                flex: 1,
+                minWidth: 0,
+                bgcolor: '#fff',
+                borderRadius: 2,
+                border: '1px solid #e2e8f0',
                 p: 1.5,
-                minWidth: 160,
-                cursor: 'pointer',
-                border: filters.orderStatus === status.toLowerCase() ? '2px solid #1976d2' : '1px solid #e0e0e0'
+                display: 'flex',
+                flexDirection: 'column',
+                transition: 'all 0.2s',
+                cursor: card.clickable ? 'pointer' : 'default',
+                '&:hover': card.clickable ? {
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                  transform: 'translateY(-2px)',
+                  border: '1px solid #1976d2'
+                } : {
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                }
               }}
             >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                {statusIconMap[status]}
-                <Typography variant="caption" color="text.secondary">{status}</Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                <Box
+                  sx={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: '50%',
+                    bgcolor: card.iconCircleBg,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  {card.icon}
+                </Box>
+                <Typography variant="caption" sx={{ fontSize: '11px', fontWeight: 500, color: '#64748b' }}>
+                  {card.title}
+                </Typography>
               </Box>
-              <Typography variant="h6" fontWeight="bold">{orderStatusCounts[status] || 0}</Typography>
-            </Paper>
+              
+              <Typography variant="h5" sx={{ fontWeight: 700, fontSize: '22px', lineHeight: 1.2, mb: 0.5, color: '#1e293b' }}>
+                {card.value}
+              </Typography>
+              
+              {card.revenue && (
+                <Typography variant="caption" sx={{ fontSize: '10px', fontWeight: 500, color: '#2e7d32', mt: 0.5 }}>
+                  Revenue: {card.revenue}
+                </Typography>
+              )}
+              
+              <Typography variant="caption" sx={{ fontSize: '9px', color: card.changeColor, mt: 0.5 }}>
+                {card.change}
+              </Typography>
+            </Box>
           ))}
         </Box>
 
-        <Paper sx={{ p: 2, mb: 2 }}>
-          <Grid container spacing={2}>
-            <Grid item xs={12} md={3}>
-              <TextField fullWidth size="small" label="Search" value={filters.search} onChange={(e) => setFilters({ ...filters, search: e.target.value })} />
-            </Grid>
-            <Grid item xs={12} md={2}>
-              <FormControl fullWidth size="small"><InputLabel>Order Status</InputLabel>
-                <Select label="Order Status" value={filters.orderStatus} onChange={(e) => setFilters({ ...filters, orderStatus: e.target.value })}>
-                  <MenuItem value="all">All</MenuItem>{statusOptions.map((s) => <MenuItem key={s} value={s.toLowerCase()}>{s}</MenuItem>)}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} md={2}>
-              <FormControl fullWidth size="small"><InputLabel>Payment</InputLabel>
-                <Select label="Payment" value={filters.paymentStatus} onChange={(e) => setFilters({ ...filters, paymentStatus: e.target.value })}>
-                  <MenuItem value="all">All</MenuItem>
-                  {paymentStatusOptions.map((status) => (
-                    <MenuItem key={status} value={status}>
-                      {status.charAt(0).toUpperCase() + status.slice(1)}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} md={2}>
-              <FormControl fullWidth size="small"><InputLabel>Refund</InputLabel>
-                <Select label="Refund" value={filters.refundStatus} onChange={(e) => setFilters({ ...filters, refundStatus: e.target.value })}>
-                  <MenuItem value="all">All</MenuItem>
-                  {refundStatusOptions.map((status) => (
-                    <MenuItem key={status} value={status}>
-                      {status.charAt(0).toUpperCase() + status.slice(1)}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} md={1.5}>
-              <TextField fullWidth size="small" type="date" label="From" InputLabelProps={{ shrink: true }} value={filters.fromDate} onChange={(e) => setFilters({ ...filters, fromDate: e.target.value })} />
-            </Grid>
-            <Grid item xs={12} md={1.5}>
-              <TextField fullWidth size="small" type="date" label="To" InputLabelProps={{ shrink: true }} value={filters.toDate} onChange={(e) => setFilters({ ...filters, toDate: e.target.value })} />
-            </Grid>
-            <Grid item xs={12} sx={{ display: 'flex', gap: 1 }}>
-              <Button variant="outlined" onClick={() => setPage(0)}>Filter</Button>
-              <Button variant="text" color="inherit" onClick={() => setFilters({ search: '', orderStatus: 'all', paymentStatus: 'all', refundStatus: 'all', fromDate: '', toDate: '' })}>Reset</Button>
-            </Grid>
-          </Grid>
-        </Paper>
+        {/* Search and Filter Bar */}
+        <FilterBar>
+          <TextField
+            size="small"
+            placeholder="Search by Order ID / Product / Customer"
+            value={filters.search}
+            onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+            sx={{ flex: 2, minWidth: '180px' }}
+            InputProps={{
+              startAdornment: <SearchIcon sx={{ fontSize: '16px', color: '#94a3b8', mr: 0.5 }} />,
+              sx: { fontSize: '12px' }
+            }}
+          />
+          <FormControl size="small" sx={{ minWidth: '100px' }}>
+            <Select
+              value={filters.orderStatus}
+              onChange={(e) => setFilters({ ...filters, orderStatus: e.target.value })}
+              displayEmpty
+              sx={{ fontSize: '12px' }}
+            >
+              <MenuItem value="all">Order Status</MenuItem>
+              {statusOptions.map(s => <MenuItem key={s} value={s.toLowerCase()}>{s}</MenuItem>)}
+            </Select>
+          </FormControl>
+          <FormControl size="small" sx={{ minWidth: '100px' }}>
+            <Select
+              value={filters.paymentStatus}
+              onChange={(e) => setFilters({ ...filters, paymentStatus: e.target.value })}
+              displayEmpty
+              sx={{ fontSize: '12px' }}
+            >
+              <MenuItem value="all">Payment Status</MenuItem>
+              {paymentStatusFilterOptions.map(status => <MenuItem key={status} value={status.toLowerCase()}>{status}</MenuItem>)}
+            </Select>
+          </FormControl>
+          <FormControl size="small" sx={{ minWidth: '100px' }}>
+            <Select
+              value={filters.refundStatus}
+              onChange={(e) => setFilters({ ...filters, refundStatus: e.target.value })}
+              displayEmpty
+              sx={{ fontSize: '12px' }}
+            >
+              <MenuItem value="all">Refund Status</MenuItem>
+              {refundStatusOptions.map(status => <MenuItem key={status} value={status}>{status.charAt(0).toUpperCase() + status.slice(1)}</MenuItem>)}
+            </Select>
+          </FormControl>
+          
+          <TextField
+            type="date"
+            size="small"
+            label="From Date"
+            value={filters.fromDate}
+            onChange={(e) => setFilters({ ...filters, fromDate: e.target.value })}
+            sx={{ minWidth: '120px' }}
+            InputLabelProps={{ shrink: true }}
+            inputProps={{ sx: { fontSize: '12px' } }}
+          />
+          <TextField
+            type="date"
+            size="small"
+            label="To Date"
+            value={filters.toDate}
+            onChange={(e) => setFilters({ ...filters, toDate: e.target.value })}
+            sx={{ minWidth: '120px' }}
+            InputLabelProps={{ shrink: true }}
+            inputProps={{ sx: { fontSize: '12px' } }}
+          />
+          
+          <Button size="small" variant="outlined" onClick={() => setPage(0)} sx={{ fontSize: '11px', textTransform: 'none', px: 1.5 }}>
+            Filter
+          </Button>
+          <Button size="small" color="inherit" onClick={resetFilters} sx={{ fontSize: '11px', textTransform: 'none', px: 1.5 }}>
+            Reset
+          </Button>
+        </FilterBar>
 
+        {/* Active Filter Indicator */}
+        {filters.orderStatus !== 'all' && (
+          <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Chip 
+              label={`Active Filter: ${filters.orderStatus.toUpperCase()} Orders`}
+              size="small"
+              onDelete={() => {
+                setFilters({ ...filters, orderStatus: 'all' });
+                setPage(0);
+              }}
+              color="primary"
+              variant="outlined"
+            />
+            <Typography variant="caption" color="text.secondary">
+              Showing {filters.orderStatus.toUpperCase()} orders
+            </Typography>
+          </Box>
+        )}
+
+        {/* Orders Table */}
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-            <CircularProgress />
+            <CircularProgress size={40} />
           </Box>
         ) : (
           <StyledTableContainer component={Paper}>
-            <Table>
+            <Table size="small">
               <TableHead>
-                <TableRow sx={{ backgroundColor: (theme) => theme.palette.primary.main }}>
-                  {bulkDeleteMode && (
-                    <TableCell sx={{ color: 'white', fontWeight: 'bold', width: '50px' }}>
-                      <Checkbox
-                        checked={selectedOrders.length === currentOrders.length && currentOrders.length > 0}
-                        indeterminate={selectedOrders.length > 0 && selectedOrders.length < currentOrders.length}
-                        onChange={handleSelectAll}
-                        sx={{ color: 'white', '&.Mui-checked': { color: 'white' } }}
-                      />
-                    </TableCell>
-                  )}
-                  <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Order ID</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Customer</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Product</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Price</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Qty</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Order Status</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Payment Status</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Refund Status</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Order Date</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Actions</TableCell>
+                <TableRow sx={{ backgroundColor: '#f8fafc' }}>
+                  <TableCell sx={{ fontWeight: 600, fontSize: '11px', color: '#475569', py: 1.2, px: 1.5 }}>ORDER ID</TableCell>
+                  <TableCell sx={{ fontWeight: 600, fontSize: '11px', color: '#475569', py: 1.2, px: 1.5 }}>CUSTOMER</TableCell>
+                  <TableCell sx={{ fontWeight: 600, fontSize: '11px', color: '#475569', py: 1.2, px: 1.5 }}>PRODUCT</TableCell>
+                  <TableCell sx={{ fontWeight: 600, fontSize: '11px', color: '#475569', py: 1.2, px: 1.5 }}>PRICE</TableCell>
+                  <TableCell sx={{ fontWeight: 600, fontSize: '11px', color: '#475569', py: 1.2, px: 1.5 }}>QTY</TableCell>
+                  <TableCell sx={{ fontWeight: 600, fontSize: '11px', color: '#475569', py: 1.2, px: 1.5 }}>ORDER STATUS</TableCell>
+                  <TableCell sx={{ fontWeight: 600, fontSize: '11px', color: '#475569', py: 1.2, px: 1.5 }}>PAYMENT STATUS</TableCell>
+                  <TableCell sx={{ fontWeight: 600, fontSize: '11px', color: '#475569', py: 1.2, px: 1.5 }}>REFUND STATUS</TableCell>
+                  <TableCell sx={{ fontWeight: 600, fontSize: '11px', color: '#475569', py: 1.2, px: 1.5 }}>ORDER DATE</TableCell>
+                  <TableCell sx={{ fontWeight: 600, fontSize: '11px', color: '#475569', py: 1.2, px: 1.5 }}>ACTIONS</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {currentOrders.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={bulkDeleteMode ? 12 : 11} align="center">
-                      <Typography>No orders found</Typography>
+                    <TableCell colSpan={10} align="center" sx={{ py: 4 }}>
+                      <Typography variant="body2" color="text.secondary">No orders found</Typography>
                     </TableCell>
                   </TableRow>
                 ) : (
                   currentOrders.map((order) => {
                     const items = order.items || [];
-
-                    return items.map((item, index) => (
-                      <TableRow 
-                        key={`${order._id}-${item.productId || index}-${index}`} 
-                        hover
-                        sx={{
-                          backgroundColor: selectedOrders.includes(order._id) ? 'action.selected' : 'inherit',
-                          '&:hover': {
-                            backgroundColor: selectedOrders.includes(order._id) ? 'action.selected' : 'action.hover'
-                          }
-                        }}
-                      >
-                        {bulkDeleteMode && index === 0 && (
-                          <TableCell rowSpan={items.length}>
-                            <Checkbox
-                              checked={selectedOrders.includes(order._id)}
-                              onChange={() => handleSelectOrder(order._id)}
-                              disabled={!canDeleteOrder(order)}
-                            />
-                          </TableCell>
-                        )}
-                        
-                        {index === 0 && (
-                          <TableCell rowSpan={items.length}>{safeString(order._id, '-')}</TableCell>
-                        )}
-
-                        {index === 0 && (
-                          <TableCell rowSpan={items.length}>{safeString(order.userName || order.email, '-')}</TableCell>
-                        )}
-
-                        <SafeTableCell>{getProductName(item)}</SafeTableCell>
-
-                        {index === 0 && (
-                          <TableCell rowSpan={items.length}>
-                            ₹{safeNumber(order.totalAmount, 0).toFixed(2)}
-                          </TableCell>
-                        )}
-
-                        <SafeTableCell>
-                          {safeNumber(item.quantity, 0)}
-                        </SafeTableCell>
-
-                        {index === 0 && (
-                          <TableCell rowSpan={items.length}>
-                            <FormControl fullWidth size="small" sx={{ minWidth: 120 }}>
+                    const firstItem = items[0];
+                    const currentPaymentStatus = getPaymentStatusValue(order);
+                    
+                    return (
+                      <TableRow key={order._id} hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+                        <TableCell sx={{ py: 1, px: 1.5 }}>
+                          <OrderIdCell onClick={() => handleViewOrder(order)}>
+                            {safeString(order._id, '-').slice(-8)}
+                          </OrderIdCell>
+                        </TableCell>
+                        <TableCell sx={{ py: 1, px: 1.5 }}>
+                          <CustomerName>{getCustomerName(order)}</CustomerName>
+                        </TableCell>
+                        <TableCell sx={{ py: 1, px: 1.5 }}>
+                          <ProductCell>
+                            <ProductName>{firstItem ? getProductName(firstItem) : '-'}</ProductName>
+                            {firstItem?.sku && <ProductSku>SKU: {firstItem.sku}</ProductSku>}
+                          </ProductCell>
+                        </TableCell>
+                        <TableCell sx={{ py: 1, px: 1.5 }}>
+                          <PriceCell>₹{safeNumber(order.totalAmount, 0).toFixed(2)}</PriceCell>
+                        </TableCell>
+                        <TableCell sx={{ py: 1, px: 1.5 }}>
+                          <Typography fontSize="11px">{order.totalQty || 1}</Typography>
+                        </TableCell>
+                        <TableCell sx={{ py: 1, px: 1.5 }}>
+                          <FormControl size="small" sx={{ minWidth: '95px' }}>
+                            <Select
+                              value={safeString(order.status, 'Pending')}
+                              disabled={updatingStatusId === order._id}
+                              onChange={(e) => updateOrderStatus(order._id, e.target.value)}
+                              sx={{ fontSize: '11px', height: '28px' }}
+                            >
+                              {statusOptions.map((status) => (
+                                <MenuItem key={status} value={status} sx={{ fontSize: '11px', py: 0.5 }}>
+                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
+                                    <Box sx={{ width: 7, height: 7, borderRadius: '50%', bgcolor: 
+                                      status === 'Delivered' ? '#2e7d32' :
+                                      status === 'Confirmed' ? '#1565c0' :
+                                      status === 'Processing' ? '#ef6c00' :
+                                      status === 'Shipped' ? '#3949ab' :
+                                      status === 'Pending' ? '#f57c00' :
+                                      status === 'Cancelled' ? '#c62828' :
+                                      status === 'Refunded' ? '#7b1fa2' : '#94a3b8'
+                                    }} />
+                                    {status}
+                                  </Box>
+                                </MenuItem>
+                              ))}
+                            </Select>
+                          </FormControl>
+                        </TableCell>
+                        <TableCell sx={{ py: 1, px: 1.5 }}>
+                          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.3 }}>
+                            <FormControl size="small" sx={{ minWidth: '90px' }}>
                               <Select
-                                value={safeString(order.status, 'Pending')}
-                                disabled={updatingStatusId === order._id}
-                                onChange={(e) => updateOrderStatus(order._id, e.target.value)}
-                                sx={{
-                                  backgroundColor: 'white',
-                                  '& .MuiSelect-select': {
-                                    py: 0.5
-                                  }
-                                }}
+                                value={currentPaymentStatus}
+                                disabled={updatingPaymentId === order._id}
+                                onChange={(e) => updatePaymentStatus(order._id, e.target.value)}
+                                sx={{ fontSize: '11px', height: '28px' }}
                               >
-                                {statusOptions.map((status) => (
-                                  <MenuItem key={status} value={status}>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                      <Box
-                                        sx={{
-                                          width: 8,
-                                          height: 8,
-                                          borderRadius: '50%',
-                                          bgcolor: 
-                                            status === 'Delivered' ? 'success.main' :
-                                            status === 'Confirmed' ? 'info.main' :
-                                            status === 'Processing' ? 'warning.main' :
-                                            status === 'Shipped' ? 'primary.main' :
-                                            status === 'Pending' ? 'warning.light' :
-                                            status === 'Cancelled' ? 'error.main' :
-                                            status === 'Refunded' ? 'secondary.main' :
-                                            'grey.500'
-                                        }}
-                                      />
+                                {paymentStatusOptions.map((status) => (
+                                  <MenuItem key={status} value={status} sx={{ fontSize: '11px', py: 0.5 }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
+                                      <Box sx={{ width: 7, height: 7, borderRadius: '50%', bgcolor: 
+                                        status === 'Paid' ? '#2e7d32' :
+                                        status === 'COD' ? '#1565c0' :
+                                        status === 'Pending' ? '#f57c00' : '#94a3b8'
+                                      }} />
                                       {status}
                                     </Box>
                                   </MenuItem>
                                 ))}
                               </Select>
                             </FormControl>
-                            {updatingStatusId === order._id && (
-                              <CircularProgress size={16} sx={{ ml: 1 }} />
+                            {needsPaymentCapture(order.paymentInfo) && (
+                              <Button variant="outlined" color="primary" size="small" disabled={processingCapture === order._id} onClick={() => capturePayment(order._id)} sx={{ fontSize: '8px', padding: '1px 4px', minWidth: 'auto' }}>
+                                {processingCapture === order._id ? '...' : 'Capture'}
+                              </Button>
                             )}
-                          </TableCell>
-                        )}
-
-                        {index === 0 && (
-                          <TableCell rowSpan={items.length}>
-                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                              <StatusChip
-                                label={getPaymentStatusLabel(order.paymentInfo)}
-                                status={safeString(order.paymentInfo?.status, 'unknown').toLowerCase()}
-                                size="small"
-                              />
-                              {needsPaymentCapture(order.paymentInfo) && (
-                                <Button
-                                  variant="outlined"
-                                  color="primary"
-                                  size="small"
-                                  disabled={processingCapture === order._id}
-                                  onClick={() => capturePayment(order._id)}
-                                  sx={{ fontSize: '10px', padding: '2px 8px' }}
-                                >
-                                  {processingCapture === order._id ? 'Capturing...' : 'Capture Payment'}
-                                </Button>
-                              )}
-                            </Box>
-                          </TableCell>
-                        )}
-
-                        {index === 0 && (
-                          <TableCell rowSpan={items.length}>{formatDate(order.createdAt)}</TableCell>
-                        )}
-
-                        {index === 0 && (
-                          <TableCell rowSpan={items.length}>
-                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                              <StatusChip
-                                label={getRefundStatusText(order.refundInfo)}
-                                status={safeString(order.refundInfo?.status, 'none').toLowerCase()}
-                                size="small"
-                              />
-                              {order.refundInfo && order.refundInfo.refundId && getEstimatedRefundDays(order.refundInfo) && (
-                                <Typography variant="caption" color="text.secondary">
-                                  {getEstimatedRefundDays(order.refundInfo)}
-                                </Typography>
-                              )}
-                            </Box>
-                          </TableCell>
-                        )}
-
-                        {index === 0 && (
-                          <TableCell rowSpan={items.length}>
-                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                              <Tooltip title="View Order Details">
-                                <Button
-                                  variant="outlined"
-                                  size="small"
-                                  startIcon={<VisibilityIcon />}
-                                  onClick={() => handleViewOrder(order)}
-                                  sx={{ justifyContent: 'flex-start' }}
-                                >
-                                  View
-                                </Button>
-                              </Tooltip>
-                              
-                              <Tooltip title={canDeleteOrder(order) ? "Delete Order" : "Cannot delete order with current status"}>
-                                <span>
-                                  <Button
-                                    variant="outlined"
-                                    size="small"
-                                    color="error"
-                                    startIcon={<DeleteIcon />}
-                                    onClick={() => handleDeleteClick(order)}
-                                    disabled={!canDeleteOrder(order)}
-                                    sx={{ justifyContent: 'flex-start' }}
-                                  >
-                                    Delete
-                                  </Button>
-                                </span>
-                              </Tooltip>
-                            </Box>
-                          </TableCell>
-                        )}
+                          </Box>
+                        </TableCell>
+                        <TableCell sx={{ py: 1, px: 1.5 }}>
+                          <StatusChip
+                            label={getRefundStatusText(order.refundInfo)}
+                            statuscolor={safeString(order.refundInfo?.status, 'none').toLowerCase()}
+                            size="small"
+                          />
+                        </TableCell>
+                        <TableCell sx={{ py: 1, px: 1.5 }}>
+                          <Typography fontSize="10px">{formatDate(order.createdAt)}</Typography>
+                        </TableCell>
+                        <TableCell sx={{ py: 1, px: 1.5 }}>
+                          <Box sx={{ display: 'flex', gap: 0.5 }}>
+                            <Tooltip title="View Details">
+                              <IconButton size="small" onClick={() => handleViewOrder(order)} sx={{ p: 0.3 }}>
+                                <VisibilityIcon sx={{ fontSize: '14px' }} />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title={canDeleteOrder(order) ? "Delete Order" : "Cannot delete"}>
+                              <span>
+                                <IconButton size="small" color="error" onClick={() => handleDeleteClick(order)} disabled={!canDeleteOrder(order)} sx={{ p: 0.3 }}>
+                                  <DeleteIcon sx={{ fontSize: '14px' }} />
+                                </IconButton>
+                              </span>
+                            </Tooltip>
+                          </Box>
+                        </TableCell>
                       </TableRow>
-                    ));
+                    );
                   })
                 )}
               </TableBody>
             </Table>
             <TablePagination
-              rowsPerPageOptions={[10, 20, 30]}
+              rowsPerPageOptions={[5, 10, 25]}
               component="div"
-              count={orders.length}
+              count={filteredOrders.length}
               rowsPerPage={rowsPerPage}
               page={page}
               onPageChange={handleChangePage}
               onRowsPerPageChange={handleChangeRowsPerPage}
-              sx={{
-                backgroundColor: '#f5f5f5',
-                borderBottomLeftRadius: '8px',
-                borderBottomRightRadius: '8px',
-              }}
+              sx={{ fontSize: '11px', borderTop: '1px solid #e2e8f0' }}
             />
           </StyledTableContainer>
         )}
-      </Box>
+      </Container>
 
-      {/* ========== DELETE SINGLE ORDER DIALOG ========== */}
+      {/* Delete Order Dialog */}
       <Dialog open={deleteDialog.open} onClose={() => setDeleteDialog({ open: false, orderId: null, orderDetails: null })} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ color: 'error.main', display: 'flex', alignItems: 'center', gap: 1 }}>
-          <WarningIcon color="error" />
+        <DialogTitle sx={{ fontSize: '16px', fontWeight: 600, color: '#c62828', pb: 1 }}>
           Delete Order
         </DialogTitle>
         <DialogContent>
-          <Alert severity="error" sx={{ mb: 2 }}>
-            <AlertTitle>Warning: This action cannot be undone!</AlertTitle>
+          <Alert severity="error" sx={{ mb: 2, fontSize: '12px' }}>
+            <AlertTitle sx={{ fontSize: '13px' }}>Warning: This action cannot be undone!</AlertTitle>
             You are about to permanently delete this order.
           </Alert>
-          
           {deleteDialog.orderDetails && (
             <Box sx={{ mt: 2 }}>
-              <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 'bold', mb: 1 }}>
-                Order Details:
-              </Typography>
-              <Paper variant="outlined" sx={{ p: 2, bgcolor: '#fafafa' }}>
+              <Typography variant="body2" fontWeight={600} gutterBottom fontSize="12px">Order Details:</Typography>
+              <Paper variant="outlined" sx={{ p: 1.5, bgcolor: '#fafafa' }}>
                 <Grid container spacing={1}>
-                  <Grid item xs={4}>
-                    <Typography variant="body2" color="text.secondary">Order ID:</Typography>
-                  </Grid>
-                  <Grid item xs={8}>
-                    <Typography variant="body2" sx={{ wordBreak: 'break-all' }}>{safeString(deleteDialog.orderDetails._id)}</Typography>
-                  </Grid>
-                  
-                  <Grid item xs={4}>
-                    <Typography variant="body2" color="text.secondary">Customer:</Typography>
-                  </Grid>
-                  <Grid item xs={8}>
-                    <Typography variant="body2">{safeString(deleteDialog.orderDetails.userName) || safeString(deleteDialog.orderDetails.email)}</Typography>
-                  </Grid>
-                  
-                  <Grid item xs={4}>
-                    <Typography variant="body2" color="text.secondary">Amount:</Typography>
-                  </Grid>
-                  <Grid item xs={8}>
-                    <Typography variant="body2" fontWeight="bold">₹{safeNumber(deleteDialog.orderDetails.totalAmount, 0).toFixed(2)}</Typography>
-                  </Grid>
-                  
-                  <Grid item xs={4}>
-                    <Typography variant="body2" color="text.secondary">Status:</Typography>
-                  </Grid>
-                  <Grid item xs={8}>
-                    <StatusChip
-                      label={safeString(deleteDialog.orderDetails.status)}
-                      status={safeString(deleteDialog.orderDetails.status, '').toLowerCase()}
-                      size="small"
-                    />
-                  </Grid>
-                  
-                  <Grid item xs={4}>
-                    <Typography variant="body2" color="text.secondary">Date:</Typography>
-                  </Grid>
-                  <Grid item xs={8}>
-                    <Typography variant="body2">{formatDate(deleteDialog.orderDetails.createdAt)}</Typography>
-                  </Grid>
-                  
-                  <Grid item xs={4}>
-                    <Typography variant="body2" color="text.secondary">Items:</Typography>
-                  </Grid>
-                  <Grid item xs={8}>
-                    <Typography variant="body2">{deleteDialog.orderDetails.items?.length || 0} items</Typography>
-                  </Grid>
+                  <Grid item xs={4}><Typography variant="caption" color="text.secondary" fontSize="11px">Order ID:</Typography></Grid>
+                  <Grid item xs={8}><Typography variant="caption" fontSize="11px" sx={{ wordBreak: 'break-all' }}>{safeString(deleteDialog.orderDetails._id)}</Typography></Grid>
+                  <Grid item xs={4}><Typography variant="caption" color="text.secondary" fontSize="11px">Customer:</Typography></Grid>
+                  <Grid item xs={8}><Typography variant="caption" fontSize="11px">{getCustomerName(deleteDialog.orderDetails)}</Typography></Grid>
+                  <Grid item xs={4}><Typography variant="caption" color="text.secondary" fontSize="11px">Amount:</Typography></Grid>
+                  <Grid item xs={8}><Typography variant="caption" fontSize="11px" fontWeight="bold">₹{safeNumber(deleteDialog.orderDetails.totalAmount, 0).toFixed(2)}</Typography></Grid>
+                  <Grid item xs={4}><Typography variant="caption" color="text.secondary" fontSize="11px">Status:</Typography></Grid>
+                  <Grid item xs={8}><StatusChip label={safeString(deleteDialog.orderDetails.status)} statuscolor={safeString(deleteDialog.orderDetails.status, '').toLowerCase()} size="small" /></Grid>
                 </Grid>
               </Paper>
             </Box>
           )}
         </DialogContent>
         <DialogActions sx={{ p: 2, pt: 0 }}>
-          <Button 
-            onClick={() => setDeleteDialog({ open: false, orderId: null, orderDetails: null })}
-            variant="outlined"
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={confirmDeleteOrder}
-            color="error"
-            variant="contained"
-            startIcon={<DeleteIcon />}
-          >
-            Permanently Delete
-          </Button>
+          <Button onClick={() => setDeleteDialog({ open: false, orderId: null, orderDetails: null })} variant="outlined" size="small">Cancel</Button>
+          <Button onClick={confirmDeleteOrder} color="error" variant="contained" size="small" startIcon={<DeleteIcon />}>Delete</Button>
         </DialogActions>
       </Dialog>
 
-      {/* ========== BULK DELETE DIALOG ========== */}
-      <Dialog open={bulkDeleteDialog.open} onClose={() => setBulkDeleteDialog({ open: false, count: 0 })} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ color: 'error.main', display: 'flex', alignItems: 'center', gap: 1 }}>
-          <WarningIcon color="error" />
-          Delete Multiple Orders
-        </DialogTitle>
-        <DialogContent>
-          <Alert severity="error" sx={{ mb: 2 }}>
-            <AlertTitle>Warning: This action cannot be undone!</AlertTitle>
-            You are about to permanently delete <strong>{bulkDeleteDialog.count}</strong> order(s) from the database.
-          </Alert>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-            This will remove all selected orders and their associated data permanently.
-            Please ensure you have verified the orders before proceeding.
-          </Typography>
-        </DialogContent>
-        <DialogActions sx={{ p: 2, pt: 0 }}>
-          <Button 
-            onClick={() => setBulkDeleteDialog({ open: false, count: 0 })}
-            variant="outlined"
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={confirmBulkDelete}
-            color="error"
-            variant="contained"
-            startIcon={<DeleteSweepIcon />}
-          >
-            Delete {bulkDeleteDialog.count} Orders
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Cancel/Refund Order Dialog */}
+      {/* Cancel/Refund Dialog */}
       <Dialog open={showCancelDialog} onClose={() => setShowCancelDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ color: orderToCancel?.newStatus === 'Refunded' ? 'secondary.main' : 'warning.main', display: 'flex', alignItems: 'center', gap: 1 }}>
-          <WarningIcon color={orderToCancel?.newStatus === 'Refunded' ? 'secondary' : 'warning'} />
+        <DialogTitle sx={{ fontSize: '16px', fontWeight: 600, color: orderToCancel?.newStatus === 'Refunded' ? '#7b1fa2' : '#c62828' }}>
           {orderToCancel?.newStatus === 'Refunded' ? 'Refund Order' : 'Cancel Order'}
         </DialogTitle>
         <DialogContent>
-          <Alert severity={orderToCancel?.newStatus === 'Refunded' ? 'info' : 'warning'} sx={{ mb: 2 }}>
-            <AlertTitle>
-              {orderToCancel?.newStatus === 'Refunded' ? 'Process Refund' : 'Cancel Order & Process Refund'}
-            </AlertTitle>
-            {orderToCancel?.newStatus === 'Refunded' 
-              ? 'Refunding this order will process a refund if payment has been captured.'
-              : 'Cancelling this order will automatically process a refund if payment has been captured.'}
-            This action cannot be undone.
+          <Alert severity={orderToCancel?.newStatus === 'Refunded' ? 'info' : 'warning'} sx={{ mb: 2, fontSize: '12px' }}>
+            <AlertTitle fontSize="13px">{orderToCancel?.newStatus === 'Refunded' ? 'Process Refund' : 'Cancel Order & Process Refund'}</AlertTitle>
+            {orderToCancel?.newStatus === 'Refunded' ? 'Refunding this order will process a refund if payment has been captured.' : 'Cancelling this order will automatically process a refund if payment has been captured.'}
           </Alert>
           <TextField
             fullWidth
-            label={`${orderToCancel?.newStatus === 'Refunded' ? 'Refund' : 'Cancellation'} Reason (Required)`}
+            label={`${orderToCancel?.newStatus === 'Refunded' ? 'Refund' : 'Cancellation'} Reason`}
             value={cancelReason}
             onChange={(e) => setCancelReason(e.target.value)}
-            placeholder={`Enter reason for ${orderToCancel?.newStatus === 'Refunded' ? 'refund' : 'cancellation'}...`}
             multiline
             rows={3}
-            variant="outlined"
+            size="small"
             required
             error={!cancelReason.trim() && cancelReason !== ''}
-            helperText={!cancelReason.trim() && cancelReason !== '' ? `Reason is required` : ''}
+            helperText={!cancelReason.trim() && cancelReason !== '' ? 'Reason is required' : ''}
           />
         </DialogContent>
-        <DialogActions sx={{ p: 2, pt: 0 }}>
-          <Button onClick={() => setShowCancelDialog(false)} variant="outlined">
-            Cancel
-          </Button>
-          <Button
-            onClick={confirmCancelOrder}
-            color={orderToCancel?.newStatus === 'Refunded' ? 'secondary' : 'error'}
-            variant="contained"
-            disabled={updatingStatusId === orderToCancel?.orderId || !cancelReason.trim()}
-          >
-            {updatingStatusId === orderToCancel?.orderId 
-              ? 'Processing...' 
-              : `Confirm ${orderToCancel?.newStatus === 'Refunded' ? 'Refund' : 'Cancellation'}`}
+        <DialogActions>
+          <Button onClick={() => setShowCancelDialog(false)} variant="outlined" size="small">Cancel</Button>
+          <Button onClick={confirmCancelOrder} color={orderToCancel?.newStatus === 'Refunded' ? 'secondary' : 'error'} variant="contained" size="small" disabled={!cancelReason.trim()}>
+            Confirm {orderToCancel?.newStatus === 'Refunded' ? 'Refund' : 'Cancellation'}
           </Button>
         </DialogActions>
       </Dialog>
@@ -1107,217 +1084,87 @@ const PharmaOrder = () => {
       <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
         {selectedOrder && (
           <>
-            <DialogTitle>
+            <DialogTitle sx={{ pb: 1 }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="h6">Order Details - #{safeString(selectedOrder._id, '').slice(-8)}</Typography>
-                <StatusChip
-                  label={safeString(selectedOrder.status, 'Pending')}
-                  status={safeString(selectedOrder.status, '').toLowerCase()}
-                  size="small"
-                />
+                <Typography variant="h6" sx={{ fontSize: '16px', fontWeight: 600 }}>Order Details - #{safeString(selectedOrder._id, '').slice(-8)}</Typography>
+                <StatusChip label={safeString(selectedOrder.status, 'Pending')} statuscolor={safeString(selectedOrder.status, '').toLowerCase()} size="small" />
               </Box>
             </DialogTitle>
             <DialogContent dividers>
-              <Grid container spacing={3}>
+              <Grid container spacing={2}>
                 <Grid item xs={12} md={6}>
-                  <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold', color: 'primary.main' }}>
-                    Order Information
-                  </Typography>
-                  <Divider sx={{ mb: 2 }} />
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                    <Typography variant="body2">
-                      <strong>Order ID:</strong> {safeString(selectedOrder._id)}
-                    </Typography>
-                    <Typography variant="body2">
-                      <strong>Total Amount:</strong> ₹{safeNumber(selectedOrder.totalAmount, 0).toFixed(2)}
-                    </Typography>
-                    <Typography variant="body2">
-                      <strong>Date:</strong> {formatDate(selectedOrder.createdAt)}
-                    </Typography>
-                    <Typography variant="body2">
-                      <strong>Phone:</strong> {safeString(selectedOrder.phone, 'N/A')}
-                    </Typography>
-                    <Typography variant="body2">
-                      <strong>Address:</strong> {safeString(selectedOrder.address, 'N/A')}
-                    </Typography>
-                    <Typography variant="body2">
-                      <strong>User Email:</strong> {safeString(selectedOrder.userEmail, 'N/A')}
-                    </Typography>
-                    <Typography variant="body2">
-                      <strong>Razorpay Order ID:</strong> {safeString(selectedOrder.razorpayOrderId, 'N/A')}
-                    </Typography>
-                  </Box>
-
+                  <Typography variant="subtitle2" fontWeight={600} gutterBottom fontSize="12px">Order Information</Typography>
+                  <Divider sx={{ mb: 1 }} />
+                  <Stack spacing={0.8}>
+                    <Typography variant="body2" fontSize="12px"><strong>Order ID:</strong> {safeString(selectedOrder._id)}</Typography>
+                    <Typography variant="body2" fontSize="12px"><strong>Customer:</strong> {getCustomerName(selectedOrder)}</Typography>
+                    <Typography variant="body2" fontSize="12px"><strong>Total Amount:</strong> ₹{safeNumber(selectedOrder.totalAmount, 0).toFixed(2)}</Typography>
+                    <Typography variant="body2" fontSize="12px"><strong>Date:</strong> {formatDate(selectedOrder.createdAt)}</Typography>
+                    <Typography variant="body2" fontSize="12px"><strong>Phone:</strong> {safeString(selectedOrder.phone, 'N/A')}</Typography>
+                    <Typography variant="body2" fontSize="12px"><strong>Address:</strong> {safeString(selectedOrder.address, 'N/A')}</Typography>
+                    <Typography variant="body2" fontSize="12px"><strong>User Email:</strong> {safeString(selectedOrder.userEmail, safeString(selectedOrder.email, 'N/A'))}</Typography>
+                    <Typography variant="body2" fontSize="12px"><strong>Payment Method:</strong> {selectedOrder.paymentMethod === 'cod' ? 'Cash on Delivery' : 'Online Payment'}</Typography>
+                  </Stack>
                   {selectedOrder.cancelReason && (
-                    <Box mt={3} p={2} bgcolor="error.light" borderRadius={1}>
-                      <Typography variant="subtitle2" color="error.dark" gutterBottom>
-                        <strong>Cancellation Details:</strong>
-                      </Typography>
-                      <Typography variant="body2">
-                        <strong>Reason:</strong> {safeString(selectedOrder.cancelReason)}
-                      </Typography>
-                      {selectedOrder.cancelledAt && (
-                        <Typography variant="body2">
-                          <strong>Cancelled on:</strong> {formatDate(selectedOrder.cancelledAt)}
-                        </Typography>
-                      )}
-                      {selectedOrder.cancelledBy && (
-                        <Typography variant="body2">
-                          <strong>Cancelled by:</strong> {safeString(selectedOrder.cancelledBy)}
-                        </Typography>
-                      )}
+                    <Box mt={2} p={1.5} bgcolor="#ffebee" borderRadius={1}>
+                      <Typography variant="subtitle2" color="error.dark" fontWeight={600} fontSize="12px">Cancellation Details:</Typography>
+                      <Typography variant="body2" fontSize="12px">Reason: {safeString(selectedOrder.cancelReason)}</Typography>
+                      {selectedOrder.cancelledAt && <Typography variant="body2" fontSize="12px">Cancelled on: {formatDate(selectedOrder.cancelledAt)}</Typography>}
                     </Box>
                   )}
                 </Grid>
-
                 <Grid item xs={12} md={6}>
-                  <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold', color: 'primary.main' }}>
-                    Payment Information
-                  </Typography>
-                  <Divider sx={{ mb: 2 }} />
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                    <Typography variant="body2">
-                      <strong>Payment ID:</strong> {safeString(selectedOrder.paymentInfo?.paymentId, 'N/A')}
-                    </Typography>
-                    <Typography variant="body2">
-                      <strong>Payment Status:</strong>{' '}
-                      <StatusChip
-                        label={getPaymentStatusLabel(selectedOrder.paymentInfo)}
-                        status={safeString(selectedOrder.paymentInfo?.status, 'unknown').toLowerCase()}
-                        size="small"
-                        sx={{ ml: 0.5 }}
-                      />
-                    </Typography>
-                    {selectedOrder.paymentInfo?.method && (
-                      <Typography variant="body2">
-                        <strong>Payment Method:</strong> {safeString(selectedOrder.paymentInfo.method)}
-                      </Typography>
-                    )}
-                    {selectedOrder.paymentInfo?.capturedAt && (
-                      <Typography variant="body2">
-                        <strong>Captured At:</strong> {formatDate(selectedOrder.paymentInfo.capturedAt)}
-                      </Typography>
-                    )}
-                    {selectedOrder.paymentInfo?.updatedAt && (
-                      <Typography variant="body2">
-                        <strong>Last Updated:</strong> {formatDate(selectedOrder.paymentInfo.updatedAt)}
-                      </Typography>
-                    )}
-                  </Box>
-
-                  {selectedOrder.refundInfo && selectedOrder.refundInfo.refundId && (
-                    <Box mt={3} p={2} bgcolor="info.light" borderRadius={1}>
-                      <Typography variant="subtitle2" color="info.dark" gutterBottom>
-                        <strong>Refund Information:</strong>
-                      </Typography>
-                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                        <Typography variant="body2">
-                          <strong>Refund ID:</strong> {safeString(selectedOrder.refundInfo.refundId)}
-                        </Typography>
-                        <Typography variant="body2">
-                          <strong>Amount:</strong> ₹{safeNumber(selectedOrder.refundInfo.amount, 0).toFixed(2)}
-                        </Typography>
-                        <Typography variant="body2">
-                          <strong>Status:</strong>{' '}
-                          <StatusChip
-                            label={getRefundStatusText(selectedOrder.refundInfo)}
-                            status={safeString(selectedOrder.refundInfo.status, 'unknown').toLowerCase()}
-                            size="small"
-                            sx={{ ml: 0.5 }}
-                          />
-                        </Typography>
-                        <Typography variant="body2">
-                          <strong>Reason:</strong> {safeString(selectedOrder.refundInfo.reason, 'N/A')}
-                        </Typography>
-                        {selectedOrder.refundInfo.initiatedAt && (
-                          <Typography variant="body2">
-                            <strong>Initiated:</strong> {formatDate(selectedOrder.refundInfo.initiatedAt)}
-                          </Typography>
-                        )}
-                        {selectedOrder.refundInfo.processedAt && (
-                          <Typography variant="body2">
-                            <strong>Processed:</strong> {formatDate(selectedOrder.refundInfo.processedAt)}
-                          </Typography>
-                        )}
-                        {selectedOrder.refundInfo.estimatedSettlement && (
-                          <Typography variant="body2">
-                            <strong>Expected Settlement:</strong> {formatDate(selectedOrder.refundInfo.estimatedSettlement)}
-                            <Typography variant="caption" display="block" color="text.secondary">
-                              ({getEstimatedRefundDays(selectedOrder.refundInfo)})
-                            </Typography>
-                          </Typography>
-                        )}
-                      </Box>
+                  <Typography variant="subtitle2" fontWeight={600} gutterBottom fontSize="12px">Payment Information</Typography>
+                  <Divider sx={{ mb: 1 }} />
+                  <Stack spacing={0.8}>
+                    <Typography variant="body2" fontSize="12px"><strong>Payment ID:</strong> {safeString(selectedOrder.paymentInfo?.paymentId, 'N/A')}</Typography>
+                    <Typography variant="body2" fontSize="12px"><strong>Payment Status:</strong> <StatusChip label={getPaymentStatusLabel(selectedOrder.paymentInfo)} statuscolor={getPaymentStatusLabel(selectedOrder.paymentInfo).toLowerCase()} size="small" /></Typography>
+                    {selectedOrder.paymentInfo?.method && <Typography variant="body2" fontSize="12px"><strong>Payment Method:</strong> {safeString(selectedOrder.paymentInfo.method)}</Typography>}
+                  </Stack>
+                  {selectedOrder.refundInfo?.refundId && (
+                    <Box mt={2} p={1.5} bgcolor="#e3f2fd" borderRadius={1}>
+                      <Typography variant="subtitle2" color="info.dark" fontWeight={600} fontSize="12px">Refund Information:</Typography>
+                      <Typography variant="body2" fontSize="12px"><strong>Refund ID:</strong> {safeString(selectedOrder.refundInfo.refundId)}</Typography>
+                      <Typography variant="body2" fontSize="12px"><strong>Amount:</strong> ₹{safeNumber(selectedOrder.refundInfo.amount, 0).toFixed(2)}</Typography>
+                      <Typography variant="body2" fontSize="12px"><strong>Status:</strong> {getRefundStatusText(selectedOrder.refundInfo)}</Typography>
                     </Box>
                   )}
                 </Grid>
-
                 <Grid item xs={12}>
-                  <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold', color: 'primary.main', mt: 2 }}>
-                    Order Items
-                  </Typography>
-                  <Divider sx={{ mb: 2 }} />
-                  {selectedOrder.items && selectedOrder.items.map((item, index) => (
-                    <Paper key={index} variant="outlined" sx={{ mb: 2, p: 2 }}>
-                      <Grid container spacing={2}>
-                        <Grid item xs={12} sm={6}>
-                          <Typography variant="body2">
-                            <strong>Product:</strong> {getProductName(item)}
-                          </Typography>
-                          <Typography variant="body2">
-                            <strong>Product ID:</strong> {safeString(item.productId, 'N/A')}
-                          </Typography>
-                          {item.category && (
-                            <Typography variant="body2">
-                              <strong>Category:</strong> {safeString(item.category)}
-                            </Typography>
-                          )}
+                  <Typography variant="subtitle2" fontWeight={600} gutterBottom fontSize="12px">Order Items</Typography>
+                  <Divider sx={{ mb: 1 }} />
+                  {selectedOrder.items?.map((item, idx) => (
+                    <Paper key={idx} variant="outlined" sx={{ mb: 1, p: 1.5 }}>
+                      <Grid container spacing={1}>
+                        <Grid item xs={6}>
+                          <Typography variant="body2" fontSize="12px"><strong>Product:</strong> {getProductName(item)}</Typography>
+                          <Typography variant="body2" fontSize="12px"><strong>SKU:</strong> {safeString(item.sku, 'N/A')}</Typography>
                         </Grid>
-                        <Grid item xs={12} sm={6}>
-                          <Typography variant="body2">
-                            <strong>Price:</strong> ₹{safeNumber(item.price, 0).toFixed(2)}
-                          </Typography>
-                          <Typography variant="body2">
-                            <strong>Quantity:</strong> {safeNumber(item.quantity, 0)}
-                          </Typography>
-                          <Typography variant="body2" fontWeight="bold" color="primary.main">
-                            <strong>Subtotal:</strong> ₹{(safeNumber(item.price, 0) * safeNumber(item.quantity, 0)).toFixed(2)}
-                          </Typography>
+                        <Grid item xs={6}>
+                          <Typography variant="body2" fontSize="12px"><strong>Price:</strong> ₹{safeNumber(item.price, 0).toFixed(2)}</Typography>
+                          <Typography variant="body2" fontSize="12px"><strong>Quantity:</strong> {safeNumber(item.quantity, 0)}</Typography>
+                          <Typography variant="body2" fontSize="12px" fontWeight={600}>Subtotal: ₹{(safeNumber(item.price, 0) * safeNumber(item.quantity, 0)).toFixed(2)}</Typography>
                         </Grid>
-                        {item.description && (
-                          <Grid item xs={12}>
-                            <Typography variant="body2" color="text.secondary">
-                              <strong>Description:</strong> {safeString(item.description)}
-                            </Typography>
-                          </Grid>
-                        )}
                       </Grid>
                     </Paper>
                   ))}
                 </Grid>
               </Grid>
             </DialogContent>
-            <DialogActions sx={{ p: 2 }}>
-              <Button onClick={handleCloseDialog} variant="contained" color="primary">
-                Close
-              </Button>
+            <DialogActions>
+              <Button onClick={handleCloseDialog} variant="contained" size="small">Close</Button>
             </DialogActions>
           </>
         )}
       </Dialog>
 
-      {/* Snackbar for notifications */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      >
+      {/* Snackbar */}
+      <Snackbar open={snackbar.open} autoHideDuration={6000} onClose={handleCloseSnackbar} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
         <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }} elevation={6}>
           {snackbar.message}
         </Alert>
       </Snackbar>
-    </Container>
+    </PageContainer>
   );
 };
 
