@@ -1,0 +1,61 @@
+/* components/OfferBanners/OfferBanners.css */
+.offers-section {
+  padding: 48px 0;
+  background: white;
+}
+
+.offers-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.offer-card {
+  border-radius: 28px;
+  padding: 32px 24px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.offer-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 30px -12px rgba(0, 0, 0, 0.2);
+}
+
+.offer-content h3 {
+  font-size: 24px;
+  font-weight: 800;
+  color: white;
+  margin-bottom: 8px;
+}
+
+.offer-content p {
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 20px;
+}
+
+.offer-cta {
+  background: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 40px;
+  font-weight: 600;
+  color: #1a1a1a;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.offer-cta:hover {
+  transform: translateX(4px);
+  background: #f0f0f0;
+}
+
+@media (max-width: 768px) {
+  .offers-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .offer-content h3 {
+    font-size: 20px;
+  }
+}

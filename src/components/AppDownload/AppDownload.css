@@ -1,0 +1,94 @@
+/* components/AppDownload/AppDownload.css */
+.app-download {
+  padding: 48px 0;
+  background: white;
+}
+
+.app-banner {
+  background: linear-gradient(135deg, #7a0c0c 0%, #a03030 100%);
+  border-radius: 32px;
+  padding: 48px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 32px;
+}
+
+.app-content h2 {
+  font-size: 32px;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 12px;
+}
+
+.app-content p {
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 24px;
+  font-size: 16px;
+}
+
+.app-buttons {
+  display: flex;
+  gap: 16px;
+}
+
+.app-store {
+  background: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 40px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.app-store:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.app-qr .qr-code {
+  background: white;
+  padding: 20px;
+  border-radius: 20px;
+  text-align: center;
+}
+
+.qr-placeholder {
+  width: 120px;
+  height: 120px;
+  background: #f0f0f0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+}
+
+.qr-placeholder span {
+  font-size: 48px;
+}
+
+.qr-placeholder p {
+  font-size: 10px;
+  margin-top: 8px;
+  color: #666;
+}
+
+@media (max-width: 768px) {
+  .app-banner {
+    flex-direction: column;
+    text-align: center;
+    padding: 32px 24px;
+  }
+  .app-content h2 {
+    font-size: 24px;
+  }
+  .app-buttons {
+    justify-content: center;
+  }
+}

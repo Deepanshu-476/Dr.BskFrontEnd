@@ -1,0 +1,50 @@
+/* components/FloatingButtons/FloatingButtons.css */
+.floating-buttons {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 1000;
+}
+
+.floating-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 50px;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.floating-btn:hover {
+  transform: translateX(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.btn-icon {
+  font-size: 20px;
+}
+
+.btn-label {
+  font-size: 14px;
+}
+
+@media (max-width: 768px) {
+  .floating-btn {
+    padding: 10px 16px;
+  }
+  .btn-label {
+    display: none;
+  }
+  .floating-btn {
+    border-radius: 50%;
+    padding: 14px;
+  }
+}
