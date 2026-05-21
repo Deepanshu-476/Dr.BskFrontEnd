@@ -123,7 +123,7 @@ const PharmaDashboard = () => {
     const codOrders = orders.filter(o => o.paymentMethod === 'cod').length;
     const onlineOrders = orders.filter(o => o.paymentMethod === 'online').length;
     
-    // Revenue calculations
+    // Today's Revenue (from filtered orders)
     const todaysRevenue = orders
       .filter(o => {
         const today = new Date().toDateString();
@@ -131,15 +131,29 @@ const PharmaDashboard = () => {
       })
       .reduce((sum, o) => sum + (o.totalAmount || 0), 0);
     
-    const monthlyRevenue = orders
-      .filter(o => {
-        const now = new Date();
-        const orderDate = new Date(o.createdAt);
-        return orderDate.getMonth() === now.getMonth() && 
-               orderDate.getFullYear() === now.getFullYear() &&
-               o.status === 'Delivered';
-      })
-      .reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+    // Monthly Revenue - Show revenue for the selected month
+    let monthlyRevenue = 0;
+    if (selectedMonth === 'all') {
+      // If all months selected, show total revenue of current month
+      const now = new Date();
+      monthlyRevenue = orders
+        .filter(o => {
+          const orderDate = new Date(o.createdAt);
+          return orderDate.getMonth() === now.getMonth() && 
+                 orderDate.getFullYear() === now.getFullYear() &&
+                 o.status === 'Delivered';
+        })
+        .reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+    } else {
+      // If specific month selected, show revenue for that month
+      monthlyRevenue = orders
+        .filter(o => {
+          const orderDate = new Date(o.createdAt);
+          const orderMonth = `${orderDate.getFullYear()}-${String(orderDate.getMonth() + 1).padStart(2, '0')}`;
+          return orderMonth === selectedMonth && o.status === 'Delivered';
+        })
+        .reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+    }
     
     // Refund requests (orders with refund status)
     const refundRequests = orders.filter(o => o.refundInfo?.status === 'pending' || o.refundInfo?.status === 'processing').length;
@@ -157,7 +171,7 @@ const PharmaDashboard = () => {
       totalUsers: usersData.length,
       totalProducts: totalProducts.total || 0
     };
-  }, [filteredOrders, usersData, totalProducts.total]);
+  }, [filteredOrders, usersData, totalProducts.total, selectedMonth]);
 
   // Recent Orders (last 5) from filtered orders
   const recentOrders = useMemo(() => {
@@ -315,6 +329,13 @@ const PharmaDashboard = () => {
     return month ? month.label : 'All Months';
   };
 
+  // Get revenue period label
+  const getRevenuePeriodLabel = () => {
+    if (selectedMonth === 'all') return 'Current Month';
+    const month = availableMonths.find(m => m.value === selectedMonth);
+    return month ? month.label : 'Selected Month';
+  };
+
   if (loading) return <CustomLoader />;
 
   return (
@@ -359,11 +380,23 @@ const PharmaDashboard = () => {
           <DashboardStatCard title="Total Orders" value={dashboardMetrics.totalOrders} icon="🛒" trend={true} trendValue={-3} color="#ef4444" />
           <DashboardStatCard title="Pending Orders" value={dashboardMetrics.pendingOrders} icon="⏳" trend={true} trendValue={8} color="#f59e0b" />
           <DashboardStatCard title="Today's Revenue" value={`₹${dashboardMetrics.todaysRevenue.toLocaleString('en-IN')}`} icon="💰" trend={true} trendValue={15} color="#8b5cf6" />
-          <DashboardStatCard title="Monthly Revenue" value={`₹${dashboardMetrics.monthlyRevenue.toLocaleString('en-IN')}`} icon="📈" trend={true} trendValue={12} color="#06b6d4" />
+          <DashboardStatCard 
+            title="Monthly Revenue" 
+            value={`₹${dashboardMetrics.monthlyRevenue.toLocaleString('en-IN')}`} 
+            icon="📈" 
+            trend={true} 
+            trendValue={12} 
+            color="#06b6d4" 
+          />
           <DashboardStatCard title="Delivered Orders" value={dashboardMetrics.deliveredOrders} icon="✅" trend={true} trendValue={5} color="#10b981" />
           <DashboardStatCard title="Cancelled Orders" value={dashboardMetrics.cancelledOrders} icon="❌" trend={true} trendValue={-2} color="#ef4444" />
           <DashboardStatCard title="COD Orders" value={dashboardMetrics.codOrders} icon="💵" trend={true} trendValue={3} color="#8b5cf6" />
           <DashboardStatCard title="Refund Requests" value={dashboardMetrics.refundRequests} icon="🔄" trend={true} trendValue={2} color="#f59e0b" />
+        </div>
+
+        {/* Add a subtitle for Monthly Revenue card to show which month's revenue is displayed */}
+        <div className="dashboard-revenue-info" style={{ textAlign: 'right', marginTop: '-20px', marginBottom: '20px', fontSize: '12px', color: '#64748b' }}>
+          <span>📊 Monthly Revenue showing: <strong>{getRevenuePeriodLabel()}</strong> {selectedMonth !== 'all' && 'revenue'}</span>
         </div>
 
         {/* Main Content Grid */}
@@ -541,7 +574,7 @@ const PharmaDashboard = () => {
           <div className="dashboard-recent-orders-card">
             <div className="dashboard-card-header">
               <h3 className="dashboard-card-title">Recent Orders</h3>
-          </div>
+            </div>
             <div className="dashboard-table-wrapper-modern">
               {recentOrders.length > 0 ? (
                 <table className="dashboard-orders-table">
@@ -622,7 +655,6 @@ const PharmaDashboard = () => {
                     </span>
                     <span className="dashboard-alert-text">{alert.text}</span>
                   </div>
-                  
                 </div>
               ))}
             </div>
