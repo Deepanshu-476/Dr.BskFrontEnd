@@ -43,6 +43,11 @@ import PendingActionsIcon from '@mui/icons-material/PendingActions';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import RemoveShoppingCartIcon from '@mui/icons-material/RemoveShoppingCart';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import CancelIcon from '@mui/icons-material/Cancel';
+import DoneAllIcon from '@mui/icons-material/DoneAll';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import CurrencyRupeeIcon from '@mui/icons-material/CurrencyRupee';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 
 // Styled components
 const PageContainer = styled(Box)(({ theme }) => ({
@@ -436,6 +441,17 @@ const PharmaOrder = () => {
     )
   };
 
+  const getRevenueByStatus = (statusBucket) => normalizedOrders.reduce((sum, order) => {
+    const matchesBucket = statusBucket === 'all' || getOrderStatusBucket(order) === statusBucket;
+    if (!matchesBucket || !isRevenueEligiblePayment(order.paymentInfo)) return sum;
+    return sum + safeNumber(order.totalAmount, 0);
+  }, 0);
+
+  const allOrdersRevenue = getRevenueByStatus('all');
+  const pendingOrdersRevenue = getRevenueByStatus('pending');
+  const completedOrdersRevenue = getRevenueByStatus('completed');
+  const cancelledOrdersRevenue = getRevenueByStatus('cancelled');
+
   const currentOrders = filteredOrders.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
   const capturePayment = async (orderId) => {
@@ -733,7 +749,7 @@ const PharmaOrder = () => {
               sx={{ fontSize: '12px' }}
             >
               <MenuItem value="all">Payment Status</MenuItem>
-              {paymentStatusFilterOptions.map(status => <MenuItem key={status} value={status.toLowerCase()}>{status}</MenuItem>)}
+              {paymentStatusOptions.map(status => <MenuItem key={status} value={status.toLowerCase()}>{status}</MenuItem>)}
             </Select>
           </FormControl>
           <FormControl size="small" sx={{ minWidth: '100px' }}>
