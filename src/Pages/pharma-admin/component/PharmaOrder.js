@@ -372,6 +372,14 @@ const PharmaOrder = () => {
     totalQty: (order.items || []).reduce((sum, item) => sum + safeNumber(item.quantity, 0), 0)
   }));
 
+  const getOrderStatusBucket = (order) => {
+    const status = safeString(order.status, '').toLowerCase();
+    if (status === 'pending') return 'pending';
+    if (status === 'cancelled') return 'cancelled';
+    if (['completed', 'delivered', 'confirmed'].includes(status)) return 'completed';
+    return 'other';
+  };
+
   const filteredOrders = normalizedOrders.filter((order) => {
     const search = filters.search.trim().toLowerCase();
     const customer = getCustomerName(order).toLowerCase();
@@ -379,14 +387,8 @@ const PharmaOrder = () => {
     const product = safeString(order.firstItem?.name, '').toLowerCase();
 
     const matchesSearch = !search || [customer, orderId, product].some((val) => val.includes(search));
-const matchesOrderStatus =
-  filters.orderStatus === 'all'
-    ? true
-    : filters.orderStatus === 'completed'
-    ? ['delivered', 'confirmed'].includes(
-        safeString(order.status, '').toLowerCase()
-      )
-    : safeString(order.status, '').toLowerCase() === filters.orderStatus;    const matchesPayment = filters.paymentStatus === 'all' || getPaymentStatusValue(order).toLowerCase() === filters.paymentStatus;
+    const matchesOrderStatus = filters.orderStatus === 'all' || getOrderStatusBucket(order) === filters.orderStatus || safeString(order.status, '').toLowerCase() === filters.orderStatus;
+    const matchesPayment = filters.paymentStatus === 'all' || safeString(order.paymentInfo?.status, '').toLowerCase() === filters.paymentStatus;
     const matchesRefund = filters.refundStatus === 'all' || safeString(order.refundInfo?.status, 'none').toLowerCase() === filters.refundStatus;
 
     const createdAt = order.createdAt ? new Date(order.createdAt) : null;
@@ -396,91 +398,42 @@ const matchesOrderStatus =
     return matchesSearch && matchesOrderStatus && matchesPayment && matchesRefund && fromOk && toOk;
   });
 
-  const paymentStatusFilterOptions = ['Pending', 'Paid', 'COD'];
+  const paymentStatusOptions = Array.from(
+    new Set(
+      normalizedOrders
+        .map((order) => safeString(order.paymentInfo?.status, '').toLowerCase())
+        .filter(Boolean)
+    )
+  );
 
-  const refundStatusOptions = Array.from(new Set(normalizedOrders.map((order) => safeString(order.refundInfo?.status, 'none').toLowerCase()).filter(Boolean)));
+  const refundStatusOptions = Array.from(
+    new Set(
+      normalizedOrders
+        .map((order) => safeString(order.refundInfo?.status, 'none').toLowerCase())
+        .filter(Boolean)
+    )
+  );
 
-  // ==================== CALCULATE REVENUE FOR DIFFERENT FILTER TYPES (BASED ON ALL ORDERS) ====================
-  const calculateRevenue = (ordersList) => {
-    return ordersList.reduce((sum, o) => {
-      // Count revenue for both online captured payments AND COD orders
-      const isPaidOrder = (o.paymentMethod === 'online' && o.paymentInfo?.status === 'captured') || o.paymentMethod === 'cod';
-      if (isPaidOrder) {
-        return sum + (o.totalAmount || 0);
-      }
-      return sum;
-    }, 0);
+  const isRevenueEligiblePayment = (paymentInfo) => {
+    const status = safeString(paymentInfo?.status, '').toLowerCase();
+    return ['cod', 'paid', 'captured'].includes(status);
   };
 
-  // Calculate revenue for different order statuses from ALL orders (not filtered)
-  const allOrdersRevenue = calculateRevenue(normalizedOrders);
-  const pendingOrdersRevenue = calculateRevenue(normalizedOrders.filter(o => o.status === 'Pending'));
-  const completedOrdersRevenue = calculateRevenue(normalizedOrders.filter(o => ['Delivered', 'Confirmed'].includes(o.status)));
-  const cancelledOrdersRevenue = calculateRevenue(normalizedOrders.filter(o => o.status === 'Cancelled'));
+  const statusCardFilter = filters.orderStatus;
+  const revenueOrders = filteredOrders.filter((order) => {
+    if (statusCardFilter === 'all') return true;
+    return getOrderStatusBucket(order) === statusCardFilter;
+  });
 
-  // ==================== STAT CARD CLICK HANDLERS ====================
-  const handleStatCardClick = (filterType) => {
-    // Reset filters first
-    setFilters({
-      search: '',
-      orderStatus: 'all',
-      paymentStatus: 'all',
-      refundStatus: 'all',
-      fromDate: '',
-      toDate: ''
-    });
-    
-    let revenueMessage = '';
-    
-    // Apply the corresponding filter and set revenue message
-    if (filterType === 'total') {
-      setFilters(prev => ({
-        ...prev,
-        orderStatus: 'all' // Show all orders
-      }));
-      revenueMessage = `Total Orders Revenue (Paid + COD): ₹${allOrdersRevenue.toLocaleString('en-IN')}`;
-      showSnackbar(revenueMessage, 'info');
-    } else if (filterType === 'pending') {
-      setFilters(prev => ({
-        ...prev,
-        orderStatus: 'pending'
-      }));
-      revenueMessage = `Pending Orders Revenue (Paid + COD): ₹${pendingOrdersRevenue.toLocaleString('en-IN')}`;
-      showSnackbar(revenueMessage, 'info');
-    } else if (filterType === 'completed') {
-      setFilters(prev => ({
-        ...prev,
-        orderStatus: 'completed'
-      }));
-      revenueMessage = `Completed Orders Revenue (Paid + COD): ₹${completedOrdersRevenue.toLocaleString('en-IN')}`;
-      showSnackbar(revenueMessage, 'info');
-    } else if (filterType === 'cancelled') {
-      setFilters(prev => ({
-        ...prev,
-        orderStatus: 'cancelled'
-      }));
-      revenueMessage = `Cancelled Orders Revenue (Paid + COD): ₹${cancelledOrdersRevenue.toLocaleString('en-IN')}`;
-      showSnackbar(revenueMessage, 'info');
-    }
-    
-    // Reset to first page
-    setPage(0);
-  };
-
-  // ==================== SUMMARY WITH DYNAMIC REVENUE ====================
   const summary = {
     total: filteredOrders.length,
-    pending: filteredOrders.filter((o) => o.status === 'Pending').length,
-    completed: filteredOrders.filter((o) => ['Delivered', 'Confirmed'].includes(o.status)).length,
-    cancelled: filteredOrders.filter((o) => o.status === 'Cancelled').length,
-    revenue: filteredOrders.reduce((sum, o) => {
-      // Count revenue for both online captured payments AND COD orders
-      const isPaidOrder = (o.paymentMethod === 'online' && o.paymentInfo?.status === 'captured') || o.paymentMethod === 'cod';
-      if (isPaidOrder) {
-        return sum + (o.totalAmount || 0);
-      }
-      return sum;
-    }, 0)
+    pending: filteredOrders.filter((o) => getOrderStatusBucket(o) === 'pending').length,
+    completed: filteredOrders.filter((o) => getOrderStatusBucket(o) === 'completed').length,
+    cancelled: filteredOrders.filter((o) => getOrderStatusBucket(o) === 'cancelled').length,
+    revenue: revenueOrders.reduce((sum, o) => 
+      isRevenueEligiblePayment(o.paymentInfo) ? sum + safeNumber(o.totalAmount, 0) : sum,
+      0
+    )
   };
 
   const currentOrders = filteredOrders.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
@@ -698,6 +651,7 @@ const matchesOrderStatus =
           </Box>
         </HeaderSection>
 
+<<<<<<< HEAD
         {/* Stats Cards - 5 cards in one row with click functionality */}
         <Box sx={{ display: 'flex', gap: 1.5, mb: 2, flexWrap: 'wrap' }}>
           {statCards.map((card, index) => (
@@ -758,6 +712,56 @@ const matchesOrderStatus =
               </Typography>
             </Box>
           ))}
+=======
+        <Box sx={{ mb: 2, display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
+          <Paper
+            onClick={() => setFilters((prev) => ({ ...prev, orderStatus: 'all' }))}
+            sx={{ p: 1.5, minWidth: 170, cursor: 'pointer', border: filters.orderStatus === 'all' ? '2px solid #1976d2' : '1px solid #e0e0e0' }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <ShoppingCartIcon fontSize="small" color="primary" />
+              <Typography variant="caption" color="text.secondary">Total Orders</Typography>
+            </Box>
+            <Typography variant="h6" fontWeight="bold">{summary.total}</Typography>
+          </Paper>
+          <Paper sx={{ p: 1.5, minWidth: 170, border: '1px solid #e0e0e0' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <CurrencyRupeeIcon fontSize="small" color="success" />
+              <Typography variant="caption" color="text.secondary">Total Revenue</Typography>
+            </Box>
+            <Typography variant="h6" fontWeight="bold">₹{summary.revenue.toFixed(2)}</Typography>
+          </Paper>
+          <Paper
+            onClick={() => setFilters((prev) => ({ ...prev, orderStatus: 'pending' }))}
+            sx={{ p: 1.5, minWidth: 160, cursor: 'pointer', border: filters.orderStatus === 'pending' ? '2px solid #1976d2' : '1px solid #e0e0e0' }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <AccessTimeIcon fontSize="small" />
+              <Typography variant="caption" color="text.secondary">Pending Orders</Typography>
+            </Box>
+            <Typography variant="h6" fontWeight="bold">{summary.pending}</Typography>
+          </Paper>
+          <Paper
+            onClick={() => setFilters((prev) => ({ ...prev, orderStatus: 'completed' }))}
+            sx={{ p: 1.5, minWidth: 160, cursor: 'pointer', border: filters.orderStatus === 'completed' ? '2px solid #1976d2' : '1px solid #e0e0e0' }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <DoneAllIcon fontSize="small" />
+              <Typography variant="caption" color="text.secondary">Completed Orders</Typography>
+            </Box>
+            <Typography variant="h6" fontWeight="bold">{summary.completed}</Typography>
+          </Paper>
+          <Paper
+            onClick={() => setFilters((prev) => ({ ...prev, orderStatus: 'cancelled' }))}
+            sx={{ p: 1.5, minWidth: 160, cursor: 'pointer', border: filters.orderStatus === 'cancelled' ? '2px solid #1976d2' : '1px solid #e0e0e0' }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <CancelIcon fontSize="small" />
+              <Typography variant="caption" color="text.secondary">Cancelled Orders</Typography>
+            </Box>
+            <Typography variant="h6" fontWeight="bold">{summary.cancelled}</Typography>
+          </Paper>
+>>>>>>> a01e497d14b758e13797e1cd8ff9c9d4273bc816
         </Box>
 
         {/* Search and Filter Bar */}
