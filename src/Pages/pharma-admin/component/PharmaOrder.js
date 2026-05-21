@@ -356,6 +356,14 @@ const PharmaOrder = () => {
     totalQty: (order.items || []).reduce((sum, item) => sum + safeNumber(item.quantity, 0), 0)
   }));
 
+  const getOrderStatusBucket = (order) => {
+    const status = safeString(order.status, '').toLowerCase();
+    if (status === 'pending') return 'pending';
+    if (status === 'cancelled') return 'cancelled';
+    if (['completed', 'delivered', 'confirmed'].includes(status)) return 'completed';
+    return 'other';
+  };
+
   const filteredOrders = normalizedOrders.filter((order) => {
     const search = filters.search.trim().toLowerCase();
     const customer = safeString(order.userName || order.email, '').toLowerCase();
@@ -363,7 +371,7 @@ const PharmaOrder = () => {
     const product = safeString(order.firstItem?.name, '').toLowerCase();
 
     const matchesSearch = !search || [customer, orderId, product].some((val) => val.includes(search));
-    const matchesOrderStatus = filters.orderStatus === 'all' || safeString(order.status, '').toLowerCase() === filters.orderStatus;
+    const matchesOrderStatus = filters.orderStatus === 'all' || getOrderStatusBucket(order) === filters.orderStatus || safeString(order.status, '').toLowerCase() === filters.orderStatus;
     const matchesPayment = filters.paymentStatus === 'all' || safeString(order.paymentInfo?.status, '').toLowerCase() === filters.paymentStatus;
     const matchesRefund = filters.refundStatus === 'all' || safeString(order.refundInfo?.status, 'none').toLowerCase() === filters.refundStatus;
 
@@ -373,13 +381,6 @@ const PharmaOrder = () => {
 
     return matchesSearch && matchesOrderStatus && matchesPayment && matchesRefund && fromOk && toOk;
   });
-
-  const orderStatusCounts = statusOptions.reduce((acc, status) => {
-    acc[status] = filteredOrders.filter(
-      (order) => safeString(order.status, '').toLowerCase() === status.toLowerCase()
-    ).length;
-    return acc;
-  }, {});
 
   const paymentStatusOptions = Array.from(
     new Set(
@@ -397,30 +398,26 @@ const PharmaOrder = () => {
     )
   );
 
-  const isPaidPayment = (paymentInfo) => {
+  const isRevenueEligiblePayment = (paymentInfo) => {
     const status = safeString(paymentInfo?.status, '').toLowerCase();
-    return status === 'captured' || status === 'paid';
+    return ['cod', 'paid', 'captured'].includes(status);
   };
+
+  const statusCardFilter = filters.orderStatus;
+  const revenueOrders = filteredOrders.filter((order) => {
+    if (statusCardFilter === 'all') return true;
+    return getOrderStatusBucket(order) === statusCardFilter;
+  });
 
   const summary = {
     total: filteredOrders.length,
-    pending: filteredOrders.filter((o) => safeString(o.status, '').toLowerCase() === 'pending').length,
-    completed: filteredOrders.filter((o) => ['delivered', 'confirmed'].includes(safeString(o.status, '').toLowerCase())).length,
-    cancelled: filteredOrders.filter((o) => safeString(o.status, '').toLowerCase() === 'cancelled').length,
-    revenue: filteredOrders.reduce((sum, o) => 
-      isPaidPayment(o.paymentInfo) ? sum + safeNumber(o.totalAmount, 0) : sum,
+    pending: filteredOrders.filter((o) => getOrderStatusBucket(o) === 'pending').length,
+    completed: filteredOrders.filter((o) => getOrderStatusBucket(o) === 'completed').length,
+    cancelled: filteredOrders.filter((o) => getOrderStatusBucket(o) === 'cancelled').length,
+    revenue: revenueOrders.reduce((sum, o) => 
+      isRevenueEligiblePayment(o.paymentInfo) ? sum + safeNumber(o.totalAmount, 0) : sum,
       0
     )
-  };
-
-  const statusIconMap = {
-    Pending: <AccessTimeIcon fontSize="small" />,
-    Confirmed: <CheckCircleIcon fontSize="small" />,
-    Processing: <AutorenewIcon fontSize="small" />,
-    Shipped: <LocalShippingIcon fontSize="small" />,
-    Delivered: <DoneAllIcon fontSize="small" />,
-    Cancelled: <CancelIcon fontSize="small" />,
-    Refunded: <ReplayIcon fontSize="small" />
   };
 
   const currentOrders = filteredOrders.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
@@ -636,24 +633,36 @@ const PharmaOrder = () => {
             </Box>
             <Typography variant="h6" fontWeight="bold">₹{summary.revenue.toFixed(2)}</Typography>
           </Paper>
-          {statusOptions.map((status) => (
-            <Paper
-              key={status}
-              onClick={() => setFilters((prev) => ({ ...prev, orderStatus: status.toLowerCase() }))}
-              sx={{
-                p: 1.5,
-                minWidth: 160,
-                cursor: 'pointer',
-                border: filters.orderStatus === status.toLowerCase() ? '2px solid #1976d2' : '1px solid #e0e0e0'
-              }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                {statusIconMap[status]}
-                <Typography variant="caption" color="text.secondary">{status}</Typography>
-              </Box>
-              <Typography variant="h6" fontWeight="bold">{orderStatusCounts[status] || 0}</Typography>
-            </Paper>
-          ))}
+          <Paper
+            onClick={() => setFilters((prev) => ({ ...prev, orderStatus: 'pending' }))}
+            sx={{ p: 1.5, minWidth: 160, cursor: 'pointer', border: filters.orderStatus === 'pending' ? '2px solid #1976d2' : '1px solid #e0e0e0' }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <AccessTimeIcon fontSize="small" />
+              <Typography variant="caption" color="text.secondary">Pending Orders</Typography>
+            </Box>
+            <Typography variant="h6" fontWeight="bold">{summary.pending}</Typography>
+          </Paper>
+          <Paper
+            onClick={() => setFilters((prev) => ({ ...prev, orderStatus: 'completed' }))}
+            sx={{ p: 1.5, minWidth: 160, cursor: 'pointer', border: filters.orderStatus === 'completed' ? '2px solid #1976d2' : '1px solid #e0e0e0' }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <DoneAllIcon fontSize="small" />
+              <Typography variant="caption" color="text.secondary">Completed Orders</Typography>
+            </Box>
+            <Typography variant="h6" fontWeight="bold">{summary.completed}</Typography>
+          </Paper>
+          <Paper
+            onClick={() => setFilters((prev) => ({ ...prev, orderStatus: 'cancelled' }))}
+            sx={{ p: 1.5, minWidth: 160, cursor: 'pointer', border: filters.orderStatus === 'cancelled' ? '2px solid #1976d2' : '1px solid #e0e0e0' }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <CancelIcon fontSize="small" />
+              <Typography variant="caption" color="text.secondary">Cancelled Orders</Typography>
+            </Box>
+            <Typography variant="h6" fontWeight="bold">{summary.cancelled}</Typography>
+          </Paper>
         </Box>
 
         <Paper sx={{ p: 2, mb: 2 }}>
