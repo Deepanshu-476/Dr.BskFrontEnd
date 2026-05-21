@@ -43,11 +43,6 @@ import PendingActionsIcon from '@mui/icons-material/PendingActions';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import RemoveShoppingCartIcon from '@mui/icons-material/RemoveShoppingCart';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
-import CancelIcon from '@mui/icons-material/Cancel';
-import DoneAllIcon from '@mui/icons-material/DoneAll';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import CurrencyRupeeIcon from '@mui/icons-material/CurrencyRupee';
-import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 
 // Styled components
 const PageContainer = styled(Box)(({ theme }) => ({
@@ -377,14 +372,6 @@ const PharmaOrder = () => {
     totalQty: (order.items || []).reduce((sum, item) => sum + safeNumber(item.quantity, 0), 0)
   }));
 
-  const getOrderStatusBucket = (order) => {
-    const status = safeString(order.status, '').toLowerCase();
-    if (status === 'pending') return 'pending';
-    if (status === 'cancelled') return 'cancelled';
-    if (['completed', 'delivered', 'confirmed'].includes(status)) return 'completed';
-    return 'other';
-  };
-
   const filteredOrders = normalizedOrders.filter((order) => {
     const search = filters.search.trim().toLowerCase();
     const customer = getCustomerName(order).toLowerCase();
@@ -392,8 +379,8 @@ const PharmaOrder = () => {
     const product = safeString(order.firstItem?.name, '').toLowerCase();
 
     const matchesSearch = !search || [customer, orderId, product].some((val) => val.includes(search));
-    const matchesOrderStatus = filters.orderStatus === 'all' || getOrderStatusBucket(order) === filters.orderStatus || safeString(order.status, '').toLowerCase() === filters.orderStatus;
-    const matchesPayment = filters.paymentStatus === 'all' || safeString(order.paymentInfo?.status, '').toLowerCase() === filters.paymentStatus;
+    const matchesOrderStatus = filters.orderStatus === 'all' || safeString(order.status, '').toLowerCase() === filters.orderStatus;
+    const matchesPayment = filters.paymentStatus === 'all' || getPaymentStatusValue(order).toLowerCase() === filters.paymentStatus;
     const matchesRefund = filters.refundStatus === 'all' || safeString(order.refundInfo?.status, 'none').toLowerCase() === filters.refundStatus;
 
     const createdAt = order.createdAt ? new Date(order.createdAt) : null;
@@ -403,54 +390,92 @@ const PharmaOrder = () => {
     return matchesSearch && matchesOrderStatus && matchesPayment && matchesRefund && fromOk && toOk;
   });
 
-  const paymentStatusOptions = Array.from(
-    new Set(
-      normalizedOrders
-        .map((order) => safeString(order.paymentInfo?.status, '').toLowerCase())
-        .filter(Boolean)
-    )
-  );
+  const paymentStatusFilterOptions = ['Pending', 'Paid', 'COD'];
 
-  const refundStatusOptions = Array.from(
-    new Set(
-      normalizedOrders
-        .map((order) => safeString(order.refundInfo?.status, 'none').toLowerCase())
-        .filter(Boolean)
-    )
-  );
+  const refundStatusOptions = Array.from(new Set(normalizedOrders.map((order) => safeString(order.refundInfo?.status, 'none').toLowerCase()).filter(Boolean)));
 
-  const isRevenueEligiblePayment = (paymentInfo) => {
-    const status = safeString(paymentInfo?.status, '').toLowerCase();
-    return ['cod', 'paid', 'captured'].includes(status);
+  // ==================== CALCULATE REVENUE FOR DIFFERENT FILTER TYPES (BASED ON ALL ORDERS) ====================
+  const calculateRevenue = (ordersList) => {
+    return ordersList.reduce((sum, o) => {
+      // Count revenue for both online captured payments AND COD orders
+      const isPaidOrder = (o.paymentMethod === 'online' && o.paymentInfo?.status === 'captured') || o.paymentMethod === 'cod';
+      if (isPaidOrder) {
+        return sum + (o.totalAmount || 0);
+      }
+      return sum;
+    }, 0);
   };
 
-  const statusCardFilter = filters.orderStatus;
-  const revenueOrders = filteredOrders.filter((order) => {
-    if (statusCardFilter === 'all') return true;
-    return getOrderStatusBucket(order) === statusCardFilter;
-  });
+  // Calculate revenue for different order statuses from ALL orders (not filtered)
+  const allOrdersRevenue = calculateRevenue(normalizedOrders);
+  const pendingOrdersRevenue = calculateRevenue(normalizedOrders.filter(o => o.status === 'Pending'));
+  const completedOrdersRevenue = calculateRevenue(normalizedOrders.filter(o => ['Delivered', 'Confirmed'].includes(o.status)));
+  const cancelledOrdersRevenue = calculateRevenue(normalizedOrders.filter(o => o.status === 'Cancelled'));
 
+  // ==================== STAT CARD CLICK HANDLERS ====================
+  const handleStatCardClick = (filterType) => {
+    // Reset filters first
+    setFilters({
+      search: '',
+      orderStatus: 'all',
+      paymentStatus: 'all',
+      refundStatus: 'all',
+      fromDate: '',
+      toDate: ''
+    });
+    
+    let revenueMessage = '';
+    
+    // Apply the corresponding filter and set revenue message
+    if (filterType === 'total') {
+      setFilters(prev => ({
+        ...prev,
+        orderStatus: 'all' // Show all orders
+      }));
+      revenueMessage = `Total Orders Revenue (Paid + COD): ₹${allOrdersRevenue.toLocaleString('en-IN')}`;
+      showSnackbar(revenueMessage, 'info');
+    } else if (filterType === 'pending') {
+      setFilters(prev => ({
+        ...prev,
+        orderStatus: 'pending'
+      }));
+      revenueMessage = `Pending Orders Revenue (Paid + COD): ₹${pendingOrdersRevenue.toLocaleString('en-IN')}`;
+      showSnackbar(revenueMessage, 'info');
+    } else if (filterType === 'completed') {
+      setFilters(prev => ({
+        ...prev,
+        orderStatus: 'delivered'
+      }));
+      revenueMessage = `Completed Orders Revenue (Paid + COD): ₹${completedOrdersRevenue.toLocaleString('en-IN')}`;
+      showSnackbar(revenueMessage, 'info');
+    } else if (filterType === 'cancelled') {
+      setFilters(prev => ({
+        ...prev,
+        orderStatus: 'cancelled'
+      }));
+      revenueMessage = `Cancelled Orders Revenue (Paid + COD): ₹${cancelledOrdersRevenue.toLocaleString('en-IN')}`;
+      showSnackbar(revenueMessage, 'info');
+    }
+    
+    // Reset to first page
+    setPage(0);
+  };
+
+  // ==================== SUMMARY WITH DYNAMIC REVENUE ====================
   const summary = {
     total: filteredOrders.length,
-    pending: filteredOrders.filter((o) => getOrderStatusBucket(o) === 'pending').length,
-    completed: filteredOrders.filter((o) => getOrderStatusBucket(o) === 'completed').length,
-    cancelled: filteredOrders.filter((o) => getOrderStatusBucket(o) === 'cancelled').length,
-    revenue: revenueOrders.reduce((sum, o) => 
-      isRevenueEligiblePayment(o.paymentInfo) ? sum + safeNumber(o.totalAmount, 0) : sum,
-      0
-    )
+    pending: filteredOrders.filter((o) => o.status === 'Pending').length,
+    completed: filteredOrders.filter((o) => ['Delivered', 'Confirmed'].includes(o.status)).length,
+    cancelled: filteredOrders.filter((o) => o.status === 'Cancelled').length,
+    revenue: filteredOrders.reduce((sum, o) => {
+      // Count revenue for both online captured payments AND COD orders
+      const isPaidOrder = (o.paymentMethod === 'online' && o.paymentInfo?.status === 'captured') || o.paymentMethod === 'cod';
+      if (isPaidOrder) {
+        return sum + (o.totalAmount || 0);
+      }
+      return sum;
+    }, 0)
   };
-
-  const getRevenueByStatus = (statusBucket) => normalizedOrders.reduce((sum, order) => {
-    const matchesBucket = statusBucket === 'all' || getOrderStatusBucket(order) === statusBucket;
-    if (!matchesBucket || !isRevenueEligiblePayment(order.paymentInfo)) return sum;
-    return sum + safeNumber(order.totalAmount, 0);
-  }, 0);
-
-  const allOrdersRevenue = getRevenueByStatus('all');
-  const pendingOrdersRevenue = getRevenueByStatus('pending');
-  const completedOrdersRevenue = getRevenueByStatus('completed');
-  const cancelledOrdersRevenue = getRevenueByStatus('cancelled');
 
   const currentOrders = filteredOrders.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
@@ -667,54 +692,66 @@ const PharmaOrder = () => {
           </Box>
         </HeaderSection>
 
-        <Box sx={{ mb: 2, display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
-          <Paper
-            onClick={() => setFilters((prev) => ({ ...prev, orderStatus: 'all' }))}
-            sx={{ p: 1.5, minWidth: 170, cursor: 'pointer', border: filters.orderStatus === 'all' ? '2px solid #1976d2' : '1px solid #e0e0e0' }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <ShoppingCartIcon fontSize="small" color="primary" />
-              <Typography variant="caption" color="text.secondary">Total Orders</Typography>
+        {/* Stats Cards - 5 cards in one row with click functionality */}
+        <Box sx={{ display: 'flex', gap: 1.5, mb: 2, flexWrap: 'wrap' }}>
+          {statCards.map((card, index) => (
+            <Box
+              key={index}
+              onClick={() => card.clickable && handleStatCardClick(card.filterType)}
+              sx={{
+                flex: 1,
+                minWidth: 0,
+                bgcolor: '#fff',
+                borderRadius: 2,
+                border: '1px solid #e2e8f0',
+                p: 1.5,
+                display: 'flex',
+                flexDirection: 'column',
+                transition: 'all 0.2s',
+                cursor: card.clickable ? 'pointer' : 'default',
+                '&:hover': card.clickable ? {
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                  transform: 'translateY(-2px)',
+                  border: '1px solid #1976d2'
+                } : {
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                }
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                <Box
+                  sx={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: '50%',
+                    bgcolor: card.iconCircleBg,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  {card.icon}
+                </Box>
+                <Typography variant="caption" sx={{ fontSize: '11px', fontWeight: 500, color: '#64748b' }}>
+                  {card.title}
+                </Typography>
+              </Box>
+              
+              <Typography variant="h5" sx={{ fontWeight: 700, fontSize: '22px', lineHeight: 1.2, mb: 0.5, color: '#1e293b' }}>
+                {card.value}
+              </Typography>
+              
+              {card.revenue && (
+                <Typography variant="caption" sx={{ fontSize: '10px', fontWeight: 500, color: '#2e7d32', mt: 0.5 }}>
+                  Revenue: {card.revenue}
+                </Typography>
+              )}
+              
+              <Typography variant="caption" sx={{ fontSize: '9px', color: card.changeColor, mt: 0.5 }}>
+                {card.change}
+              </Typography>
             </Box>
-            <Typography variant="h6" fontWeight="bold">{summary.total}</Typography>
-          </Paper>
-          <Paper sx={{ p: 1.5, minWidth: 170, border: '1px solid #e0e0e0' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <CurrencyRupeeIcon fontSize="small" color="success" />
-              <Typography variant="caption" color="text.secondary">Total Revenue</Typography>
-            </Box>
-            <Typography variant="h6" fontWeight="bold">₹{summary.revenue.toFixed(2)}</Typography>
-          </Paper>
-          <Paper
-            onClick={() => setFilters((prev) => ({ ...prev, orderStatus: 'pending' }))}
-            sx={{ p: 1.5, minWidth: 160, cursor: 'pointer', border: filters.orderStatus === 'pending' ? '2px solid #1976d2' : '1px solid #e0e0e0' }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <AccessTimeIcon fontSize="small" />
-              <Typography variant="caption" color="text.secondary">Pending Orders</Typography>
-            </Box>
-            <Typography variant="h6" fontWeight="bold">{summary.pending}</Typography>
-          </Paper>
-          <Paper
-            onClick={() => setFilters((prev) => ({ ...prev, orderStatus: 'completed' }))}
-            sx={{ p: 1.5, minWidth: 160, cursor: 'pointer', border: filters.orderStatus === 'completed' ? '2px solid #1976d2' : '1px solid #e0e0e0' }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <DoneAllIcon fontSize="small" />
-              <Typography variant="caption" color="text.secondary">Completed Orders</Typography>
-            </Box>
-            <Typography variant="h6" fontWeight="bold">{summary.completed}</Typography>
-          </Paper>
-          <Paper
-            onClick={() => setFilters((prev) => ({ ...prev, orderStatus: 'cancelled' }))}
-            sx={{ p: 1.5, minWidth: 160, cursor: 'pointer', border: filters.orderStatus === 'cancelled' ? '2px solid #1976d2' : '1px solid #e0e0e0' }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <CancelIcon fontSize="small" />
-              <Typography variant="caption" color="text.secondary">Cancelled Orders</Typography>
-            </Box>
-            <Typography variant="h6" fontWeight="bold">{summary.cancelled}</Typography>
-          </Paper>
+          ))}
         </Box>
 
         {/* Search and Filter Bar */}
@@ -749,7 +786,7 @@ const PharmaOrder = () => {
               sx={{ fontSize: '12px' }}
             >
               <MenuItem value="all">Payment Status</MenuItem>
-              {paymentStatusOptions.map(status => <MenuItem key={status} value={status.toLowerCase()}>{status}</MenuItem>)}
+              {paymentStatusFilterOptions.map(status => <MenuItem key={status} value={status.toLowerCase()}>{status}</MenuItem>)}
             </Select>
           </FormControl>
           <FormControl size="small" sx={{ minWidth: '100px' }}>
