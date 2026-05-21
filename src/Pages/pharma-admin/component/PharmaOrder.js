@@ -651,68 +651,6 @@ const PharmaOrder = () => {
           </Box>
         </HeaderSection>
 
-<<<<<<< HEAD
-        {/* Stats Cards - 5 cards in one row with click functionality */}
-        <Box sx={{ display: 'flex', gap: 1.5, mb: 2, flexWrap: 'wrap' }}>
-          {statCards.map((card, index) => (
-            <Box
-              key={index}
-              onClick={() => card.clickable && handleStatCardClick(card.filterType)}
-              sx={{
-                flex: 1,
-                minWidth: 0,
-                bgcolor: '#fff',
-                borderRadius: 2,
-                border: '1px solid #e2e8f0',
-                p: 1.5,
-                display: 'flex',
-                flexDirection: 'column',
-                transition: 'all 0.2s',
-                cursor: card.clickable ? 'pointer' : 'default',
-                '&:hover': card.clickable ? {
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                  transform: 'translateY(-2px)',
-                  border: '1px solid #1976d2'
-                } : {
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                }
-              }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                <Box
-                  sx={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: '50%',
-                    bgcolor: card.iconCircleBg,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                >
-                  {card.icon}
-                </Box>
-                <Typography variant="caption" sx={{ fontSize: '11px', fontWeight: 500, color: '#64748b' }}>
-                  {card.title}
-                </Typography>
-              </Box>
-              
-              <Typography variant="h5" sx={{ fontWeight: 700, fontSize: '22px', lineHeight: 1.2, mb: 0.5, color: '#1e293b' }}>
-                {card.value}
-              </Typography>
-              
-              {card.revenue && (
-                <Typography variant="caption" sx={{ fontSize: '10px', fontWeight: 500, color: '#2e7d32', mt: 0.5 }}>
-                  Revenue: {card.revenue}
-                </Typography>
-              )}
-              
-              <Typography variant="caption" sx={{ fontSize: '9px', color: card.changeColor, mt: 0.5 }}>
-                {card.change}
-              </Typography>
-            </Box>
-          ))}
-=======
         <Box sx={{ mb: 2, display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
           <Paper
             onClick={() => setFilters((prev) => ({ ...prev, orderStatus: 'all' }))}
@@ -761,7 +699,6 @@ const PharmaOrder = () => {
             </Box>
             <Typography variant="h6" fontWeight="bold">{summary.cancelled}</Typography>
           </Paper>
->>>>>>> a01e497d14b758e13797e1cd8ff9c9d4273bc816
         </Box>
 
         {/* Search and Filter Bar */}
