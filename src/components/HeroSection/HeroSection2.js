@@ -37,24 +37,6 @@ const HeroSection2 = () => {
             alt="Ayurvedic Products and Doctor Family" 
             className="hero-section2-main-img"
           />
-          
-          {/* GEA Award Seal Badge */}
-          <div className="hero-section2-gea-award-badge">
-            <div className="hero-section2-award-circle">
-              <span className="hero-section2-award-title">gea</span>
-              <span className="hero-section2-award-sub">AWARDS 2025</span>
-              <span className="hero-section2-award-winner">Proud Winner</span>
-            </div>
-          </div>
-
-          {/* Fast Delivery Floating Badge */}
-          <div className="hero-section2-fast-delivery-badge">
-            <div className="hero-section2-delivery-icon">🚚</div>
-            <div className="hero-section2-delivery-text">
-              <strong>Fast Delivery</strong>
-              <span>Across 20,000+ Pincode</span>
-            </div>
-          </div>
         </div>
 
       </div>

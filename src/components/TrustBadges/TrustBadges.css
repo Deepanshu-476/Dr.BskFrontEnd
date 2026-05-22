@@ -1,87 +1,103 @@
-/* components/TrustBadges/TrustBadges.css */
-.trust-badges {
-  padding: 48px 0;
-  background: white;
-}
-
-.container {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 0 32px;
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 32px;
-  margin-bottom: 48px;
-}
-
-.stat-card {
-  text-align: center;
-  padding: 24px;
-  background: #fff7f2;
-  border-radius: 24px;
-  transition: all 0.3s ease;
-}
-
-.stat-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-}
-
-.stat-icon {
-  font-size: 40px;
-  margin-bottom: 12px;
-}
-
-.stat-number {
-  font-size: 32px;
-  font-weight: 700;
-  color: #7a0c0c;
-  margin-bottom: 8px;
-}
-
-.stat-label {
-  font-size: 14px;
-  color: #666;
-  font-weight: 500;
-}
-
-.trust-strip {
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 16px;
+.trust-badges-section {
+  background-color: #ffffff;
   padding: 24px 0;
-  border-top: 1px solid #ececec;
-  border-bottom: 1px solid #ececec;
+  width: 100%;
+  border-top: 1px solid #f0f0f0;
+  border-bottom: 1px solid #f0f0f0;
 }
 
-.trust-item {
-  font-size: 14px;
-  font-weight: 500;
-  color: #2c2c2c;
+.trust-badges-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 16px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
 }
 
-@media (max-width: 768px) {
-  .stats-grid {
+.trust-badge-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  justify-content: center;
+  position: relative;
+}
+
+/* हर आइटम के बीच की पतली लाइन (आखिरी वाले को छोड़कर) */
+.trust-badge-item:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 10%;
+  height: 80%;
+  width: 1px;
+  background-color: #e5e5e5;
+}
+
+.trust-badge-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #a82929; /* इमेज का डीप रेड/मरून शेड */
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+.trust-badge-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.trust-badge-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.trust-badge-number {
+  font-family: sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a1a1a;
+  line-height: 1.2;
+}
+
+.trust-badge-label {
+  font-family: sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: #666666;
+  margin-top: 2px;
+  line-height: 1.2;
+}
+
+/* रिस्पॉन्सिव डिज़ाइन: मोबाइल और टैबलेट स्क्रीन के लिए */
+@media (max-width: 992px) {
+  .trust-badges-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px 12px;
+  }
+  .trust-badge-item::after {
+    display: none !important; /* मोबाइल पर वर्टिकल लाइन्स हटा दी हैं */
+  }
+}
+
+@media (max-width: 600px) {
+  .trust-badges-container {
     grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
-  }
-  .trust-strip {
-    justify-content: center;
   }
 }
 
-@media (max-width: 480px) {
-  .stats-grid {
+@media (max-width: 400px) {
+  .trust-badges-container {
     grid-template-columns: 1fr;
+    justify-content: flex-start;
   }
-  .stat-number {
-    font-size: 28px;
+  .trust-badge-item {
+    justify-content: flex-start;
+    padding-left: 20px;
   }
 }
