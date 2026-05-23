@@ -8,8 +8,7 @@ import BestSellerProducts from "../../components/BestSellerProducts/BestSellerPr
 import OfferBanners from "../../components/OfferBanners/OfferBanners";
 import WhyChooseUs from "../../components/WhyChooseUs/WhyChooseUs";
 import Certificates from "../../components/Certificates/Certificates";
-import Testimonials from "../../components/Testimonials/Testimonials";
-import BlogSection from "../../components/BlogSection/BlogSection";
+import CombinedSection from "../../components/CombinedSection/CombinedSection.js";
 import AppDownload from "../../components/AppDownload/AppDownload";
 import FloatingButtons from "../../components/FloatingButtons/FloatingButtons";
 import Footer from "../../components/Footer/Footer";
@@ -39,8 +38,7 @@ function Dashboard() {
       <OfferBanners />
       <WhyChooseUs />
       <Certificates />
-      <Testimonials />
-      <BlogSection />
+      <CombinedSection />
       <AppDownload />
       <FloatingButtons />
       <Footer />

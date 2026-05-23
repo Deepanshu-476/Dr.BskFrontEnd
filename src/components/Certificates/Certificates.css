@@ -1,70 +1,133 @@
-/* components/Certificates/Certificates.css */
-.certificates {
-  padding: 48px 0;
-  background: #fff7f2;
+/* Section Wrapper */
+.certificates-section {
+  padding: 40px 20px;
+  background-color: #fff; /* हल्का बैकग्राउंड ताकि वाइट कार्ड उभर कर दिखे */
+  font-family: system-ui, -apple-system, sans-serif;
 }
 
-.certs-grid {
+/* Main Layout Container */
+.certificates-container {
+  max-width: 1200px;
+  margin: 0 auto;
   display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 32px;
-  margin: 32px 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 30px;
 }
 
-.cert-card {
+/* Left Content Area */
+.certificates-left {
+  flex: 0 0 250px;
   display: flex;
   flex-direction: column;
+  gap: 16px;
+}
+
+.section-header h2 {
+  font-size: 20px;
+  color: #111111;
+  margin: 0 0 6px 0;
+  font-weight: 700;
+}
+
+.section-header p {
+  font-size: 13px;
+  color: #666666;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Red Line Button matching the image */
+.view-all-btn {
+  align-self: flex-start;
+  background: transparent;
+  border: 1px solid #a82323;
+  color: #a82323;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.view-all-btn:hover {
+  background: #a82323;
+  color: #ffffff;
+}
+
+/* Right Side Single White Card Container */
+.certificates-right-card {
+  flex: 1;
+  background: #ffffff;
+  border: 1px solid #ececec;
+  border-radius: 12px;
+  padding: 24px 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.02);
+}
+
+/* Individual Certificate Items inside the card */
+.cert-item {
+  display: flex;
   align-items: center;
   gap: 12px;
-  padding: 24px 32px;
-  background: white;
-  border-radius: 20px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
+  flex: 1;
 }
 
-.cert-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+.cert-logo-wrapper {
+  font-size: 32px; /* इमेज के लोगो साइज के हिसाब से */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.cert-logo {
-  font-size: 40px;
+.cert-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
-.cert-card span {
-  font-weight: 600;
-  font-size: 14px;
-  color: #1a1a1a;
+.cert-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #222222;
+  white-space: nowrap;
 }
 
-.view-certificates {
-  text-align: center;
-  margin-top: 32px;
+.cert-desc {
+  font-size: 11px;
+  color: #777777;
+  line-height: 1.3;
 }
 
-.view-certificates button {
-  background: transparent;
-  border: 2px solid #7a0c0c;
-  color: #7a0c0c;
-  padding: 10px 28px;
-  border-radius: 40px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  cursor: pointer;
-}
-
-.view-certificates button:hover {
-  background: #7a0c0c;
-  color: white;
-}
-
-@media (max-width: 768px) {
-  .certs-grid {
-    gap: 16px;
+/* 📱 Responsive Design for Mobile & Tablets */
+@media (max-width: 1024px) {
+  .certificates-container {
+    flex-direction: column;
+    align-items: flex-start;
   }
-  .cert-card {
-    padding: 16px 24px;
+  
+  .certificates-right-card {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 24px;
+  }
+}
+
+@media (max-width: 600px) {
+  .certificates-right-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+    padding: 20px;
+  }
+  
+  .cert-item {
+    width: 100%;
   }
 }

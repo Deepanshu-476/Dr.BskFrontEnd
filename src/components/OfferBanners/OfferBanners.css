@@ -1,61 +1,115 @@
 /* components/OfferBanners/OfferBanners.css */
+
 .offers-section {
-  padding: 48px 0;
+  padding: 32px 20px;
   background: white;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .offers-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
+  gap: 20px;
 }
 
 .offer-card {
-  border-radius: 28px;
-  padding: 32px 24px;
-  transition: all 0.3s ease;
-  cursor: pointer;
+  border-radius: 12px; /* इमेज के अनुसार हल्का राउंडेड कॉर्नर */
+  padding: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+  height: 160px; /* फिक्स्ड हाइट जो इमेज से मैच करे */
 }
 
-.offer-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 20px 30px -12px rgba(0, 0, 0, 0.2);
+.offer-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  z-index: 2;
+  max-width: 60%;
 }
 
 .offer-content h3 {
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 800;
-  color: white;
-  margin-bottom: 8px;
+  margin: 0 0 6px 0;
+  letter-spacing: -0.3px;
 }
 
 .offer-content p {
-  color: rgba(255, 255, 255, 0.9);
-  margin-bottom: 20px;
+  color: #555555;
+  font-size: 13px;
+  margin: 0 0 16px 0;
+  font-weight: 500;
 }
 
 .offer-cta {
-  background: white;
+  background: transparent;
   border: none;
-  padding: 10px 20px;
-  border-radius: 40px;
-  font-weight: 600;
-  color: #1a1a1a;
-  transition: all 0.3s ease;
+  padding: 0;
+  font-weight: 700;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   cursor: pointer;
+  width: fit-content;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
-.offer-cta:hover {
+.offer-cta .arrow {
+  font-size: 14px;
+  transition: transform 0.2s ease;
+}
+
+.offer-card:hover .offer-cta .arrow {
   transform: translateX(4px);
-  background: #f0f0f0;
 }
 
-@media (max-width: 768px) {
+/* राइट साइड इमेज कंटेनर */
+.offer-image {
+  width: 40%;
+  height: 100%;
+  display: flex;
+  align-items: flex-end; /* इमेज नीचे से अलाइंड रहेगी */
+  justify-content: flex-end;
+}
+
+.offer-image img {
+  max-width: 110%;
+  max-height: 110%;
+  object-fit: contain;
+  transform: translateY(10px); /* इमेज को नीचे के बॉर्डर से सटाने के लिए */
+}
+
+/* रिस्पॉन्सिव (Mobile & Tablets) */
+@media (max-width: 992px) {
+  .offers-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
   .offers-grid {
     grid-template-columns: 1fr;
-    gap: 16px;
+    gap: 12px;
   }
+  
+  .offer-card {
+    height: 140px;
+    padding: 16px;
+  }
+
   .offer-content h3 {
-    font-size: 20px;
+    font-size: 18px;
   }
 }

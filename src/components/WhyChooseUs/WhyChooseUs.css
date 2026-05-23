@@ -1,54 +1,101 @@
 /* components/WhyChooseUs/WhyChooseUs.css */
+
 .why-choose {
-  padding: 64px 0;
-  background: white;
+  padding: 40px 20px;
+  background: #ffffff;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-.features-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 32px;
+.container {
+  max-width: 1300px; /* थोड़ा चौड़ा लेआउट ताकि सभी रो में आ सकें */
+  margin: 0 auto;
 }
 
-.feature-card {
+/* बिल्कुल सेंटर हेडिंग */
+.section-header-center {
   text-align: center;
-  padding: 32px 24px;
-  background: #fff7f2;
-  border-radius: 28px;
-  transition: all 0.3s ease;
+  margin-bottom: 28px;
 }
 
-.feature-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
-}
-
-.feature-icon {
-  font-size: 48px;
-  margin-bottom: 20px;
-}
-
-.feature-card h3 {
-  font-size: 20px;
+.section-header-center h2 {
+  font-size: 22px;
   font-weight: 700;
-  margin-bottom: 12px;
-  color: #1a1a1a;
+  color: #0b1426; /* डार्क नेवी ब्लू जैसा कलर */
+  margin: 0;
 }
 
-.feature-card p {
-  color: #666;
-  font-size: 14px;
+/* हॉरिजॉन्टल फ्लेक्स रो */
+.features-row-container {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 8px;
 }
 
-@media (max-width: 768px) {
-  .features-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
+/* स्क्रॉल बार छुपाने के लिए */
+.features-row-container::-webkit-scrollbar {
+  display: none;
+}
+.features-row-container {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* इमेज जैसा फ्लैट कार्ड स्टाइल */
+.feature-row-card {
+  display: flex;
+  align-items: flex-start; /* आइकॉन को ऊपर से सिंक करने के लिए */
+  gap: 12px;
+  background: #ffffff;
+  border: 1px solid #eaeaea; /* बहुत हल्का बॉर्डर */
+  border-radius: 8px; /* स्लीक और प्रोफेशनल कॉर्नर्स */
+  padding: 16px;
+  min-width: 195px; /* ताकि स्क्रीन सिकुड़ने पर टेक्स्ट न टूटे */
+  flex: 1 1 0px; /* बराबर चौड़ाई बांटने के लिए */
+  box-sizing: border-box;
+}
+
+/* आइकॉन बॉक्स स्टाइल (मैरून थीम) */
+.feature-icon-box {
+  background: transparent;
+  color: #7a0c0c; /* इमेज वाला मैरून/रेड टोन */
+  font-size: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 2px;
+}
+
+/* टेक्स्ट बॉक्स */
+.feature-text-box {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.feature-text-box h3 {
+  font-size: 13px;
+  font-weight: 700;
+  color: #111111;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.feature-text-box p {
+  color: #666666;
+  font-size: 11px;
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* मोबाइल और टैबलेट के लिए फ्लेक्सिबिलिटी */
+@media (max-width: 1024px) {
+  .features-row-container {
+    overflow-x: auto; /* बड़ी स्क्रीन्स से छोटे होने पर अपने आप स्मूथ स्क्रॉल बन जाएगा */
+    padding-bottom: 12px;
   }
-}
-
-@media (max-width: 480px) {
-  .features-grid {
-    grid-template-columns: 1fr;
+  .feature-row-card {
+    min-width: 190px;
+    flex: 0 0 auto;
   }
 }

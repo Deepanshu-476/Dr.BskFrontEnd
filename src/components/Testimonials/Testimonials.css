@@ -1,75 +1,102 @@
 /* components/Testimonials/Testimonials.css */
-.testimonials {
-  padding: 64px 0;
+.testimonials-section {
+  padding: 40px 20px;
+  background: #fffcf7; /* Matches the warm soft background */
+}
+
+.section-header h2 {
+  font-size: 22px;
+  color: #1a1a1a;
+  font-weight: 700;
+  margin-bottom: 24px;
+}
+
+.carousel-container {
+  display: flex;
+  align-items: center;
+  position: relative;
+  gap: 16px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.carousel-arrow {
   background: white;
+  border: 1px solid #e0e0e0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  font-size: 16px;
+  color: #555;
+  transition: all 0.2s ease;
+}
+
+.carousel-arrow:hover {
+  background: #f5f5f5;
 }
 
 .testimonials-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 28px;
-  margin-top: 40px;
+  gap: 20px;
+  flex: 1;
 }
 
 .testimonial-card {
-  background: #fff7f2;
-  padding: 28px;
-  border-radius: 28px;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-}
-
-.testimonial-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 20px 30px -12px rgba(0, 0, 0, 0.12);
+  background: white;
+  padding: 24px;
+  border-radius: 16px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+  border: 1px solid #f0f0f0;
 }
 
 .testimonial-header {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
   margin-bottom: 16px;
 }
 
 .testimonial-header img {
-  width: 56px;
-  height: 56px;
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
   object-fit: cover;
 }
 
 .testimonial-info h4 {
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 700;
-  margin-bottom: 4px;
-  color: #1a1a1a;
+  color: #222;
+  margin: 0 0 2px 0;
 }
 
 .testimonial-info span {
   font-size: 13px;
-  color: #888;
+  color: #777;
+  display: block;
+  margin-bottom: 4px;
 }
 
 .testimonial-rating {
   color: #ffb800;
-  font-size: 14px;
-  margin-bottom: 16px;
-  letter-spacing: 2px;
+  font-size: 12px;
+  letter-spacing: 1px;
 }
 
 .testimonial-text {
-  color: #4a4a4a;
-  line-height: 1.6;
-  font-size: 15px;
+  color: #444;
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 0;
 }
 
 @media (max-width: 968px) {
-  .testimonials-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 640px) {
   .testimonials-grid {
     grid-template-columns: 1fr;
   }
