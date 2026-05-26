@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  Eye, EyeOff, Mail, Lock, ArrowRight, Smartphone, User, Phone, MapPin, Building
+  Mail, Lock, ArrowRight, Smartphone, Building
 } from 'lucide-react';
 import './Cart.css';
 import Header from '../../components/Header/Header';
@@ -11,11 +11,9 @@ import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 
 const Cart = () => {
-  const [showPassword, setShowPassword] = useState(false);
   const [isMobileLogin, setIsMobileLogin] = useState(false);
   const [showSignUp, setShowSignUp] = useState(false);
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
   const [otpSent, setOtpSent] = useState(false);
@@ -25,8 +23,6 @@ const Cart = () => {
   const [isWholesalePartner, setIsWholesalePartner] = useState(false);
   const navigate = useNavigate();
 
-  const togglePasswordVisibility = () => setShowPassword(!showPassword);
-  
   const toggleLoginMethod = () => {
     setIsMobileLogin(!isMobileLogin);
     setErrors({});
@@ -34,7 +30,6 @@ const Cart = () => {
     setLoginError(null);
     // Clear form fields when switching
     setEmail('');
-    setPassword('');
     setPhone('');
     setOtp('');
   };
@@ -207,7 +202,6 @@ const Cart = () => {
     setIsWholesalePartner(false);
     // Reset form state
     setEmail('');
-    setPassword('');
     setPhone('');
     setOtp('');
     setOtpSent(false);
@@ -221,23 +215,26 @@ const Cart = () => {
       <div className="davaindia-auth-container">
         {/* Illustration Side */}
         <div className="davaindia-illustration-side">
-          <div className="davaindia-illustration-container">
-            <img 
-              src="https://app.davaindia.com/images/AuthLogo.svg" 
-              alt="Health" 
-              className="davaindia-illustration" 
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.src = '/images/fallback-auth-logo.png';
-              }}
+          <div className="davaindia-hero-content">
+            <h2>Trusted Healthcare Delivered To Your Doorstep</h2>
+            <p>100% Genuine Medicines | Fast Delivery | Best Prices</p>
+            <div className="davaindia-hero-badges">
+              <span>10,000+ Happy Customers</span>
+              <span>500+ Products</span>
+              <span>PAN India Delivery</span>
+              <span>24x7 Support</span>
+            </div>
+            <img
+              src="https://images.unsplash.com/photo-1584516150909-c43483ee7935?auto=format&fit=crop&w=1200&q=80"
+              alt="Healthcare team"
+              className="davaindia-hero-image"
             />
-            <div className="davaindia-illustration-overlay"></div>
           </div>
-          <div className="davaindia-tagline-container">
-            <p className="davaindia-tagline">
-              <span className="davaindia-highlight">India's largest</span> private generic pharmacy retail chain
-            </p>
-            <div className="davaindia-tagline-decoration"></div>
+          <div className="davaindia-feature-strip">
+            <span>Doctor Consultation</span>
+            <span>Upload Prescription</span>
+            <span>COD Available</span>
+            <span>Easy Returns</span>
           </div>
         </div>
 
@@ -257,6 +254,26 @@ const Cart = () => {
                 )}
 
                 {/* Login method toggle */}
+                <div className="davaindia-login-toggle">
+                  <button
+                    type="button"
+                    className={`davaindia-toggle-btn ${isMobileLogin ? 'active' : ''}`}
+                    onClick={() => {
+                      if (!isMobileLogin) toggleLoginMethod();
+                    }}
+                  >
+                    Login with Mobile
+                  </button>
+                  <button
+                    type="button"
+                    className={`davaindia-toggle-btn ${!isMobileLogin ? 'active' : ''}`}
+                    onClick={() => {
+                      if (isMobileLogin) toggleLoginMethod();
+                    }}
+                  >
+                    Login with Email
+                  </button>
+                </div>
               
                 <form onSubmit={handleSubmit} noValidate>
                   {!isMobileLogin ? (
@@ -444,6 +461,11 @@ const Cart = () => {
                   >
                     Sign up
                   </button>
+                </div>
+
+                <div className="davaindia-social-login">
+                  <button type="button" className="davaindia-social-btn">Continue with Google</button>
+                  <button type="button" className="davaindia-social-btn">Continue with WhatsApp</button>
                 </div>
                 
                 <div className="davaindia-wholesale-cta">
