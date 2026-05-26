@@ -1,10 +1,28 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import './HeroSection2.css';
 import { Upload, ShoppingBag } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const HeroSection2 = () => {
   const navigate = useNavigate();
+  
+  // Array of images for slideshow
+  const images = [
+    '/1 (2).png',
+    '/2 (1).png',   
+    '/3 (1).png'    
+  ];
+  
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  // Auto-slide every 3 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length);
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [images.length]);
 
   return (
     <section className="hero-section2">
@@ -43,12 +61,12 @@ const HeroSection2 = () => {
           </div>
         </div>
 
-        {/* Right Image Side */}
+        {/* Right Image Side - Slideshow */}
         <div className="hero-section2-image-container">
           <img
-            src="/1 (1).png"
-            alt="Ayurvedic Products and Doctor Family"
-            className="hero-section2-main-img"
+            src={images[currentImageIndex]}
+            alt={`Ayurvedic Products and Doctor Family - Image ${currentImageIndex + 1}`}
+            className="hero-section2-main-img hero-section2-slide-image"
           />
         </div>
 
