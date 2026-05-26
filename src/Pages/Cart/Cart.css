@@ -62,6 +62,67 @@ body {
   overflow: hidden;
 }
 
+.davaindia-hero-content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 680px;
+  color: #fff;
+}
+
+.davaindia-hero-content h2 {
+  font-size: 2.3rem;
+  line-height: 1.2;
+  margin-bottom: 0.75rem;
+}
+
+.davaindia-hero-content p {
+  font-size: 1rem;
+  opacity: 0.95;
+}
+
+.davaindia-hero-badges {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin: 1.25rem 0;
+}
+
+.davaindia-hero-badges span {
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 10px;
+  padding: 0.5rem 0.75rem;
+  background: rgba(255,255,255,0.08);
+  font-size: 0.85rem;
+}
+
+.davaindia-hero-image {
+  width: 100%;
+  border-radius: 18px;
+  margin-top: 0.5rem;
+  border: 1px solid rgba(255,255,255,0.25);
+}
+
+.davaindia-feature-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 680px;
+  margin-top: 1rem;
+  z-index: 2;
+}
+
+.davaindia-feature-strip span {
+  font-size: 0.8rem;
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.35);
+  border-radius: 999px;
+  padding: 0.45rem 0.6rem;
+  text-align: center;
+  color: #fff;
+}
+
 .davaindia-illustration-side::before {
   content: '';
   position: absolute;
@@ -334,16 +395,17 @@ body {
 /* Login Method Toggle */
 .davaindia-login-toggle {
   display: flex;
-  gap: 1rem;
+  gap: 0;
   margin: 1.5rem 0;
+  border-bottom: 1px solid #E5E7EB;
 }
 
 .davaindia-toggle-btn {
   flex: 1;
-  padding: 0.75rem;
-  border-radius: 10px;
-  background: #FFFFFF;
-  border: 2px solid #E5E7EB;
+  padding: 0.75rem 0.5rem;
+  border-radius: 0;
+  background: transparent;
+  border: none;
   color: #6B7280;
   font-weight: 500;
   cursor: pointer;
@@ -355,10 +417,10 @@ body {
 }
 
 .davaindia-toggle-btn.active {
-  background: #FEF2F2;
-  border-color: #68171b;
+  background: transparent;
   color: #68171b;
   font-weight: 600;
+  border-bottom: 2px solid #68171b;
 }
 
 .davaindia-toggle-btn:hover:not(.active) {
@@ -469,6 +531,21 @@ body {
   text-align: center;
 }
 
+.davaindia-social-login {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.davaindia-social-btn {
+  border: 1px solid #E5E7EB;
+  background: #fff;
+  border-radius: 10px;
+  height: 42px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
 .davaindia-wholesale-cta p {
   color: #1F2937;
   margin-bottom: 0.5rem;
@@ -537,6 +614,14 @@ body {
   .davaindia-illustration {
     max-width: 180px;
     max-height: 140px;
+  }
+
+  .davaindia-hero-content h2 {
+    font-size: 1.6rem;
+  }
+
+  .davaindia-feature-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .davaindia-tagline {
