@@ -1,3 +1,4 @@
+// components/Certificates/Certificates.jsx
 import React from 'react';
 import './Certificates.css';
 

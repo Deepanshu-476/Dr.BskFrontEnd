@@ -49,59 +49,59 @@ const blogs = [
 
 const CombinedSection = () => {
   return (
-    <section className="main-combined-section">
-      <div className="combined-container">
+    <section className="Combined-main-combined-section">
+      <div className="Combined-combined-container">
         
         {/* LEFT SIDE: TESTIMONIALS */}
-        <div className="testimonials-side">
-          <div className="side-header">
+        <div className="Combined-testimonials-side">
+          <div className="Combined-side-header">
             <h2>What Our Customers Say</h2>
           </div>
           
-          <div className="carousel-wrapper">
-            <button className="nav-arrow left-arrow">&lt;</button>
+          <div className="Combined-carousel-wrapper">
+            <button className="Combined-nav-arrow Combined-left-arrow">&lt;</button>
             
-            <div className="testimonials-list">
+            <div className="Combined-testimonials-list">
               {testimonials.map((item) => (
-                <div className="t-card" key={item.id}>
-                  <div className="t-profile">
+                <div className="Combined-t-card" key={item.id}>
+                  <div className="Combined-t-profile">
                     <img src={item.image} alt={item.name} />
-                    <div className="t-meta">
+                    <div className="Combined-t-meta">
                       <h4>{item.name}</h4>
                       <span>{item.city}</span>
-                      <div className="t-stars">
+                      <div className="Combined-t-stars">
                         {'★'.repeat(item.rating)}{'☆'.repeat(5 - item.rating)}
                       </div>
                     </div>
                   </div>
-                  <p className="t-comment">{item.text}</p>
+                  <p className="Combined-t-comment">{item.text}</p>
                 </div>
               ))}
             </div>
 
-            <button className="nav-arrow right-arrow">&gt;</button>
+            <button className="Combined-nav-arrow Combined-right-arrow">&gt;</button>
           </div>
         </div>
 
         {/* RIGHT SIDE: HEALTH TIPS & BLOGS */}
-        <div className="blogs-side">
-          <div className="side-header blog-header-flex">
+        <div className="Combined-blogs-side">
+          <div className="Combined-side-header Combined-blog-header-flex">
             <div>
               <h2>Health Tips & Blogs</h2>
-              <p className="sub-title">Explore expert advice for a healthier you</p>
+              <p className="Combined-sub-title">Explore expert advice for a healthier you</p>
             </div>
-            <button className="btn-view-all">View All Blogs</button>
+            <button className="Combined-btn-view-all">View All Blogs</button>
           </div>
 
-          <div className="blogs-list">
+          <div className="Combined-blogs-list">
             {blogs.map((blog) => (
-              <div className="b-card" key={blog.id}>
-                <div className="b-img-container">
+              <div className="Combined-b-card" key={blog.id}>
+                <div className="Combined-b-img-container">
                   <img src={blog.image} alt={blog.title} />
                 </div>
-                <div className="b-info">
+                <div className="Combined-b-info">
                   <h3>{blog.title}</h3>
-                  <button className="btn-read-more">Read More &rarr;</button>
+                  <button className="Combined-btn-read-more">Read More &rarr;</button>
                 </div>
               </div>
             ))}

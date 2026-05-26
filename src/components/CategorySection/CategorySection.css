@@ -1,3 +1,7 @@
+/* ========================================== */
+/* DESKTOP VIEW (UNTOUCHED & ORIGINAL)      */
+/* ========================================== */
+
 .ui-category-section {
   padding: 60px 0 40px 0;
   background-color: #ffffff;
@@ -11,10 +15,11 @@
   padding: 0 24px;
 }
 
-/* हेडर डिज़ाइन */
+/* हेडर डिज़ाइन */
 .ui-section-header {
   text-align: center;
   margin-bottom: 36px;
+  position: relative;
 }
 
 .ui-section-header h2 {
@@ -31,6 +36,9 @@
   margin: 0;
 }
 
+.ui-view-all {
+  display: none; /* Hidden on desktop view by default */
+}
 
 .ui-category-flex-row {
   display: flex;
@@ -41,11 +49,9 @@
   padding-bottom: 10px;
 }
 
-
 .ui-category-flex-row::-webkit-scrollbar {
   display: none;
 }
-
 
 .ui-category-node {
   display: flex;
@@ -61,7 +67,6 @@
 .ui-category-node:hover {
   transform: translateY(-2px);
 }
-
 
 .ui-avatar-circle {
   width: 84px;
@@ -83,12 +88,10 @@
   object-fit: cover;
 }
 
-
 .ui-view-all-bg {
   background-color: #f8f9fa;
   border: 1px solid #eeeeee;
 }
-
 
 .ui-category-title {
   font-size: 13px;
@@ -100,10 +103,103 @@
 }
 
 
+/* ========================================== */
+/* MOBILE & TABLET VIEW (AS PER IMAGE)      */
+/* ========================================== */
+
 @media (max-width: 1024px) {
+  /* Give the main wrapper component a soft background layout color */
+  .ui-category-section {
+    background-color: #fcfcfc;
+    padding: 16px 8px;
+  }
+
+  .ui-category-container {
+    padding: 0 8px;
+  }
+
+  /* Styled White Box Wrapper matching your image layout exactly */
+  .ui-category-card {
+    background-color: #ffffff;
+    border: 1px solid #f0f0f0;
+    border-radius: 16px;
+    padding: 20px 14px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.02);
+  }
+
+  /* Split row layout header: Title left, View All right */
+  .ui-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    text-align: left;
+    margin-bottom: 24px;
+    padding: 0 4px;
+  }
+
+  .ui-section-header h2 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #111111;
+    margin: 0;
+  }
+
+  /* Hides the desktop description line on mobile view */
+  .ui-sub-text {
+    display: none !important;
+  }
+
+  /* Visible "View All" link style exactly like the image */
+  .ui-view-all {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #a31d1d; /* Elegant deep red color */
+    cursor: pointer;
+  }
+
+  /* Changes horizontal scroll row to a 4-Column Grid layout */
   .ui-category-flex-row {
-    justify-content: flex-start;
-    overflow-x: auto; 
-    -webkit-overflow-scrolling: touch;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px 8px;
+    overflow-x: visible;
+    padding-bottom: 0;
+    justify-content: center;
+  }
+
+  .ui-category-node {
+    min-width: unset;
+    flex-shrink: unset;
+  }
+
+  /* Category Circle Sizing for Mobile displays */
+  .ui-avatar-circle {
+    width: 68px;
+    height: 68px;
+    border: 1px solid #eef0f2;
+    margin-bottom: 8px;
+    background-color: #ffffff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.01);
+  }
+
+  /* Label Text Typography styling matching image alignment */
+  .ui-category-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: #333333;
+    max-width: 80px;
+    line-height: 1.25;
+  }
+}
+
+/* Extra safety fine-tuning for extra small screens */
+@media (max-width: 360px) {
+  .ui-avatar-circle {
+    width: 60px;
+    height: 60px;
+  }
+  .ui-category-title {
+    font-size: 10px;
   }
 }

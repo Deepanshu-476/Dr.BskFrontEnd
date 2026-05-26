@@ -1,4 +1,6 @@
-/* components/OfferBanners/OfferBanners.css */
+/* ========================================== */
+/* DESKTOP VIEW (UNTOUCHED & ORIGINAL)      */
+/* ========================================== */
 
 .offers-section {
   padding: 32px 20px;
@@ -91,25 +93,80 @@
   transform: translateY(10px); /* इमेज को नीचे के बॉर्डर से सटाने के लिए */
 }
 
-/* रिस्पॉन्सिव (Mobile & Tablets) */
-@media (max-width: 992px) {
-  .offers-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
 
-@media (max-width: 600px) {
-  .offers-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
+/* ========================================== */
+/* MOBILE & TABLET VIEW (AS PER IMAGE)      */
+/* ========================================== */
+
+@media (max-width: 992px) {
+  .offers-section {
+    padding: 16px 0 16px 14px; /* Left padding creates standard image layout alignment gap */
+    overflow: hidden;
   }
-  
+
+  .container {
+    max-width: 100%;
+    padding: 0;
+  }
+
+  /* Converted grid structure into an elegant inline side-by-side row slider */
+  .offers-grid {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 12px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding-right: 14px; /* Extends boundary spacing to prevent clipping */
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Hides default native mobile scroll bars across different browsers */
+  .offers-grid::-webkit-scrollbar {
+    display: none;
+  }
+  .offers-grid {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* Stabilizes custom sizing parameters for side-scrolling cards */
   .offer-card {
-    height: 140px;
+    flex: 0 0 285px; /* Fixed base width mapping to standard modern viewports */
+    height: 125px; /* Proportionate portrait block depth */
     padding: 16px;
+    border-radius: 14px;
+    scroll-snap-align: start;
+  }
+
+  .offer-content {
+    max-width: 65%;
   }
 
   .offer-content h3 {
-    font-size: 18px;
+    font-size: 16px;
+    font-weight: 800;
+    margin-bottom: 2px;
+    white-space: nowrap;
+  }
+
+  .offer-content p {
+    font-size: 11px;
+    margin-bottom: 12px;
+    white-space: nowrap;
+  }
+
+  .offer-cta {
+    font-size: 12px;
+    text-underline-offset: 2px;
+  }
+
+  .offer-image {
+    width: 35%;
+  }
+  
+  .offer-image img {
+    max-width: 115%;
+    max-height: 115%;
+    transform: translateY(6px);
   }
 }

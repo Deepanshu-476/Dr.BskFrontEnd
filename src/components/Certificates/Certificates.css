@@ -1,3 +1,7 @@
+/* ========================================== */
+/* DESKTOP VIEW (UNTOUCHED & ORIGINAL)      */
+/* ========================================== */
+
 /* Section Wrapper */
 .certificates-section {
   padding: 40px 20px;
@@ -104,30 +108,84 @@
   line-height: 1.3;
 }
 
-/* 📱 Responsive Design for Mobile & Tablets */
-@media (max-width: 1024px) {
+
+/* ========================================== */
+/* MOBILE VIEW (AS PER IMAGE - EXACT MATCH)   */
+/* ========================================== */
+
+@media (max-width: 992px) {
+  .certificates-section {
+    padding: 24px 0 24px 16px;
+    overflow: hidden;
+  }
+
   .certificates-container {
     flex-direction: column;
     align-items: flex-start;
+    gap: 16px;
   }
-  
-  .certificates-right-card {
-    width: 100%;
-    flex-wrap: wrap;
-    justify-content: flex-start;
-    gap: 24px;
-  }
-}
 
-@media (max-width: 600px) {
-  .certificates-right-card {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 20px;
-    padding: 20px;
-  }
-  
-  .cert-item {
+  .certificates-left {
+    flex: 0 0 auto;
     width: 100%;
+    padding-right: 16px;
+    gap: 10px;
+  }
+
+  
+  .view-all-btn {
+    display: none; 
+  }
+
+  
+  .certificates-right-card {
+    width: 100%;
+    background: #ffffff;
+    border-top-left-radius: 12px;
+    border-bottom-left-radius: 12px;
+    border-top-right-radius: 0px;
+    border-bottom-right-radius: 0px;
+    border-right: none; 
+    padding: 16px;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    justify-content: flex-start !important;
+    gap: 20px !important;
+    overflow-x: auto !important;
+    scroll-snap-type: x mandatory;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.02);
+    -webkit-overflow-scrolling: touch;
+  }
+
+
+  .certificates-right-card::-webkit-scrollbar {
+    display: none;
+  }
+  .certificates-right-card {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .cert-item {
+    flex: 0 0 190px !important;
+    width: 190px !important;
+    scroll-snap-align: start;
+    gap: 10px;
+  }
+
+  .cert-logo-wrapper {
+    font-size: 26px;
+  }
+
+  .cert-title {
+    font-size: 12px;
+  }
+
+  .cert-desc {
+    font-size: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }

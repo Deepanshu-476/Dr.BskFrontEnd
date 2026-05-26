@@ -1,4 +1,6 @@
-/* components/WhyChooseUs/WhyChooseUs.css */
+/* ========================================== */
+/* DESKTOP VIEW (UNTOUCHED & ORIGINAL)      */
+/* ========================================== */
 
 .why-choose {
   padding: 40px 20px;
@@ -88,14 +90,104 @@
   margin: 0;
 }
 
-/* मोबाइल और टैबलेट के लिए फ्लेक्सिबिलिटी */
+/* ओरिजिनल मीडिया क्वेरी फॉर टैबलेट्स */
 @media (max-width: 1024px) {
   .features-row-container {
-    overflow-x: auto; /* बड़ी स्क्रीन्स से छोटे होने पर अपने आप स्मूथ स्क्रॉल बन जाएगा */
+    overflow-x: auto;
     padding-bottom: 12px;
   }
   .feature-row-card {
     min-width: 190px;
     flex: 0 0 auto;
+  }
+}
+
+
+/* ========================================== */
+/* MOBILE VIEW (AS PER IMAGE - EXACT MATCH)   */
+/* ========================================== */
+
+@media (max-width: 768px) {
+  .why-choose {
+    padding: 14px 10px;
+    background-color: #fdfdfd;
+  }
+
+  .container {
+    padding: 0;
+    max-width: 100%;
+  }
+
+  /* सफ़ेद रंग का आउटर कार्ड फ्रेम कॉर्नर रेडियस के साथ */
+  .why-choose-main-frame {
+    background-color: #ffffff;
+    border: 1px solid #f2f2f2;
+    border-radius: 16px;
+    padding: 20px 12px;
+    box-shadow: 0 1px 8px rgba(0, 0, 0, 0.01);
+  }
+
+  /* मोबाइल हेडिंग साइज और स्पेसिंग */
+  .section-header-center {
+    margin-bottom: 18px;
+    text-align: center;
+  }
+
+  .section-header-center h2 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #111111;
+  }
+
+  /* हॉरिजॉन्टल रो को हटाकर 2-कॉलम ग्रिड में बदला गया */
+  .features-row-container {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+    overflow-x: visible !important;
+    padding-bottom: 0 !important;
+  }
+
+  /* मोबाइल कार्ड स्पेसिफिकेशन्स जो इमेज ग्रिड से मिलते हैं */
+  .feature-row-card {
+    display: flex;
+    flex-direction: row;
+    align-items: center; /* मोबाइल पर आइकॉन और टेक्स्ट सेंटर में अलाइन */
+    gap: 10px;
+    padding: 10px 8px;
+    background: #ffffff;
+    border: 1px solid #f4f4f4;
+    border-radius: 10px;
+    min-width: 0 !important; /* रिस्पॉन्सिव बिहेवियर के लिए फिक्स्ड विड्थ हटाई */
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* आइकॉन साइज एडजस्टमेंट */
+  .feature-icon-box {
+    font-size: 18px;
+    padding-top: 0;
+    flex-shrink: 0;
+  }
+
+  .feature-text-box {
+    gap: 1px;
+    overflow: hidden;
+  }
+
+  .feature-text-box h3 {
+    font-size: 12px;
+    font-weight: 700;
+    color: #111111;
+    white-space: normal; /* जरूरत पड़ने पर टेक्स्ट को नीचे रैप होने देगा */
+    line-height: 1.2;
+  }
+
+  .feature-text-box p {
+    font-size: 10px;
+    color: #777777;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; /* लंबा टेक्स्ट होने पर अंत में ... दिखेगा */
   }
 }

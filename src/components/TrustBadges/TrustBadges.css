@@ -1,3 +1,7 @@
+/* ========================================== */
+/* DESKTOP VIEW (UNTOUCHED & ORIGINAL)      */
+/* ========================================== */
+
 .trust-badges-section {
   background-color: #ffffff;
   padding: 24px 0;
@@ -24,7 +28,7 @@
   position: relative;
 }
 
-/* हर आइटम के बीच की पतली लाइन (आखिरी वाले को छोड़कर) */
+/* हर आइटम के बीच की पतली लाइन (आखिरी वाले को छोड़कर) */
 .trust-badge-item:not(:last-child)::after {
   content: '';
   position: absolute;
@@ -73,31 +77,113 @@
   line-height: 1.2;
 }
 
-/* रिस्पॉन्सिव डिज़ाइन: मोबाइल और टैबलेट स्क्रीन के लिए */
+
+/* ========================================== */
+/* MOBILE & TABLET VIEW (AS PER IMAGE)      */
+/* ========================================== */
+
 @media (max-width: 992px) {
+  /* Main outer wrapper padding */
+  .trust-badges-section {
+    padding: 16px;
+    border: none;
+  }
+
+  /* 2-Row card box setup with a soft gray border and rounded corners */
   .trust-badges-container {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 24px 12px;
+    grid-template-columns: repeat(6, 1fr); /* 6-column internal grid for precise spacing */
+    gap: 0px; 
+    border: 1px solid #f2e9e4;
+    border-radius: 12px;
+    padding: 16px 8px;
+    max-width: 650px;
+    margin: 0 auto;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
   }
-  .trust-badge-item::after {
-    display: none !important; /* मोबाइल पर वर्टिकल लाइन्स हटा दी हैं */
-  }
-}
 
-@media (max-width: 600px) {
-  .trust-badges-container {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 400px) {
-  .trust-badges-container {
-    grid-template-columns: 1fr;
-    justify-content: flex-start;
-  }
   .trust-badge-item {
+    padding: 12px 6px;
+    width: 100%;
     justify-content: flex-start;
+  }
+
+  /* Remove original full-height vertical dividers entirely */
+  .trust-badge-item::after {
+    display: none !important;
+  }
+
+  /* Add subtle horizontal dividing border between row 1 and row 2 */
+  .trust-badge-item:nth-child(-n+3) {
+    border-bottom: 1px solid #f5ebe6;
+  }
+
+  /* Custom inner divider lines exactly matching the image layout */
+  .trust-badge-item:nth-child(1)::after,
+  .trust-badge-item:nth-child(2)::after,
+  .trust-badge-item:nth-child(4)::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 25%;
+    height: 50%;
+    width: 1px;
+    background-color: #ebdcd5;
+    display: block !important;
+  }
+
+  /* --- Row 1 Config (3 grid cells taking up 2 fractions each) --- */
+  .trust-badge-item:nth-child(1) { grid-column: span 2; }
+  .trust-badge-item:nth-child(2) { grid-column: span 2; }
+  .trust-badge-item:nth-child(3) { grid-column: span 2; }
+
+  /* --- Row 2 Config (Shifted inward exactly like your layout image) --- */
+  /* Extra padding left on items to offset them beautifully */
+  .trust-badge-item:nth-child(4) { 
+    grid-column: 2 / span 2; 
     padding-left: 20px;
+  }
+  .trust-badge-item:nth-child(5) { 
+    grid-column: 4 / span 2; 
+    padding-left: 20px;
+  }
+
+  /* Shrinking typography slightly for mobile screens */
+  .trust-badge-number {
+    font-size: 14px;
+  }
+
+  .trust-badge-label {
+    font-size: 11px;
+    white-space: nowrap; /* Prevents text from breaking onto multiple lines */
+  }
+
+  .trust-badge-icon {
+    width: 26px;
+    height: 26px;
+  }
+}
+
+/* Extra adjustments to preserve layout integrity on extra tiny phones */
+@media (max-width: 480px) {
+  .trust-badges-container {
+    padding: 12px 4px;
+  }
+  
+  .trust-badge-item {
+    gap: 6px;
+  }
+
+  .trust-badge-number {
+    font-size: 13px;
+  }
+
+  .trust-badge-label {
+    font-size: 9px;
+  }
+
+  .trust-badge-item:nth-child(4),
+  .trust-badge-item:nth-child(5) { 
+    padding-left: 10px;
   }
 }
