@@ -46,7 +46,7 @@ const HeroSection2 = () => {
         {/* Right Image Side */}
         <div className="hero-section2-image-container">
           <img
-            src="/logo2.png"
+            src="/1 (1).png"
             alt="Ayurvedic Products and Doctor Family"
             className="hero-section2-main-img"
           />
