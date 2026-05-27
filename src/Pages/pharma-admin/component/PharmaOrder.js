@@ -43,6 +43,8 @@ import PendingActionsIcon from '@mui/icons-material/PendingActions';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import RemoveShoppingCartIcon from '@mui/icons-material/RemoveShoppingCart';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 // Styled components
 const PageContainer = styled(Box)(({ theme }) => ({
@@ -317,6 +319,141 @@ const PharmaOrder = () => {
 
   const handleCloseSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
+  };
+
+  // ==================== PDF EXPORT FUNCTION ====================
+  const exportToPDF = () => {
+    if (!filteredOrders || filteredOrders.length === 0) {
+      showSnackbar('No orders to export', 'warning');
+      return;
+    }
+
+    try {
+      const doc = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: 'a4'
+      });
+
+      // Add header
+      doc.setFontSize(18);
+      doc.setTextColor(33, 33, 33);
+      doc.text('Orders Report', 14, 15);
+      
+      doc.setFontSize(10);
+      doc.setTextColor(100, 100, 100);
+      const dateStr = new Date().toLocaleString('en-IN', { dateStyle: 'full', timeStyle: 'short' });
+      doc.text(`Generated on: ${dateStr}`, 14, 25);
+      
+      // Add summary statistics
+      const totalRevenue = filteredOrders.reduce((sum, o) => {
+        const isPaidOrder = (o.paymentMethod === 'online' && o.paymentInfo?.status === 'captured') || o.paymentMethod === 'cod';
+        if (isPaidOrder) {
+          return sum + (o.totalAmount || 0);
+        }
+        return sum;
+      }, 0);
+      
+      doc.setFontSize(9);
+      doc.setTextColor(0, 0, 0);
+      doc.text(`Total Orders: ${filteredOrders.length}`, 14, 33);
+      doc.text(`Total Revenue: ₹${totalRevenue.toLocaleString('en-IN')}`, 60, 33);
+      doc.text(`Pending Orders: ${filteredOrders.filter(o => o.status === 'Pending').length}`, 110, 33);
+      doc.text(`Completed Orders: ${filteredOrders.filter(o => ['Delivered', 'Confirmed'].includes(o.status)).length}`, 170, 33);
+      
+      // Apply filters info
+      let filterText = '';
+      if (filters.orderStatus !== 'all') filterText += `Status: ${filters.orderStatus.toUpperCase()} `;
+      if (filters.paymentStatus !== 'all') filterText += `Payment: ${filters.paymentStatus.toUpperCase()} `;
+      if (filters.search) filterText += `Search: ${filters.search} `;
+      if (filterText) {
+        doc.setFontSize(8);
+        doc.setTextColor(80, 80, 80);
+        doc.text(`Filters Applied: ${filterText}`, 14, 40);
+      }
+      
+      // Prepare table data
+      const tableData = filteredOrders.map(order => {
+        const firstItem = order.items?.[0];
+        const productsList = order.items?.map(item => `${getProductName(item)} (x${item.quantity})`).join(', ') || '-';
+        
+        return [
+          safeString(order._id, '-').slice(-8),
+          getCustomerName(order),
+          productsList.length > 50 ? productsList.substring(0, 50) + '...' : productsList,
+          `₹${safeNumber(order.totalAmount, 0).toFixed(2)}`,
+          order.items?.reduce((sum, item) => sum + safeNumber(item.quantity, 0), 0) || 1,
+          safeString(order.status, 'Pending'),
+          getPaymentStatusValue(order),
+          getRefundStatusText(order.refundInfo),
+          order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-IN') : '-',
+          order.createdAt ? new Date(order.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '-'
+        ];
+      });
+      
+      // Configure table
+      doc.autoTable({
+        head: [[
+          'Order ID',
+          'Customer',
+          'Products',
+          'Amount',
+          'Qty',
+          'Order Status',
+          'Payment Status',
+          'Refund Status',
+          'Date',
+          'Time'
+        ]],
+        body: tableData,
+        startY: 45,
+        theme: 'striped',
+        headStyles: {
+          fillColor: [41, 128, 185],
+          textColor: [255, 255, 255],
+          fontSize: 9,
+          fontStyle: 'bold',
+          halign: 'center'
+        },
+        bodyStyles: {
+          fontSize: 8,
+          cellPadding: 2
+        },
+        columnStyles: {
+          0: { cellWidth: 25, halign: 'center' }, // Order ID
+          1: { cellWidth: 30 }, // Customer
+          2: { cellWidth: 50 }, // Products
+          3: { cellWidth: 20, halign: 'right' }, // Amount
+          4: { cellWidth: 15, halign: 'center' }, // Qty
+          5: { cellWidth: 25, halign: 'center' }, // Order Status
+          6: { cellWidth: 25, halign: 'center' }, // Payment Status
+          7: { cellWidth: 25, halign: 'center' }, // Refund Status
+          8: { cellWidth: 20, halign: 'center' }, // Date
+          9: { cellWidth: 20, halign: 'center' }  // Time
+        },
+        margin: { left: 14, right: 14 },
+        didDrawPage: (data) => {
+          // Add footer on each page
+          const pageCount = doc.internal.getNumberOfPages();
+          doc.setFontSize(8);
+          doc.setTextColor(150, 150, 150);
+          doc.text(
+            `Page ${data.pageNumber} of ${pageCount}`,
+            doc.internal.pageSize.getWidth() / 2,
+            doc.internal.pageSize.getHeight() - 10,
+            { align: 'center' }
+          );
+        }
+      });
+      
+      // Save the PDF
+      doc.save(`orders_report_${new Date().toISOString().split('T')[0]}.pdf`);
+      showSnackbar('PDF exported successfully!', 'success');
+      
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      showSnackbar('Failed to generate PDF. Please try again.', 'error');
+    }
   };
 
   const handleDeleteClick = (order) => {
@@ -683,11 +820,14 @@ const PharmaOrder = () => {
             Orders Management
           </Typography>
           <Box sx={{ display: 'flex', gap: 1 }}>
-            <Button variant="outlined" size="small" startIcon={<GetAppIcon />} sx={{ fontSize: '11px', textTransform: 'none', py: 0.5 }}>
-              Export
-            </Button>
-            <Button variant="contained" size="small" startIcon={<AddIcon />} sx={{ fontSize: '11px', textTransform: 'none', bgcolor: '#1976d2', py: 0.5 }}>
-              Add Order
+            <Button 
+              variant="outlined" 
+              size="small" 
+              startIcon={<GetAppIcon />} 
+              onClick={exportToPDF}
+              sx={{ fontSize: '11px', textTransform: 'none', py: 0.5 }}
+            >
+              Export to PDF
             </Button>
           </Box>
         </HeaderSection>
