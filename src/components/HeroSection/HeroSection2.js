@@ -44,7 +44,7 @@ const HeroSection2 = () => {
             {/* Shop Medicines Button */}
             <button
               className="hero-section2-btn-primary"
-              onClick={() => navigate('/shop')}
+              onClick={() => navigate('/fever')}
             >
               <ShoppingBag size={18} />
               <span>Shop Medicines</span>

@@ -32,18 +32,18 @@ const testimonials = [
 const blogs = [
   {
     id: 1,
-    title: 'Boost Your Immunity Naturally This Winter',
-    image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&h=250&fit=crop'
+    title: 'How To Choose The Best Animal Health Companies In India For Livestock Management?',
+    image: '/blog.jpg'
   },
   {
     id: 2,
-    title: 'Benefits of Giloy for Overall Health',
-    image: 'https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=400&h=250&fit=crop'
+    title: 'How To Choose The Best Animal Health Companies In India For Livestock Management?',
+    image: '/blog.jpg'
   },
   {
     id: 3,
-    title: 'How to Manage Diabetes with Ayurveda',
-    image: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=400&h=250&fit=crop'
+    title: 'How To Choose The Best Animal Health Companies In India For Livestock Management?',
+    image: '/blog.jpg'
   }
 ];
 

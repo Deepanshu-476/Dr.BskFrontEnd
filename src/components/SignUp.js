@@ -671,7 +671,6 @@
                 ...styles.inputContainer,
                 ...(focusedField === 'email' ? styles.inputContainerFocused : {})
               }}>
-                <Mail size={18} style={styles.icon} />
                 <input
                   type="email"
                   name="email"
@@ -718,7 +717,7 @@
                 ...styles.inputContainer,
                 ...(focusedField === 'password' ? styles.inputContainerFocused : {})
               }}>
-                <Lock size={18} style={styles.icon} />
+                
                 <input
                   type={showPassword ? "text" : "password"}
                   name="password"
@@ -764,7 +763,7 @@
                 ...styles.inputContainer,
                 ...(focusedField === 'confirmPassword' ? styles.inputContainerFocused : {})
               }}>
-                <Lock size={18} style={styles.icon} />
+                
                 <input
                   type={showConfirmPassword ? "text" : "password"}
                   name="confirmPassword"
@@ -796,7 +795,7 @@
                 ...styles.inputContainer,
                 ...(focusedField === 'address' ? styles.inputContainerFocused : {})
               }}>
-                <MapPin size={18} style={styles.icon} />
+                
                 <input
                   type="text"
                   name="address"

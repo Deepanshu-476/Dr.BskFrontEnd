@@ -87,10 +87,10 @@
 }
 
 .offer-image img {
-  max-width: 110%;
-  max-height: 110%;
-  object-fit: contain;
-  transform: translateY(10px); /* इमेज को नीचे के बॉर्डर से सटाने के लिए */
+    max-width: 124%;
+    max-height: 110%;
+    object-fit: contain;
+    transform: translateY(10px);
 }
 
 

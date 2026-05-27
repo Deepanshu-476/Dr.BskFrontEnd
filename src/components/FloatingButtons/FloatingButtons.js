@@ -1,4 +1,4 @@
-// components/FloatingButtons/FloatingButtons.jsx
+
 import React from 'react';
 import './FloatingButtons.css';
 
@@ -6,7 +6,7 @@ const FloatingButtons = () => {
   const buttons = [
     { icon: '💬', label: 'WhatsApp', color: '#25D366', action: () => window.open('https://wa.me/919115513759') },
     { icon: '📞', label: 'Call', color: '#7a0c0c', action: () => window.location.href = 'tel:+919115513759' },
-    { icon: '📋', label: 'Upload Prescription', color: '#ff9800', action: () => alert('Upload prescription feature coming soon') },
+    { icon: '📋', label: 'Upload Prescription', color: '#ff9800', action: () => window.location.href = '/#/Prescription' },
   ];
 
   return (
