@@ -44,7 +44,7 @@ import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import RemoveShoppingCartIcon from '@mui/icons-material/RemoveShoppingCart';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from "jspdf-autotable";
 
 // Styled components
 const PageContainer = styled(Box)(({ theme }) => ({
@@ -391,61 +391,27 @@ const PharmaOrder = () => {
         ];
       });
       
-      // Configure table
-      doc.autoTable({
-        head: [[
-          'Order ID',
-          'Customer',
-          'Products',
-          'Amount',
-          'Qty',
-          'Order Status',
-          'Payment Status',
-          'Refund Status',
-          'Date',
-          'Time'
-        ]],
-        body: tableData,
-        startY: 45,
-        theme: 'striped',
-        headStyles: {
-          fillColor: [41, 128, 185],
-          textColor: [255, 255, 255],
-          fontSize: 9,
-          fontStyle: 'bold',
-          halign: 'center'
-        },
-        bodyStyles: {
-          fontSize: 8,
-          cellPadding: 2
-        },
-        columnStyles: {
-          0: { cellWidth: 25, halign: 'center' }, // Order ID
-          1: { cellWidth: 30 }, // Customer
-          2: { cellWidth: 50 }, // Products
-          3: { cellWidth: 20, halign: 'right' }, // Amount
-          4: { cellWidth: 15, halign: 'center' }, // Qty
-          5: { cellWidth: 25, halign: 'center' }, // Order Status
-          6: { cellWidth: 25, halign: 'center' }, // Payment Status
-          7: { cellWidth: 25, halign: 'center' }, // Refund Status
-          8: { cellWidth: 20, halign: 'center' }, // Date
-          9: { cellWidth: 20, halign: 'center' }  // Time
-        },
-        margin: { left: 14, right: 14 },
-        didDrawPage: (data) => {
-          // Add footer on each page
-          const pageCount = doc.internal.getNumberOfPages();
-          doc.setFontSize(8);
-          doc.setTextColor(150, 150, 150);
-          doc.text(
-            `Page ${data.pageNumber} of ${pageCount}`,
-            doc.internal.pageSize.getWidth() / 2,
-            doc.internal.pageSize.getHeight() - 10,
-            { align: 'center' }
-          );
-        }
-      });
-      
+    autoTable(doc, {
+  head: [[
+    'Order ID',
+    'Customer',
+    'Products',
+    'Amount',
+    'Qty',
+    'Order Status',
+    'Payment Status',
+    'Refund Status',
+    'Date',
+    'Time'
+  ]],
+  body: tableData,
+  startY: 45,
+  theme: 'striped',
+  headStyles: {
+    fillColor: [41, 128, 185],
+    textColor: [255, 255, 255]
+  }
+});
       // Save the PDF
       doc.save(`orders_report_${new Date().toISOString().split('T')[0]}.pdf`);
       showSnackbar('PDF exported successfully!', 'success');

@@ -10,10 +10,107 @@ import API_URL from "../../config";
 import { toast } from "react-toastify";
 import CustomLoader from "../../components/CustomLoader";
 import JoinUrl from "../../JoinUrl";
+import { Helmet } from "react-helmet-async";
 
 const PAGE_SIZE = 20;
 
-// Helper function to parse quantity variants - FIXED version
+const normalizeSeoKey = (value) => (value || "").trim().toLowerCase();
+
+const seoData = {
+  [normalizeSeoKey("FOR CATTLES")]: {
+    title: "Best Cattle Healthcare Products for Animal Care Now",
+    description:
+      "Best cattle healthcare products for strong immunity, growth, and health. Natural herbal support for daily care, energy, and healthy livestock animals.",
+    canonical: "https://drbskhealthcare.com/#/fever/FOR%20CATTLES",
+  },
+  [normalizeSeoKey("FOR HORSE'S")]: {
+    title: "Best Horse Healthcare Products for Strong Horses Care",
+    description:
+      "Best horse healthcare products for immunity, strength, and performance. Natural herbal support for daily care, energy, and overall horse health care now.",
+    canonical: "https://drbskhealthcare.com/#/fever/FOR%20HORSE'S",
+  },
+  [normalizeSeoKey("Dogs Cats")]: {
+    title: "Best Dog and Cat Care Products for Pet Health Care",
+    description:
+      "Best dog and cat care products for immunity, energy, and wellness. Natural herbal support for daily pet health, strength, and overall care for pets daily.",
+    canonical: "https://drbskhealthcare.com/#/fever/Dogs%20Cats",
+  },
+  [normalizeSeoKey("GOATS AND SHEEPS")]: {
+    title: "Best Herbal Goat and Sheep Healthcare Products Care",
+    description:
+      "Best goat and sheep healthcare products for strong immunity, growth, and overall health. Natural herbal support for daily care, energy, and strength daily use.",
+    canonical: "https://drbskhealthcare.com/#/fever/GOATS%20AND%20SHEEPS",
+  },
+  [normalizeSeoKey("FOR POULTRY")]: {
+    title: "Poultry Care Products for Strong and Healthy Birds",
+    description:
+      "Best poultry care products for healthy growth, immunity, and strong birds. Natural herbal solutions support daily farm health, energy, and complete care.",
+    canonical: "https://drbskhealthcare.com/#/fever/FOR%20POULTRY",
+  },
+  [normalizeSeoKey("OILS, SHAMPOO, SPRAY, LOTIONS")]: {
+    title: "Best Herbal Healthcare & Body Care Products Online",
+    description:
+      "Best herbal healthcare and body care products for immunity, energy, and wellness. Natural herbs support daily health, strength, and care every day effectively.",
+    canonical:
+      "https://drbskhealthcare.com/#/fever/OILS%2C%20SHAMPOO%2C%20SPRAY%2C%20LOTIONS",
+  },
+  [normalizeSeoKey("COMBINATIONS KITS")]: {
+    title: "Best Herbal Care Combination Products for Health Boost",
+    description:
+      "Best herbal care combination products for immunity, energy, and wellness. Natural herbs support daily health, strength, and overall body care every day.",
+    canonical: "https://drbskhealthcare.com/#/fever/COMBINATIONS%20KITS",
+  },
+  [normalizeSeoKey("DROPS")]: {
+    title: "Best Ayurvedic Drops for Immunity & Health Support",
+    description:
+      "Best Ayurvedic drops for immunity, energy, and wellness. Made with natural herbs to support daily health, strength, and overall body care daily use only.",
+    canonical: "https://drbskhealthcare.com/#/fever/DROPS",
+  },
+  [normalizeSeoKey("ELECTROPATHY SYRUP")]: {
+    title: "Best Herbal Syrup for Immunity Energy Wellness Care",
+    description:
+      "Best herbal electropathy syrup for immunity, energy, and wellness. Made with natural herbs to support daily health, strength and overall body care daily.",
+    canonical: "https://drbskhealthcare.com/#/fever/ELECTROPATHY%20SYRUP",
+  },
+  [normalizeSeoKey("ELECTROPATHY CAPSULE")]: {
+    title: "Best Electro Homeopathy Capsules Online India Health",
+    description:
+      "Best electro homeopathy capsules for immunity, energy, and wellness. Made with natural herbs for daily health support and strong immunity boost care daily.",
+    canonical: "https://drbskhealthcare.com/#/fever/ELECTROPATHY%20CAPSULE",
+  },
+  [normalizeSeoKey("AYURVEDIC SYRUP")]: {
+    title: "Best Ayurvedic Healthcare Syrup for Immunity Boost",
+    description:
+      "Discover the best Ayurvedic healthcare syrup for immunity, energy, and strength. Made with natural herbs for daily wellness and better health support.",
+    canonical: "https://drbskhealthcare.com/#/fever/AYURVEDIC%20SYRUP",
+  },
+  [normalizeSeoKey("AYURVEDIC CAPSULE")]: {
+    title: "Best Natural Healthcare Capsules for Daily Wellness",
+    description:
+      "Discover the best natural healthcare capsules for immunity, energy, strength, and overall wellness. Made with trusted herbal ingredients for daily care.",
+    canonical: "https://drbskhealthcare.com/#/fever/AYURVEDIC%20CAPSULE",
+  },
+  [normalizeSeoKey("AYURVEDIC RAS AND JUICE")]: {
+    title: "Best Ayurvedic Ras for Immunity & Daily Health Care",
+    description:
+      "Boost immunity naturally with the best Ayurvedic Ras made from powerful herbs. Supports energy, stamina, strength, and wellness daily for healthy life..!",
+    canonical:
+      "https://drbskhealthcare.com/#/fever/AYURVEDIC%20RAS%20AND%20JUICE",
+  },
+  [normalizeSeoKey("BSK Pharma")]: {
+    title: "Dr. BSK Healthcare | Ayurvedic & Homeopathy India Care",
+    description:
+      "Dr. BSK Healthcare delivers quality Ayurvedic, Electro Homeopathy & animal care products for health, wellness, immunity, nutrition and better living needs.",
+    canonical: "https://drbskhealthcare.com/",
+  },
+  default: {
+    title: "Best Animal Feed Supplement for Healthy Growth Care",
+    description:
+      "Best animal feed supplement for strong growth, immunity, and health. Natural nutrients support energy, digestion, and daily livestock care effectively.",
+    canonical: "https://drbskhealthcare.com/",
+  },
+};
+
 const parseQuantityVariants = (raw) => {
   try {
     let arr = [];
@@ -567,10 +664,36 @@ const Fever = () => {
     );
   };
 
-  const pageTitle = decodedSubCategoryName ? `Products - ${decodedSubCategoryName}` : "All Products";
+  const selectedSeoData =
+    seoData[normalizeSeoKey(decodedSubCategoryName)] || seoData.default;
+
+  useEffect(() => {
+    document.title = selectedSeoData.title;
+
+    const descriptionMeta = document.querySelector('meta[name="description"]');
+    if (descriptionMeta) {
+      descriptionMeta.setAttribute("content", selectedSeoData.description);
+    }
+
+    const robotsMeta = document.querySelector('meta[name="robots"]');
+    if (robotsMeta) {
+      robotsMeta.setAttribute("content", "index, follow");
+    }
+
+    const canonicalLink = document.querySelector('link[rel="canonical"]');
+    if (canonicalLink) {
+      canonicalLink.setAttribute("href", selectedSeoData.canonical);
+    }
+  }, [selectedSeoData]);
 
   return (
     <>
+      <Helmet>
+        <title>{selectedSeoData.title}</title>
+        <meta name="description" content={selectedSeoData.description} />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href={selectedSeoData.canonical} />
+      </Helmet>
       <Header />
       <div className="fever-container">
         <button className="mobile-filter-btn" onClick={toggleMobileFilters}>

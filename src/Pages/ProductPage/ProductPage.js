@@ -109,6 +109,8 @@ const toNum = (v, fallback = 0) => {
   const n = Number(v);
   return Number.isFinite(n) ? n : fallback;
 };
+const toCssUrl = (url) =>
+  url ? `url("${url.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}")` : "none";
 
 /** ---------- FAQ Accordion Component ---------- */
 const FAQItem = ({ question, answer, isOpen, onClick }) => {
@@ -531,7 +533,7 @@ const ProductPage = () => {
 
   const selectedMediaItem = mediaSafe[selectedImageIndex];
   const selectedImageUrl = selectedMediaItem ? JoinUrl(API_URL, selectedMediaItem.url) : "";
-  const cssSafeUrl = selectedImageUrl ? encodeURI(selectedImageUrl) : "";
+  const zoomBackgroundImage = toCssUrl(selectedImageUrl);
   const savingsPercent = selectedVariant?.discount || 0;
 
 
@@ -650,7 +652,7 @@ const ProductPage = () => {
                     <div 
                       className="zoom-result"
                       style={{
-                        backgroundImage: `url(${cssSafeUrl})`,
+                        backgroundImage: zoomBackgroundImage,
                         backgroundPosition: `${zoomPosition.x}% ${zoomPosition.y}%`,
                       }}
                     />

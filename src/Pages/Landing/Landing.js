@@ -10,9 +10,39 @@ import fdaLogo from '../../logo/fda.png';
 import Footer from '../../components/Footer/Footer';
 import Head from '../Head/Head';
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
+
+const homeSeoData = {
+  title: 'Best Animal Feed Supplement for Healthy Growth Care',
+  description:
+    'Best animal feed supplement for strong growth, immunity, and health. Natural nutrients support energy, digestion, and daily livestock care effectively.',
+  canonical: 'https://drbskhealthcare.com/',
+};
+
+const setMetaContent = (selector, value) => {
+  const meta = document.querySelector(selector);
+  if (meta) {
+    meta.setAttribute('content', value);
+  }
+};
 
 const Landing = () => {
   const [currentTimelineIndex, setCurrentTimelineIndex] = useState(0);
+
+  useEffect(() => {
+    document.title = homeSeoData.title;
+    setMetaContent('meta[name="description"]', homeSeoData.description);
+    setMetaContent('meta[name="robots"]', 'index, follow');
+    setMetaContent('meta[property="og:title"]', homeSeoData.title);
+    setMetaContent('meta[property="og:description"]', homeSeoData.description);
+    setMetaContent('meta[property="og:url"]', homeSeoData.canonical);
+    setMetaContent('meta[property="og:type"]', 'website');
+
+    const canonicalLink = document.querySelector('link[rel="canonical"]');
+    if (canonicalLink) {
+      canonicalLink.setAttribute('href', homeSeoData.canonical);
+    }
+  }, []);
 
   // Animate on scroll
   useEffect(() => {
@@ -78,6 +108,16 @@ const Landing = () => {
 
   return (
     <div className="landing-page">
+      <Helmet>
+        <title>{homeSeoData.title}</title>
+        <meta name="description" content={homeSeoData.description} />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href={homeSeoData.canonical} />
+        <meta property="og:title" content={homeSeoData.title} />
+        <meta property="og:description" content={homeSeoData.description} />
+        <meta property="og:url" content={homeSeoData.canonical} />
+        <meta property="og:type" content="website" />
+      </Helmet>
       <Head />
 
       {/* Banner Section */}

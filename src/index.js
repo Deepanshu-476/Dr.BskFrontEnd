@@ -10,6 +10,7 @@ import "react-toastify/dist/ReactToastify.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
+import { HelmetProvider } from "react-helmet-async";
 
 
 
@@ -26,14 +27,16 @@ root.render(
   // ✅ If you want NO double PageView logs in dev, comment StrictMode
   // <React.StrictMode>
   <HashRouter>
-    <Provider store={store}>
-      <PersistGate loading={null} persistor={persistor}>
-        <ThemeProvider theme={theme}>          
-          <App />
-        </ThemeProvider>
-      </PersistGate>
-      <ToastContainer autoClose={1000} />
-    </Provider>
+    <HelmetProvider>
+      <Provider store={store}>
+        <PersistGate loading={null} persistor={persistor}>
+          <ThemeProvider theme={theme}>          
+            <App />
+          </ThemeProvider>
+        </PersistGate>
+        <ToastContainer autoClose={1000} />
+      </Provider>
+    </HelmetProvider>
   </HashRouter>
   // </React.StrictMode>
 );
