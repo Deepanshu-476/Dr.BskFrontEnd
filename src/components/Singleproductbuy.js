@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { 
   ShoppingBag, 
@@ -17,7 +17,6 @@ import {
   Shield,
   Clock,
   Headphones,
-  Award,
   Package,
   AlertCircle,
   Lock
@@ -37,6 +36,10 @@ const SingleProductCheckout = () => {
   const navigate = useNavigate();
   
   const productFromState = location.state?.product;
+  const autoPayRequested = Boolean(location.state?.autoOpenPayment);
+  const autoPaymentStartedRef = useRef(false);
+  const autoPaymentNoticeShownRef = useRef(false);
+  const handleOnlineCheckoutRef = useRef(null);
   
   const [product, setProduct] = useState(productFromState || null);
   const [quantity, setQuantity] = useState(location.state?.quantity || 1);
@@ -62,7 +65,7 @@ const SingleProductCheckout = () => {
     selectedAddress: ''
   });
   
-  const [paymentMethod, setPaymentMethod] = useState('online');
+  const [paymentMethod, setPaymentMethod] = useState(location.state?.paymentMethod === 'cod' ? 'cod' : 'online');
   const [codCharge] = useState(99);
   const [paymentProcessing, setPaymentProcessing] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
@@ -726,6 +729,53 @@ const SingleProductCheckout = () => {
       await handleOnlineCheckout();
     }
   };
+
+  handleOnlineCheckoutRef.current = handleOnlineCheckout;
+
+  useEffect(() => {
+    if (!autoPayRequested || autoPaymentStartedRef.current || loading || !product) {
+      return;
+    }
+
+    if (paymentMethod !== 'online') {
+      setPaymentMethod('online');
+    }
+
+    const hasCheckoutDetails =
+      formData.selectedAddress &&
+      formData.email &&
+      isValidEmail(formData.email) &&
+      formData.phone &&
+      formData.phone.length === 10;
+
+    if (!hasCheckoutDetails) {
+      if (!autoPaymentNoticeShownRef.current) {
+        toast.info('Please add delivery details to continue to Razorpay.');
+        autoPaymentNoticeShownRef.current = true;
+      }
+      return;
+    }
+
+    if (checkoutLoading || paymentProcessing || codProcessing || isProcessing) {
+      return;
+    }
+
+    autoPaymentStartedRef.current = true;
+    handleOnlineCheckoutRef.current?.();
+  }, [
+    autoPayRequested,
+    loading,
+    product,
+    paymentMethod,
+    formData.selectedAddress,
+    formData.email,
+    formData.phone,
+    isValidEmail,
+    checkoutLoading,
+    paymentProcessing,
+    codProcessing,
+    isProcessing,
+  ]);
 
   const handleApplyPromo = () => {
     if (promoCode.toLowerCase() === 'welcome20') {

@@ -74,13 +74,6 @@ const Footer = () => {
                 />
               </a>
             </div>
-            <button
-              className="footer-playmore-btn"
-              type="button"
-              onClick={() => navigate('/play-more-herbs')}
-            >
-              Play More Herbs
-            </button>
           </div>
         </div>
 
@@ -215,6 +208,15 @@ const Footer = () => {
             <li><a onClick={() => navigate('/photo')}>Photo Gallery</a></li>
             <li><a onClick={() => navigate('/blogs')}>Blogs</a></li>
             <li><a onClick={() => navigate('/contactus')}>Contact us</a></li>
+            <li>
+              <button
+                className="footer-playmore-btn"
+                type="button"
+                onClick={() => navigate('/play-more-herbs')}
+              >
+                Play More Herbs
+              </button>
+            </li>
           </ul>
         </div>
 

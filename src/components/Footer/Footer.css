@@ -175,15 +175,15 @@
 }
 
 .footer-playmore-btn {
-  margin-top: 18px;
+  margin-top: 4px;
   border: none;
   border-radius: 8px;
   background: linear-gradient(135deg, #ffd86b, #f7b51f);
   color: #1d1500;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 800;
-  padding: 12px 22px;
-  min-width: 190px;
+  padding: 10px 18px;
+  min-width: 160px;
   box-shadow: 0 8px 18px rgba(104, 23, 27, 0.18);
   cursor: pointer;
   transition: transform 0.25s ease, box-shadow 0.25s ease;
@@ -282,7 +282,7 @@ address {
     padding-left: 27px;
 }
 .footer-playmore-btn {
-    margin-left: 27px;
+    margin-left: 0;
 }
 .footerLinkSec h4 {
     text-align: left;
