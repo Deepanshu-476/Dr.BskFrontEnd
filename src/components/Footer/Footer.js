@@ -74,6 +74,13 @@ const Footer = () => {
                 />
               </a>
             </div>
+            <button
+              className="footer-playmore-btn"
+              type="button"
+              onClick={() => navigate('/play-more-herbs')}
+            >
+              Play More Herbs
+            </button>
           </div>
         </div>
 

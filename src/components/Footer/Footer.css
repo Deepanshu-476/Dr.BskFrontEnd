@@ -174,6 +174,26 @@
   filter: grayscale(0%) contrast(100%) brightness(200%);
 }
 
+.footer-playmore-btn {
+  margin-top: 18px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #ffd86b, #f7b51f);
+  color: #1d1500;
+  font-size: 15px;
+  font-weight: 800;
+  padding: 12px 22px;
+  min-width: 190px;
+  box-shadow: 0 8px 18px rgba(104, 23, 27, 0.18);
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.footer-playmore-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(104, 23, 27, 0.24);
+}
+
 address {
   font-style: normal;
   margin-bottom: 20px;
@@ -260,6 +280,9 @@ address {
  .social-icons {
     justify-content: flex-start;
     padding-left: 27px;
+}
+.footer-playmore-btn {
+    margin-left: 27px;
 }
 .footerLinkSec h4 {
     text-align: left;

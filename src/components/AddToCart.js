@@ -1334,8 +1334,8 @@ const AddToCart = () => {
                   <h4>📞 Need Help?</h4>
                   <p>Contact our customer support</p>
                   <p className="support-contact">
-                    📧 support@drbsk.com<br />
-                    📱 +91 98765 43210
+                    📧 ukgermanpharmaceutical@gmail.com<br />
+                    📱 +91 9115739933
                   </p>
                   <p className="support-timings">Mon - Sat: 9:00 AM - 6:00 PM</p>
                 </div>

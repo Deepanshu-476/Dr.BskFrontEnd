@@ -13,6 +13,7 @@ import Head from "./Pages/Head/Head";
 import Cart from "./Pages/Cart/Cart";
 import Prescription from "./Pages/Prescription/Prescription";
 import Phone from "./Pages/Phone/Phone";
+import PlayMoreHerbs from "./Pages/PlayMoreHerbs/PlayMoreHerbs";
 
 import AddToCart from "./components/AddToCart";
 import OrderSuccessModal from "./components/success";
@@ -73,6 +74,7 @@ function App() {
         <Route path="/checkout" element={<SingleProductCheckout />} />
         <Route path="/Prescription" element={<Prescription />} />
         <Route path="/Phone" element={<Phone />} />
+        <Route path="/play-more-herbs" element={<PlayMoreHerbs />} />
         <Route path="/subcategory/:subCategoryName" element={<Fever />} />
 
         {/* footer pages */}

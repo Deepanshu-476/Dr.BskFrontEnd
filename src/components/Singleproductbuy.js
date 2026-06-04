@@ -1234,8 +1234,8 @@ const SingleProductCheckout = () => {
                 <Headphones size={isMobile ? 18 : 20} />
                 <h4>Need help?</h4>
                 <p>Contact our support team</p>
-                <a href="mailto:support@drbsk.com" className="help-email">support@drbsk.com</a>
-                <a href="tel:+919876543210" className="help-phone">+91 98765 43210</a>
+                <a href="mailto:ukgermanpharmaceutical@gmail.com" className="help-email">ukgermanpharmaceutical@gmail.com</a>
+                <a href="tel:+919876543210" className="help-phone">+91 9115739933</a>
                 <p className="help-timings">Mon - Sat, 9:00 AM - 6:00 PM</p>
               </div>
             </div>
