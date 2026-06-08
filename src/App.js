@@ -51,10 +51,12 @@ import ShippingPolicy from "./Pages/footerLinksPages/ShippingPolicy";
 import ReturnsPolicy from "./Pages/footerLinksPages/ReturnsPolicy";
 
 import { MobileBottomNav } from "./components/MobileBottomNav";
+import ScrollToTop from "./components/ScrollToTop";
 
 function App() {
   return (
     <>
+      <ScrollToTop />
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/homepage" element={<Dashboard />} />

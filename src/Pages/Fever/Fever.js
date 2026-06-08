@@ -271,6 +271,7 @@ const Fever = () => {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const productGridRef = useRef(null);
 
   const storedUser = localStorage.getItem("userData");
   const userData = storedUser ? JSON.parse(storedUser) : null;
@@ -619,7 +620,7 @@ const Fever = () => {
   const goToPage = (page) => {
     const p = Math.min(Math.max(1, page), totalPages);
     setCurrentPage(p);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    productGridRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const Pagination = () => {
@@ -774,7 +775,7 @@ const Fever = () => {
               </div>
             </div>
 
-            <div className="product-grid">
+            <div className="product-grid" ref={productGridRef}>
               <div className="product-header">
                 <div className="results-count">
                   Showing {products.length} product{products.length !== 1 ? "s" : ""}

@@ -8,7 +8,8 @@
 
 /* Product Container */
 .product-container {
-  max-width: 1200px;
+  width: 95%;
+  max-width: none;
   margin: 20px auto;
   background: white;
   border-radius: 10px;
@@ -17,18 +18,17 @@
 }
 
 .product-wrapper {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: minmax(430px, 54%) minmax(0, 46%);
   align-items: flex-start;
 }
 
 /* ========== PRODUCT IMAGE SECTION ========== */
 .product-image-container {
-  flex: 1 1 25%;
-  min-width: 350px;
-  padding: 20px;
+  min-width: 0;
+  padding: 20px 26px;
   position: sticky;
-  top: 10px;
+  top: 80px;
   align-self: flex-start;
   height: fit-content;
   z-index: 10;
@@ -40,6 +40,7 @@
   border-radius: 20px;
   padding: 20px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  overflow: visible;
 }
 
 /* Share Button */
@@ -109,21 +110,25 @@
 
 /* Image with Thumbnails Layout */
 .image-with-thumbnails {
-  display: flex;
-  gap: 15px;
+  display: grid;
+  grid-template-columns: 82px minmax(0, 1fr);
+  align-items: center;
+  gap: 18px;
   margin-bottom: 20px;
   position: relative;
 }
 
 /* Left Thumbnails */
 .thumbnails-left {
-    position: absolute;
-    top: 33px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    width: 80px;
-    flex-shrink: 0;}
+  position: relative;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 82px;
+  flex-shrink: 0;
+  z-index: 2;
+}
 
 .thumbnail-left {
   width: 80px;
@@ -184,27 +189,30 @@
   text-align: center;
 }
 
-.premium-image-wrapper {
+.zoom-wrapper {
   flex: 1;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   cursor: crosshair;
-  background: transparent;
+  background: #fff;
   padding: 0;
   margin: 0;
   border-radius: 12px;
+  min-height: 430px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .premium-product-image {
-position: relative;
-    top: -36px;
-    left: 97px;
-    width: 83%;
-    height: 403px;
-    object-fit: contain;
-    transition: transform 0.3s ease;
-    cursor: zoom-in;
-    display: block;
+  position: static;
+  width: 100%;
+  max-width: 520px;
+  height: 430px;
+  object-fit: contain;
+  transition: transform 0.3s ease;
+  cursor: zoom-in;
+  display: block;
 }
 
 
@@ -231,7 +239,7 @@ position: relative;
   z-index: 5;
 }
 
-.premium-image-wrapper:hover .zoom-hint {
+.zoom-wrapper:hover .zoom-hint {
   opacity: 1;
 }
 
@@ -254,9 +262,10 @@ position: relative;
 .zoom-result {
   position: absolute;
   top: 0;
-  left: calc(100% + 20px);
-  width: 400px;
-  height: 400px;
+  left: calc(100% + 18px);
+  right: auto;
+  width: 360px;
+  height: 360px;
   border: 2px solid #68171b;
   border-radius: 12px;
   background-color: #fff;
@@ -338,7 +347,7 @@ position: relative;
 
 /* ========== PRODUCT INFO SECTION ========== */
 .product-info {
-  flex: 1 1 50%;
+  min-width: 0;
   padding: 30px 20px;
   border-left: 1px solid #eee;
 }
@@ -965,7 +974,8 @@ position: relative;
 
 /* ========== BENEFITS SECTION ========== */
 .benefits-section {
-  max-width: 1200px;
+  width: 95%;
+  max-width: none;
   margin: 40px auto;
   background: white;
   border-radius: 10px;
@@ -1045,7 +1055,8 @@ position: relative;
 
 /* ========== FEATURE BADGES SECTION ========== */
 .feature-badges-section {
-  max-width: 1200px;
+  width: 95%;
+  max-width: none;
   margin: 40px auto;
   background: white;
   border-radius: 10px;
@@ -1101,7 +1112,8 @@ position: relative;
 
 /* ========== FAQ SECTION ========== */
 .faq-section {
-  max-width: 1200px;
+  width: 95%;
+  max-width: none;
   margin: 40px auto;
   background: white;
   border-radius: 10px;
@@ -1178,7 +1190,16 @@ position: relative;
 }
 
 @media (max-width: 768px) {
+  .product-container,
+  .benefits-section,
+  .feature-badges-section,
+  .faq-section {
+    width: 100%;
+    border-radius: 0;
+  }
+
   .product-wrapper {
+    display: flex;
     flex-direction: column;
   }
 
@@ -1194,6 +1215,7 @@ position: relative;
   }
 
   .image-with-thumbnails {
+    display: flex;
     flex-direction: column;
   }
   
@@ -1218,12 +1240,14 @@ position: relative;
     height: 4px;
   }
   
-  .premium-image-wrapper {
+  .zoom-wrapper {
     order: 1;
+    min-height: 320px;
   }
   
   .premium-product-image {
     height: 300px;
+    max-width: 100%;
   }
   
   .image-top-badges {
@@ -1397,11 +1421,13 @@ position: relative;
   }
   
   .image-with-thumbnails {
+    display: flex;
     flex-direction: column;
   }
   
-  .premium-image-wrapper {
+  .zoom-wrapper {
     order: 1;
+    min-height: 280px;
   }
 }
 
