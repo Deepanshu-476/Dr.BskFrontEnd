@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Trash2, ShoppingBag, ArrowLeft, CheckCircle, CreditCard, Wallet, X, MapPin, Home, Phone, Mail, Building2, Landmark, Globe, ChevronDown } from 'lucide-react';
+import { Trash2, ShoppingBag, ArrowLeft, CheckCircle, CreditCard, Wallet, X, MapPin, Home, Phone, Mail, Building2, Landmark, Globe, ChevronDown, Shield, RotateCcw, Truck, Plus, Lock, Edit3, Star, Headphones } from 'lucide-react';
 import './addToCart.css';
 import Footer from "./Footer/Footer";
+import Header from "./Header/Header";
 
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -72,7 +73,7 @@ const AddToCart = () => {
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [paymentProcessing, setPaymentProcessing] = useState(false);
   
-  const [paymentMethod, setPaymentMethod] = useState('online');
+  const [paymentMethod, setPaymentMethod] = useState('cod');
   const [codCharge] = useState(99);
   const [codProcessing, setCodProcessing] = useState(false);
   
@@ -95,6 +96,12 @@ const AddToCart = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingMessage, setProcessingMessage] = useState('');
 
+  useEffect(() => {
+    if (!codEnabled && paymentMethod === 'cod') {
+      setPaymentMethod('online');
+    }
+  }, [codEnabled, paymentMethod]);
+
   const storedUser = localStorage.getItem("userData");
   const parsedUserData = storedUser ? JSON.parse(storedUser) : null;
   const isWholesaler = parsedUserData?.type === "wholesalePartner";
@@ -108,6 +115,14 @@ const AddToCart = () => {
 
   const codTotal = paymentMethod === 'cod' ? baseTotal + codCharge : baseTotal;
   const finalTotal = paymentMethod === 'cod' ? codTotal : baseTotal;
+  const mrpTotal = cartItems.reduce((acc, item) => {
+    const price = isWholesaler 
+      ? parseFloat(item.retail_price || item.final_price || 0)
+      : parseFloat(item.final_price || 0);
+    const mrp = parseFloat(item.mrp || item.retail_price || price);
+    return acc + Math.max(mrp, price) * (item.quantity || 1);
+  }, 0);
+  const cartSavings = Math.max(mrpTotal - baseTotal, 0);
 
   const isValidEmail = useCallback((email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -998,11 +1013,340 @@ const AddToCart = () => {
     }));
   };
 
+  const getItemPrice = (item) => (
+    isWholesaler 
+      ? parseFloat(item.retail_price || item.final_price || 0)
+      : parseFloat(item.final_price || 0)
+  );
+
+  const getItemImage = (item) => {
+    const imageUrl = item?.media?.[0]?.url;
+    return imageUrl ? JoinUrl(API_URL, imageUrl) : 'https://via.placeholder.com/120x120?text=Product';
+  };
+
+  const getItemBadge = (item, index) => {
+    if (item?.tag) return item.tag;
+    if (index === 0) return 'Best Seller';
+    if (index === 1) return 'Ayurvedic';
+    return 'Doctor Recommended';
+  };
+
+  const doctorImage = `${process.env.PUBLIC_URL}/image.png`;
+
+  const getAddressText = (addr) => (typeof addr === 'object' ? addr.fullAddress : addr);
+  const getAddressPhone = (addr) => (typeof addr === 'object' ? addr.phone : '');
+  const getAddressEmail = (addr) => (typeof addr === 'object' ? addr.email : '');
+
+  const checkoutDisabled =
+    !formData.selectedAddress ||
+    checkoutLoading ||
+    paymentProcessing ||
+    isProcessing ||
+    codProcessing ||
+    !formData.email ||
+    !isValidEmail(formData.email) ||
+    !formData.phone ||
+    formData.phone.length !== 10;
+
+  const renderV2AddressCard = (addr, index) => {
+    const addressText = getAddressText(addr);
+    const phone = getAddressPhone(addr) || formData.phone || '98765 43210';
+    const email = getAddressEmail(addr);
+    const selected = formData.selectedAddress === addressText;
+
+    return (
+      <label className={`cart1-address-card ${selected ? 'selected' : ''}`} key={`${addressText}-${index}`}>
+        <input
+          type="radio"
+          name="selectedAddress"
+          checked={selected}
+          onChange={() => handleAddressSelect(addressText, email, phone)}
+        />
+        <span className="cart1-radio" />
+        <span className="cart1-address-icon">
+          {index === 0 ? <Home size={28} /> : <Building2 size={28} />}
+        </span>
+        <span className="cart1-address-copy">
+          <span className="cart1-address-top">
+            <strong>{userData.name || 'Rahul Sharma'}</strong>
+            <em>+91 {phone}</em>
+          </span>
+          <span>{addressText}</span>
+          {index === 0 && <small>Default Address</small>}
+        </span>
+        <button type="button" className="cart1-edit-btn" onClick={() => setShowModal(true)}>
+          <Edit3 size={14} /> Edit
+        </button>
+      </label>
+    );
+  };
+
+  const renderV2SummaryRows = () => (
+    <>
+      <div className="cart1-summary-row"><span>Subtotal ({cartItems.length} Items)</span><strong>Rs. {baseTotal.toFixed(2)}</strong></div>
+      <div className="cart1-summary-row"><span>Shipping</span><strong className="cart1-free">FREE</strong></div>
+      {paymentMethod === 'cod' && <div className="cart1-summary-row"><span>COD Charges</span><strong>Rs. {codCharge.toFixed(2)}</strong></div>}
+      {cartSavings > 0 && <div className="cart1-summary-row"><span>You Save</span><strong className="cart1-save">- Rs. {cartSavings.toFixed(2)}</strong></div>}
+    </>
+  );
+
+  const renderV2CheckoutButton = () => (
+    <button
+      className="cart1-checkout-btn"
+      onClick={handleCheckout}
+      disabled={checkoutDisabled}
+    >
+      {checkoutLoading || paymentProcessing || isProcessing || codProcessing ? (
+        <span>Processing...</span>
+      ) : (
+        <>
+          <strong><Lock size={17} /> Proceed to Checkout</strong>
+          <span>{paymentMethod === 'cod' ? 'Cash on Delivery Available' : 'Secure Online Payment'}</span>
+        </>
+      )}
+    </button>
+  );
+
   return (
     <>
       {renderProcessingLoader()}
+      <Header />
+
+      <div className="cart1-page">
+        <div className="cart1-mobile-trust">
+          <span><Shield size={29} /><strong>100% Safe & Secure</strong><small>Your data is protected</small></span>
+          <span><RotateCcw size={29} /><strong>Easy Returns</strong><small>No hassle</small></span>
+        </div>
+
+        <div className="cart1-shell">
+          <button className="cart1-back" onClick={handleBackButtonClick}>
+            <ArrowLeft size={15} /> Continue Shopping
+          </button>
+
+          {cartItems.length === 0 ? (
+            <div className="cart1-empty">
+              <ShoppingBag size={58} />
+              <h1>Your cart is empty</h1>
+              <p>Add some items to get started.</p>
+              <button onClick={handleContinueShoppingClick}>Start Shopping</button>
+            </div>
+          ) : (
+            <>
+              <div className="cart1-heading">
+                <h1>Your Cart <span>({cartItems.length} Items)</span></h1>
+                <p>Review your items and proceed to checkout</p>
+              </div>
+
+              <div className="cart1-layout">
+                <main className="cart1-main">
+                  <section className="cart1-card cart1-items-card">
+                    <div className="cart1-table-head">
+                      <span>Product</span>
+                      <span>Price</span>
+                      <span>Quantity</span>
+                      <span>Total</span>
+                    </div>
+
+                    <div className="cart1-items">
+                      {cartItems.map((item, index) => {
+                        const itemPrice = getItemPrice(item);
+                        const qty = item.quantity || 1;
+                        return (
+                          <article className="cart1-item" key={item._id}>
+                            <div className="cart1-product-cell">
+                              <Link to={`/ProductPage/${item._id}`} className="cart1-item-img">
+                                <img src={getItemImage(item)} alt={item.name} />
+                              </Link>
+                              <div className="cart1-item-info">
+                                <h2>{item.name}</h2>
+                                <strong className="cart1-mobile-price">Rs. {itemPrice.toFixed(2)}</strong>
+                                <div className="cart1-mobile-controls">
+                                  <div className="cart1-qty">
+                                    <button onClick={() => handleQuantityChange(item._id, qty - 1)} disabled={qty <= 1}>-</button>
+                                    <span>{qty}</span>
+                                    <button onClick={() => handleQuantityChange(item._id, qty + 1)}>+</button>
+                                  </div>
+                                  <button className="cart1-mobile-remove" onClick={() => handleRemoveItem(item._id)}>
+                                    <Trash2 size={22} />
+                                  </button>
+                                </div>
+                                <span className="cart1-item-badge">{getItemBadge(item, index)}</span>
+                              </div>
+                            </div>
+                            <strong className="cart1-price">Rs. {itemPrice.toFixed(2)}</strong>
+                            <div className="cart1-quantity-cell">
+                              <div className="cart1-qty">
+                                <button onClick={() => handleQuantityChange(item._id, qty - 1)} disabled={qty <= 1}>-</button>
+                                <span>{qty}</span>
+                                <button onClick={() => handleQuantityChange(item._id, qty + 1)}>+</button>
+                              </div>
+                              <button className="cart1-remove" onClick={() => handleRemoveItem(item._id)}>
+                                <Trash2 size={16} /> <span>Remove</span>
+                              </button>
+                            </div>
+                            <strong className="cart1-line-total">Rs. {(itemPrice * qty).toFixed(2)}</strong>
+                          </article>
+                        );
+                      })}
+                    </div>
+
+                    <button className="cart1-add-more" onClick={handleContinueShoppingClick}>
+                      <Plus size={21} /> Add More Products <ChevronDown size={18} />
+                    </button>
+
+                    <div className="cart1-safe">
+                      <Shield size={38} />
+                      <div><strong>100% Safe & Secure</strong><span>Your personal details and payment information are always protected with us.</span></div>
+                    </div>
+                  </section>
+
+                  <section className="cart1-card cart1-address-section">
+                    <h2>Choose Your Delivery Address</h2>
+                    {addresses.length > 0 ? (
+                      <div className="cart1-address-list">
+                        {addresses.map((addr, index) => renderV2AddressCard(addr, index))}
+                      </div>
+                    ) : (
+                      <div className="cart1-no-address">
+                        <MapPin size={22} />
+                        <span>No address saved yet. Please add your delivery address.</span>
+                      </div>
+                    )}
+                    <button className="cart1-link-btn" onClick={() => setShowModal(true)}>
+                      <Plus size={18} /> Add New Address
+                    </button>
+                  </section>
+
+                  <section className="cart1-card cart1-payment-section">
+                    <div className="cart1-section-title">
+                      <h2>Payment Method</h2>
+                      <span><Lock size={13} /> Secure & Encrypted</span>
+                    </div>
+                    <div className="cart1-payment-list">
+                      {codEnabled && (
+                        <label className={`cart1-payment-option ${paymentMethod === 'cod' ? 'selected' : ''}`}>
+                          <input type="radio" name="paymentMethod" value="cod" checked={paymentMethod === 'cod'} onChange={(e) => handlePaymentMethodChange(e.target.value)} />
+                          <span className="cart1-radio" />
+                          <Wallet size={32} />
+                          <span><strong>Cash on Delivery (COD)</strong><small>Pay when your order is delivered</small></span>
+                          <em>Rs. {codCharge} COD Charges</em>
+                        </label>
+                      )}
+                      <label className={`cart1-payment-option ${paymentMethod === 'online' ? 'selected' : ''}`}>
+                        <input type="radio" name="paymentMethod" value="online" checked={paymentMethod === 'online'} onChange={(e) => handlePaymentMethodChange(e.target.value)} />
+                        <span className="cart1-radio" />
+                        <CreditCard size={32} />
+                        <span><strong>Online Payment (UPI / Cards / Netbanking)</strong><small>Get extra Rs. 50 OFF on prepaid orders</small></span>
+                        <b>UPI&nbsp;&nbsp; VISA&nbsp;&nbsp; Mastercard&nbsp;&nbsp; RuPay</b>
+                      </label>
+                    </div>
+                  </section>
+
+                  <section className="cart1-benefits cart1-card">
+                    <span><RotateCcw size={24} /> Easy Returns</span>
+                    <span><CheckCircle size={24} /> 7 Day Return Policy</span>
+                    <span><Shield size={24} /> 100% Original Ayurvedic Products</span>
+                    <span><Truck size={24} /> Safe & Secure Delivery</span>
+                  </section>
+
+                  <section className="cart1-mobile-summary cart1-card">
+                    <h2>Order Summary <button>Hide <ChevronDown size={16} /></button></h2>
+                    <div className="cart1-summary-products">
+                      {cartItems.map((item) => (
+                        <div key={`mobile-summary-${item._id}`}>
+                          <img src={getItemImage(item)} alt={item.name} />
+                          <span><strong>{item.name}</strong><small>Qty: {item.quantity || 1}</small></span>
+                          <b>Rs. {(getItemPrice(item) * (item.quantity || 1)).toFixed(2)}</b>
+                        </div>
+                      ))}
+                    </div>
+                    {renderV2SummaryRows()}
+                    <div className="cart1-total"><span>Total Amount</span><strong>Rs. {finalTotal.toFixed(2)}</strong><small>(Inclusive of all taxes)</small></div>
+                  </section>
+
+                  <section className="cart1-mobile-delivery cart1-card">
+                    <Truck size={38} />
+                    <span><strong>FREE Delivery Across India</strong><small>Estimated delivery: 2-4 Days</small></span>
+                  </section>
+                </main>
+
+                <aside className="cart1-sidebar">
+                  <section className="cart1-card cart1-summary-card">
+                    <h2>Order Summary</h2>
+                    <div className="cart1-summary-preview">
+                      {cartItems.slice(0, 3).map((item) => (
+                        <img key={item._id} src={getItemImage(item)} alt={item.name} />
+                      ))}
+                      <strong>{cartItems.map(item => item.name).join(' + ')}</strong>
+                    </div>
+                    {renderV2SummaryRows()}
+                    <div className="cart1-total"><span>Total Amount</span><strong>Rs. {finalTotal.toFixed(2)}</strong><small>(Inclusive of all taxes)</small></div>
+                    {cartSavings > 0 && <div className="cart1-save-box">Congratulations! You are saving Rs. {cartSavings.toFixed(2)} on this order.</div>}
+                    <div className="cart1-security">
+                      <span><Lock size={15} /> Secure SSL Encryption</span>
+                      <span><Shield size={15} /> 100% Safe & Secure Payments</span>
+                      <span><CheckCircle size={15} /> Your data is protected</span>
+                    </div>
+                  </section>
+
+                  <section className="cart1-card cart1-doctor">
+                    <div className="cart1-doctor-photo">
+                      <img
+                        src={doctorImage}
+                        alt="Dr. B.S. Kansal"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                          e.currentTarget.parentElement.classList.add('show-fallback');
+                        }}
+                      />
+                      <span>Dr.</span>
+                    </div>
+                    <div>
+                      <span>Formulated & Recommended by</span>
+                      <h3>Dr. B.S. Kansal</h3>
+                      <p>25+ Years of Experience in Ayurvedic Medicine</p>
+                      <small><CheckCircle size={13} /> AYUSH Certified</small>
+                      <small><CheckCircle size={13} /> Expert in Diabetes Care</small>
+                      <small><CheckCircle size={13} /> Thousands of Happy Patients</small>
+                    </div>
+                  </section>
+
+                  <section className="cart1-card cart1-whatsapp">
+                    <Headphones size={38} />
+                    <div>
+                      <h3>Need Help or Prefer to Order on WhatsApp?</h3>
+                      <p>Our health experts are ready to help you.</p>
+                      <a href="https://wa.me/919115739933">Order on WhatsApp<br /><span>+91 91157 39933</span></a>
+                      <small>Available 9 AM to 9 PM (Mon - Sun)</small>
+                    </div>
+                  </section>
+
+                  <section className="cart1-card cart1-reviews">
+                    <h3>Trusted by 32,000+ Customers</h3>
+                    <div>{Array.from({ length: 5 }).map((_, index) => <Star key={index} size={18} fill="currentColor" />)}</div>
+                    <strong>4.8/5 <span>(1,200+ Reviews)</span></strong>
+                    <p>"Results are amazing! My sugar levels are much better now." - Rajesh Verma</p>
+                  </section>
+                </aside>
+              </div>
+            </>
+          )}
+        </div>
+
+        {cartItems.length > 0 && (
+          <div className="cart1-sticky">
+            <div>
+              <span>Total Amount</span>
+              <strong>Rs. {finalTotal.toFixed(2)}</strong>
+              {cartSavings > 0 && <small>You Save Rs. {cartSavings.toFixed(2)}</small>}
+            </div>
+            <div className="cart1-sticky-secure"><Shield size={26} /><span><strong>100% Safe & Secure</strong><small>Your order is protected</small></span></div>
+            {renderV2CheckoutButton()}
+          </div>
+        )}
+      </div>
       
-      <div className="cart-container">
+      <div className="cart-container cart1-old-hidden">
         {renderLoginPrompt()}
         
         <div className="cart-header">
@@ -1564,3 +1908,4 @@ const AddToCart = () => {
 };
 
 export default AddToCart;
+

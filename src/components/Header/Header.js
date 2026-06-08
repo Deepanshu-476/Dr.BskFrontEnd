@@ -385,9 +385,9 @@ const Header = () => {
             </div>
             
             <div className="nav-contact">
-              <a href="tel:+919115513759" className="contact-link">
+              <a href="tel:+919115915933" className="contact-link">
                 <Phone size={16} />
-                <span>+91-911-551-3759</span>
+                <span>+91-9115915933</span>
               </a>
               <a href="mailto:ukgermanpharmaceutical@gmail.com" className="contact-link">
                 <Mail size={16} />
@@ -576,9 +576,9 @@ const Header = () => {
                 <div className="mobile-menu-footer">
                   <div className="mobile-contact-section">
                     <div className="mobile-contact-info">
-                      <a href="tel:+919115513759" className="mobile-contact-link">
+                      <a href="tel:+91-9115915933" className="mobile-contact-link">
                         <Phone size={18} />
-                        <span>+91-911-551-3759</span>
+                        <span>+91-9115915933</span>
                       </a>
                       <a href="mailto:ukgermanpharmaceutical@gmail.com" className="mobile-contact-link">
                         <Mail size={18} />

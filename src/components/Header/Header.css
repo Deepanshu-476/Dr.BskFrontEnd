@@ -2330,3 +2330,17 @@ html, body {
   height: 100vh !important;
   max-height: 100vh !important;
 }
+
+/* Keep the site header pinned while any page scrolls. */
+.header-main-container {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 5000 !important;
+  background: #fff;
+}
+
+.desktop-header,
+.mobile-header {
+  top: 0 !important;
+  z-index: 5001 !important;
+}

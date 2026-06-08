@@ -74,7 +74,7 @@ function App() {
         <Route path="/checkout" element={<SingleProductCheckout />} />
         <Route path="/Prescription" element={<Prescription />} />
         <Route path="/Phone" element={<Phone />} />
-        <Route path="/play-more-herbs" element={<PlayMoreHerbs />} />
+        <Route path="/Stame-Life" element={<PlayMoreHerbs />} />
         <Route path="/subcategory/:subCategoryName" element={<Fever />} />
 
         {/* footer pages */}

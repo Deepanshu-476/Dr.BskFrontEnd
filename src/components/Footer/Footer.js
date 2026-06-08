@@ -212,9 +212,9 @@ const Footer = () => {
               <button
                 className="footer-playmore-btn"
                 type="button"
-                onClick={() => navigate('/play-more-herbs')}
+                onClick={() => navigate('/Stame-Life')}
               >
-                Play More Herbs
+                STAME LIFE
               </button>
             </li>
           </ul>

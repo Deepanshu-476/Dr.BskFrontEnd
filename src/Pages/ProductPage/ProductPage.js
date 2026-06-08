@@ -534,7 +534,12 @@ const ProductPage = () => {
   const selectedMediaItem = mediaSafe[selectedImageIndex];
   const selectedImageUrl = selectedMediaItem ? JoinUrl(API_URL, selectedMediaItem.url) : "";
   const zoomBackgroundImage = toCssUrl(selectedImageUrl);
-  const savingsPercent = selectedVariant?.discount || 0;
+  const savingsPercent = selectedVariant?.discount ?? product?.discount ?? 0;
+  const hasBackendDiscount = Number(savingsPercent) > 0;
+  const discountPercentLabel = hasBackendDiscount
+    ? `${Number(savingsPercent) % 1 === 0 ? Number(savingsPercent).toFixed(0) : Number(savingsPercent).toFixed(2)}%`
+    : "";
+  const discountLabel = discountPercentLabel ? `${discountPercentLabel} OFF` : "";
 
 
 
@@ -565,7 +570,9 @@ const ProductPage = () => {
                 <div className="image-top-badges">
                   <span className="top-badge natural">NATURAL</span>
                   <span className="top-badge bestseller">BESTSELLER</span>
-                  <span className="top-badge discount">20% OFF</span>
+                  {hasBackendDiscount && (
+                    <span className="top-badge discount">{discountLabel}</span>
+                  )}
                   <span className="top-badge doctor">DOCTOR CHOICE</span>
                 </div>
 
@@ -722,8 +729,8 @@ const ProductPage = () => {
                   {unitMrp != null && unitMrp > unitPrice && (
                     <>
                       <span className="original-price-new">{money(unitMrp)}</span>
-                      {savingsPercent > 0 && (
-                        <span className="save-badge">Save {savingsPercent}%</span>
+                      {hasBackendDiscount && (
+                        <span className="save-badge">Save {discountPercentLabel}</span>
                       )}
                     </>
                   )}
@@ -752,10 +759,12 @@ const ProductPage = () => {
                   <span className="offers-title">Special Offers</span>
                 </div>
                 <div className="offers-list">
-                  <div className="offer-item-new">
-                    <span className="offer-check">✅</span>
-                    <span>Flat 20% OFF applied at checkout.</span>
-                  </div>
+                  {hasBackendDiscount && (
+                    <div className="offer-item-new">
+                      <span className="offer-check">✅</span>
+                      <span>Flat {discountLabel} applied at checkout.</span>
+                    </div>
+                  )}
                   <div className="offer-item-new">
                     <span className="offer-check">⬇️</span>
                     <span>Extra ₹200 OFF on all Prepaid Orders.</span>

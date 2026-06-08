@@ -14,6 +14,8 @@ import {
   Map,
   Globe,
   Truck,
+  Users,
+  User,
   Shield,
   Clock,
   Headphones,
@@ -55,8 +57,10 @@ const SingleProductCheckout = () => {
   const [addressLoading, setAddressLoading] = useState(false);
   
   const [formData, setFormData] = useState({
+    fullName: '',
     flat: '',
     landmark: '',
+    pincode: '',
     state: '',
     city: '',
     country: 'India',
@@ -65,8 +69,8 @@ const SingleProductCheckout = () => {
     selectedAddress: ''
   });
   
-  const [paymentMethod, setPaymentMethod] = useState(location.state?.paymentMethod === 'cod' ? 'cod' : 'online');
-  const [codCharge] = useState(99);
+  const [paymentMethod, setPaymentMethod] = useState(location.state?.paymentMethod === 'online' ? 'online' : 'cod');
+  const [codCharge] = useState(0);
   const [paymentProcessing, setPaymentProcessing] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [codProcessing, setCodProcessing] = useState(false);
@@ -869,6 +873,47 @@ const SingleProductCheckout = () => {
     }
   };
 
+  const productImage = product?.media?.[0]?.url
+    ? JoinUrl(API_URL, product.media[0].url)
+    : 'https://via.placeholder.com/150x150?text=No+Image';
+  const doctorImage = `${process.env.PUBLIC_URL}/image.png`;
+
+  const updateCheckoutField = (field, value) => {
+    setFormData(prev => {
+      const next = { ...prev, [field]: value };
+      const addressParts = [
+        next.flat,
+        next.landmark,
+        next.city,
+        next.state,
+        next.pincode ? `Pincode ${next.pincode}` : '',
+        next.country
+      ].filter(Boolean);
+
+      return {
+        ...next,
+        selectedAddress: addressParts.join(', ')
+      };
+    });
+  };
+
+  const handlePackageSelect = (packQuantity) => {
+    setQuantity(packQuantity);
+  };
+
+  const packageOptions = [
+    { months: 1, packs: 1, label: '1 Month Kit', note: '1 Pack' },
+    { months: 3, packs: 3, label: '3 Month Kit', note: '3 Packs', popular: true },
+    { months: 2, packs: 2, label: '2 Month Kit', note: '2 Packs' }
+  ];
+
+  const trustItems = [
+    { icon: Shield, title: 'Doctor Recommended' },
+    { icon: CheckCircle, title: '32,000+ Orders Delivered' },
+    { icon: Lock, title: 'Secure Checkout' },
+    { icon: Headphones, title: '24x7 Support' }
+  ];
+
   if (loading) {
     return (
       <>
@@ -896,6 +941,552 @@ const SingleProductCheckout = () => {
     );
   }
 
+  return (
+    <>
+      <Header />
+
+      {renderProcessingLoader()}
+
+      <div className="checkout-container checkout-v2">
+        <div className="checkout-top-strip">
+          <div className="checkout-shell checkout-trust-row">
+            <div className="checkout-brand-copy">
+              <button className="back-button" onClick={() => navigate(-1)} aria-label="Continue shopping">
+                <ArrowLeft size={18} />
+              </button>
+              <div>
+                <h1>India's Trusted Ayurvedic Care</h1>
+                <p>Loved by <strong>32,000+</strong> Happy Customers</p>
+              </div>
+            </div>
+
+            <div className="trust-metrics">
+              {trustItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <div className="trust-metric" key={item.title}>
+                    <Icon size={28} />
+                    <span>{item.title}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        <main className="checkout-shell checkout-layout">
+          <section className="checkout-left">
+            <div className="checkout-promise-row">
+              <div className="promise-tile">
+                <Wallet size={30} />
+                <div>
+                  <strong>Cash On Delivery Available</strong>
+                  <span>Pay when you receive your order</span>
+                </div>
+              </div>
+              <div className="promise-tile">
+                <Users size={32} />
+                <div>
+                  <strong>Free Delivery</strong>
+                  <span>Across India</span>
+                </div>
+              </div>
+              <div className="promise-tile mobile-doctor-promise">
+                <User size={32} />
+                <div>
+                  <strong>Doctor</strong>
+                  <span>Recommended</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="mobile-product-strip">
+              <img src={productImage} alt={product.name} onError={(e) => { e.target.src = 'https://via.placeholder.com/120x120?text=No+Image'; }} />
+              <div>
+                <strong>{product.name}</strong>
+                <span>{selectedVariant?.label || 'Standard Pack'}</span>
+              </div>
+              <div>
+                <strong>Rs. {unitPrice.toFixed(2)}</strong>
+                {mrpPrice > unitPrice && <span>Rs. {mrpPrice.toFixed(2)}</span>}
+                {savingsPercent > 0 && <em>{savingsPercent}% OFF</em>}
+              </div>
+            </div>
+
+            <div className="mobile-recent-orders">
+              <CheckCircle size={18} />
+              132 People purchased this product today
+            </div>
+
+            <div className="checkout-panel delivery-panel">
+              <div className="step-heading">
+                <span>{isMobile ? 2 : 1}</span>
+                <h2>Delivery Details</h2>
+              </div>
+
+              <div className="privacy-note">
+                <Shield size={16} />
+                Your information is safe with us and will not be shared.
+              </div>
+
+              <div className="delivery-form">
+                <label className="form-control full">
+                  <span>Mobile Number *</span>
+                  <div className="phone-control">
+                    <span>+91</span>
+                    <input
+                      type="tel"
+                      placeholder="Enter your 10 digit mobile number"
+                      value={formData.phone}
+                      onChange={handlePhoneChange}
+                      maxLength="10"
+                    />
+                  </div>
+                  <small>We will send order updates on this number</small>
+                </label>
+
+                <label className="form-control full">
+                  <span>Full Name *</span>
+                  <input
+                    type="text"
+                    placeholder="Enter your full name"
+                    value={formData.fullName}
+                    onChange={(e) => updateCheckoutField('fullName', e.target.value)}
+                  />
+                </label>
+
+                <label className="form-control">
+                  <span>Pincode *</span>
+                  <input
+                    type="text"
+                    placeholder="Enter pincode"
+                    value={formData.pincode}
+                    onChange={(e) => updateCheckoutField('pincode', e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  />
+                </label>
+
+                <label className="form-control">
+                  <span>City / Town *</span>
+                  <input
+                    type="text"
+                    placeholder="Enter city"
+                    value={formData.city}
+                    onChange={(e) => updateCheckoutField('city', e.target.value)}
+                  />
+                </label>
+
+                <label className="form-control full">
+                  <span>Address *</span>
+                  <input
+                    type="text"
+                    placeholder="House No., Building, Street, Area"
+                    value={formData.flat}
+                    onChange={(e) => updateCheckoutField('flat', e.target.value)}
+                  />
+                </label>
+
+                <label className="form-control full">
+                  <span>Landmark <em>(Optional)</em></span>
+                  <input
+                    type="text"
+                    placeholder="E.g. Near Post Office, School, Temple"
+                    value={formData.landmark}
+                    onChange={(e) => updateCheckoutField('landmark', e.target.value)}
+                  />
+                </label>
+
+                <label className="form-control full">
+                  <span>Email Address *</span>
+                  <input
+                    type="email"
+                    placeholder="Enter email for order confirmation"
+                    value={formData.email}
+                    onChange={handleEmailChange}
+                  />
+                  {formData.email && !isValidEmail(formData.email) && (
+                    <small className="error-text">Please enter a valid email address</small>
+                  )}
+                </label>
+              </div>
+
+              <div className="mini-benefits">
+                <span><Clock size={18} /> Easy Returns</span>
+                <span><CheckCircle size={18} /> 7 Day Return Policy</span>
+                <span><Shield size={18} /> Original Ayurvedic Products</span>
+                <span><Truck size={18} /> Safe Delivery</span>
+              </div>
+            </div>
+
+            {addresses.length > 0 && (
+              <div className="checkout-panel saved-panel">
+                <div className="section-header compact">
+                  <h2><MapPin size={18} /> Saved Addresses</h2>
+                  <button className="add-address-btn" onClick={() => setShowAddressModal(true)}>
+                    Add New
+                  </button>
+                </div>
+                <ul className={`address-list ${isMobile ? 'mobile' : ''}`}>
+                  {addresses.map((addr, index) => renderAddressItem(addr, index))}
+                </ul>
+              </div>
+            )}
+
+            <div className="checkout-panel package-panel">
+              <div className="step-heading">
+                <span>{isMobile ? 3 : 2}</span>
+                <h2>Choose Your Package <small>(Most Customers Buy 3 Month Course)</small></h2>
+              </div>
+
+              <div className="package-grid">
+                {packageOptions.map((option) => {
+                  const optionTotal = unitPrice * option.packs;
+                  const optionMrp = mrpPrice * option.packs;
+                  const optionSave = Math.max(optionMrp - optionTotal, 0);
+
+                  return (
+                    <button
+                      type="button"
+                      className={`package-card ${quantity === option.packs ? 'selected' : ''}`}
+                      key={option.label}
+                      onClick={() => handlePackageSelect(option.packs)}
+                    >
+                      {option.popular && <span className="best-value">Best Value</span>}
+                      <span className="radio-dot" />
+                      <div className="pack-title-row">
+                        <strong>{option.label}</strong>
+                        <small>({option.note})</small>
+                      </div>
+                      <img src={productImage} alt={product.name} onError={(e) => { e.target.src = 'https://via.placeholder.com/150x150?text=No+Image'; }} />
+                      <div className="pack-price-row">
+                        <span className="pack-price">Rs. {optionTotal.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</span>
+                        {optionMrp > optionTotal && <span className="pack-mrp">Rs. {optionMrp.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</span>}
+                      </div>
+                      {optionSave > 0 && <span className="pack-save">You Save Rs. {optionSave.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</span>}
+                      {option.popular && <em><span>+ FREE Shipping</span><span>+ FREE Bonus Drops</span></em>}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="recent-orders">
+                <CheckCircle size={18} />
+                132 People ordered this product in the last 24 hours
+              </div>
+            </div>
+
+          </section>
+
+          <aside className="checkout-right">
+            <div className="summary-card">
+              <h3>Order Summary</h3>
+              <div className="summary-product">
+                <img src={productImage} alt={product.name} onError={(e) => { e.target.src = 'https://via.placeholder.com/150x150?text=No+Image'; }} />
+                <div>
+                  <strong>{product.name}</strong>
+                  <span>{selectedVariant?.label || 'Standard Pack'}</span>
+                </div>
+              </div>
+
+              <div className="summary-qty">
+                <span>Quantity</span>
+                <div className="quantity-controls">
+                  <button className="quantity-btn" onClick={decreaseQuantity} disabled={quantity <= 1}>-</button>
+                  <span className="quantity-value">{quantity}</span>
+                  <button className="quantity-btn" onClick={increaseQuantity}>+</button>
+                </div>
+              </div>
+
+              <div className="price-breakdown">
+                <div className="price-row"><span>Price ({quantity} item{quantity > 1 ? 's' : ''})</span><strong>Rs. {baseTotal.toFixed(2)}</strong></div>
+                {savingsAmount > 0 && <div className="price-row savings-row"><span>You Save</span><strong>- Rs. {savingsAmount.toFixed(2)}</strong></div>}
+                {paymentMethod === 'cod' && codCharge > 0 && <div className="price-row cod-row"><span>COD Charge</span><strong>+ Rs. {codCharge.toFixed(2)}</strong></div>}
+                <div className="price-row"><span>Shipping</span><strong className="free-shipping">FREE</strong></div>
+              </div>
+
+              <div className="summary-payment-method">
+                <h4>Payment Method</h4>
+                <div className="summary-payment-stack">
+                  {codEnabled && (
+                    <label className={`summary-payment-row ${paymentMethod === 'cod' ? 'selected' : ''}`}>
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        value="cod"
+                        checked={paymentMethod === 'cod'}
+                        onChange={(e) => setPaymentMethod(e.target.value)}
+                      />
+                      <div>
+                        <strong>Cash on Delivery</strong>
+                        <span>Pay when you receive</span>
+                      </div>
+                      <Wallet size={18} />
+                    </label>
+                  )}
+
+                  <label className={`summary-payment-row ${paymentMethod === 'online' ? 'selected' : ''}`}>
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="online"
+                      checked={paymentMethod === 'online'}
+                      onChange={(e) => setPaymentMethod(e.target.value)}
+                    />
+                    <div>
+                      <strong>Online Payment</strong>
+                      <span>UPI / Cards / Netbanking</span>
+                    </div>
+                    <CreditCard size={18} />
+                  </label>
+                </div>
+              </div>
+
+              <div className="total-section">
+                <div className="total-row">
+                  <span>Total Amount</span>
+                  <strong>Rs. {finalTotal.toFixed(2)}</strong>
+                </div>
+                <p>Inclusive of all taxes</p>
+              </div>
+
+              {savingsAmount > 0 && (
+                <div className="save-alert">
+                  Congratulations! You are saving Rs. {savingsAmount.toFixed(2)} on this order.
+                </div>
+              )}
+
+              <div className="security-list">
+                <span><Lock size={16} /> Secure SSL Encryption</span>
+                <span><Shield size={16} /> 100% Safe & Secure Payments</span>
+                <span><CheckCircle size={16} /> Your data is protected</span>
+              </div>
+            </div>
+
+            <div className="doctor-card">
+              <div className="doctor-photo">
+                <img
+                  src={doctorImage}
+                  alt="Dr. B.S. Kansal"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.parentElement.classList.add('show-fallback');
+                  }}
+                />
+                <span>Dr.</span>
+              </div>
+              <div>
+                <span>Formulated & Recommended by</span>
+                <h3>Dr. B.S. Kansal</h3>
+                <p>25+ Years of Experience in Ayurvedic Medicine</p>
+                <ul>
+                  <li>AYUSH Certified</li>
+                  <li>Expert in Diabetes Care</li>
+                  <li>Thousands of Happy Patients</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="whatsapp-card">
+              <Headphones size={36} />
+              <div>
+                <h3>Need Help or Prefer to Order on WhatsApp?</h3>
+                <p>Our health experts are ready to help you.</p>
+                <a href="https://wa.me/919115739933">Order on WhatsApp<br /><span>+91 91157 39933</span></a>
+                <small>Available 9 AM to 9 PM (Mon - Sun)</small>
+              </div>
+            </div>
+
+            <div className="mobile-review-card">
+              <h3>Why 32,000+ Customers Trust Us</h3>
+              <div className="stars">*****</div>
+              <strong>4.8/5 <span>(1,200+ Reviews)</span></strong>
+              <p>"Results are amazing! My sugar levels are much better now." - Rajesh Verma</p>
+            </div>
+
+            <div className="mobile-delivery-card">
+              <div><Truck size={28} /><span><strong>Free Delivery</strong>Across India</span><em>FREE</em></div>
+              <div><Clock size={28} /><span><strong>Easy Returns</strong>7-day return policy</span></div>
+              <div><Shield size={28} /><span><strong>Secure Payment</strong>Your data is protected</span></div>
+            </div>
+
+          </aside>
+        </main>
+
+        <div className="sticky-order-bar">
+          <div className="secure-copy">
+            <Shield size={28} />
+            <div><strong>100% Safe & Secure</strong><span>Your order is protected</span></div>
+          </div>
+          <img src={productImage} alt={product.name} onError={(e) => { e.target.src = 'https://via.placeholder.com/80x80?text=No+Image'; }} />
+          <div className="sticky-total">
+            <span>Total Amount</span>
+            <strong>Rs. {finalTotal.toFixed(2)}</strong>
+            {savingsAmount > 0 && <small>You Save Rs. {savingsAmount.toFixed(2)}</small>}
+          </div>
+          <button
+            className="complete-order-btn"
+            onClick={handleCheckout}
+            disabled={
+              !formData.selectedAddress ||
+              checkoutLoading ||
+              paymentProcessing ||
+              isProcessing ||
+              codProcessing ||
+              !formData.email ||
+              !isValidEmail(formData.email) ||
+              !formData.phone ||
+              formData.phone.length !== 10 ||
+              !formData.fullName ||
+              !formData.flat ||
+              !formData.city ||
+              !formData.pincode
+            }
+          >
+            {checkoutLoading || paymentProcessing || isProcessing || codProcessing ? (
+              <span className="btn-loading"><div className="btn-spinner"></div> Processing...</span>
+            ) : (
+              <>
+                <strong>
+                  <Lock size={18} />
+                  <span className="mobile-order-label">Complete Order</span>
+                  <span className="desktop-order-label">Buy Now Rs. {finalTotal.toFixed(2)}</span>
+                </strong>
+                <span>{paymentMethod === 'cod' ? 'Cash on Delivery Available' : 'Secure Online Payment'}</span>
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+
+      <Dialog
+        open={showAddressModal}
+        onClose={() => setShowAddressModal(false)}
+        fullScreen={isMobile}
+        fullWidth
+        maxWidth="sm"
+        sx={{
+          '& .MuiDialog-paper': {
+            borderRadius: isMobile ? '0' : '16px',
+            overflow: 'hidden',
+            boxShadow: isMobile ? 'none' : '0 20px 60px rgba(0,0,0,0.15)',
+            margin: isMobile ? '0' : '32px',
+            maxHeight: isMobile ? '100%' : 'calc(100% - 64px)',
+            width: isMobile ? '100%' : '600px',
+          }
+        }}
+      >
+        <DialogTitle className="address-modal-title">
+          <div className="modal-title-content">
+            <MapPin size={isMobile ? 20 : 24} />
+            <span>Add Delivery Address</span>
+          </div>
+          <button className="modal-close-btn" onClick={() => setShowAddressModal(false)}>x</button>
+        </DialogTitle>
+
+        <DialogContent className={`address-modal-content ${isMobile ? 'mobile' : ''}`}>
+          <div className={`address-form-grid ${isMobile ? 'mobile' : ''}`}>
+            <div className="form-field full-width">
+              <label className="form-label">
+                <Mail size={isMobile ? 14 : 16} />
+                Email Address <span className="required-star">*</span>
+              </label>
+              <TextField
+                fullWidth
+                variant="outlined"
+                size={isMobile ? "small" : "medium"}
+                type="email"
+                value={formData.email}
+                onChange={handleEmailChange}
+                placeholder="your@email.com"
+                error={Boolean(formData.email && !isValidEmail(formData.email))}
+                helperText={
+                  formData.email && !isValidEmail(formData.email)
+                    ? "Please enter a valid email address"
+                    : "Required for order confirmation"
+                }
+              />
+            </div>
+
+            <div className="form-field">
+              <label className="form-label">
+                <Home size={isMobile ? 14 : 16} />
+                Flat / House No. <span className="required-star">*</span>
+              </label>
+              <TextField fullWidth value={formData.flat} onChange={(e) => setFormData({ ...formData, flat: e.target.value })} placeholder="e.g., Flat 101, Building A" />
+            </div>
+
+            <div className="form-field">
+              <label className="form-label">
+                <Building size={isMobile ? 14 : 16} />
+                Landmark <span className="required-star">*</span>
+              </label>
+              <TextField fullWidth value={formData.landmark} onChange={(e) => setFormData({ ...formData, landmark: e.target.value })} placeholder="e.g., Near City Mall" />
+            </div>
+
+            <div className="form-field">
+              <label className="form-label">
+                <Map size={isMobile ? 14 : 16} />
+                State <span className="required-star">*</span>
+              </label>
+              <select value={formData.state} onChange={(e) => setFormData({ ...formData, state: e.target.value, city: '' })} className="custom-select-field">
+                <option value="">Select State</option>
+                {states.map((state) => <option key={state} value={state}>{state}</option>)}
+              </select>
+            </div>
+
+            <div className="form-field">
+              <label className="form-label">
+                <Building size={isMobile ? 14 : 16} />
+                City <span className="required-star">*</span>
+              </label>
+              <select value={formData.city} onChange={(e) => setFormData({ ...formData, city: e.target.value })} className={`custom-select-field ${!formData.state ? 'disabled' : ''}`} disabled={!formData.state}>
+                <option value="">Select City</option>
+                {cities.map((city) => <option key={city} value={city}>{city}</option>)}
+              </select>
+            </div>
+
+            <div className="form-field">
+              <label className="form-label">
+                <Globe size={isMobile ? 14 : 16} />
+                Country
+              </label>
+              <TextField fullWidth value="India" disabled />
+            </div>
+
+            <div className="form-field full-width">
+              <label className="form-label">
+                <Phone size={isMobile ? 14 : 16} />
+                Phone Number <span className="required-star">*</span>
+              </label>
+              <TextField
+                fullWidth
+                value={formData.phone}
+                onChange={handlePhoneChange}
+                placeholder="9876543210"
+                InputProps={{ startAdornment: <InputAdornment position="start">+91</InputAdornment> }}
+                error={Boolean(formData.phone.length > 0 && formData.phone.length !== 10)}
+                helperText={formData.phone.length > 0 && formData.phone.length !== 10 ? "Phone number must be exactly 10 digits" : "Required for delivery updates"}
+              />
+            </div>
+          </div>
+        </DialogContent>
+
+        <DialogActions className={`address-modal-actions ${isMobile ? 'mobile' : ''}`}>
+          <button className="modal-cancel-btn" onClick={() => setShowAddressModal(false)}>Cancel</button>
+          <button
+            className="modal-save-btn"
+            onClick={handleAddAddress}
+            disabled={addressLoading || !formData.email || !isValidEmail(formData.email) || !formData.flat || !formData.landmark || !formData.city || !formData.state || formData.phone.length !== 10}
+          >
+            {addressLoading ? <span className="btn-loading"><div className="btn-spinner-small"></div> Saving...</span> : 'Save Address'}
+          </button>
+        </DialogActions>
+      </Dialog>
+
+      <Footer />
+    </>
+  );
+
+  // eslint-disable-next-line no-unreachable
   return (
     <>
       <Header />

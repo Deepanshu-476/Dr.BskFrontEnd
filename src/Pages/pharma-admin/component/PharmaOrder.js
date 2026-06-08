@@ -31,6 +31,9 @@ import {
   MenuItem,
   FormControl,
   Stack,
+  Autocomplete,
+  FormControlLabel,
+  Switch,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -219,6 +222,22 @@ const PharmaOrder = () => {
   const [deleteDialog, setDeleteDialog] = useState({ open: false, orderId: null, orderDetails: null });
   const [selectedOrders, setSelectedOrders] = useState([]);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [products, setProducts] = useState([]);
+  const [productLoading, setProductLoading] = useState(false);
+  const [addOrderOpen, setAddOrderOpen] = useState(false);
+  const [addOrderSubmitting, setAddOrderSubmitting] = useState(false);
+  const [addOrderForm, setAddOrderForm] = useState({
+    customerName: '',
+    email: '',
+    phone: '',
+    address: '',
+    productId: '',
+    productName: '',
+    price: '',
+    quantity: 1,
+    codCharge: 99,
+    isWholesaler: false
+  });
   const [filters, setFilters] = useState({
     search: '',
     orderStatus: 'all',
@@ -298,6 +317,7 @@ const PharmaOrder = () => {
 
   useEffect(() => {
     fetchData();
+    fetchProducts();
   }, []);
 
   const fetchData = async () => {
@@ -313,8 +333,213 @@ const PharmaOrder = () => {
     }
   };
 
+  const fetchProducts = async () => {
+    if (productLoading) return;
+    setProductLoading(true);
+    try {
+      const response = await axiosInstance.get('/user/allproducts');
+      setProducts(Array.isArray(response.data) ? response.data : []);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      showSnackbar('Products list unavailable. You can still enter product details manually.', 'warning');
+    } finally {
+      setProductLoading(false);
+    }
+  };
+
   const showSnackbar = (message, severity = 'success') => {
     setSnackbar({ open: true, message, severity });
+  };
+
+  const parseProductPrice = (value) => {
+    if (value === null || value === undefined) return 0;
+    if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
+    if (typeof value !== 'string') return 0;
+
+    const normalized = value.replace(/[₹,\s]/g, '');
+    const parsed = Number(normalized);
+    return Number.isFinite(parsed) ? parsed : 0;
+  };
+
+  const parseProductQuantityOptions = (source) => {
+    if (!source) return [];
+    if (Array.isArray(source)) {
+      return source.flatMap(parseProductQuantityOptions);
+    }
+    if (typeof source === 'string') {
+      try {
+        return parseProductQuantityOptions(JSON.parse(source));
+      } catch {
+        return [];
+      }
+    }
+    if (typeof source === 'object') {
+      return [source];
+    }
+    return [];
+  };
+
+  const getProductPrice = (product, isWholesaler = false) => {
+    if (!product) return 0;
+    const quantityOptions = parseProductQuantityOptions(product.quantity || product.variants);
+    const quantityPrice = quantityOptions
+      .map((option) => (
+        isWholesaler
+          ? (
+            parseProductPrice(option.retail_price) ||
+            parseProductPrice(option.wholesale_price) ||
+            parseProductPrice(option.dealer_price) ||
+            parseProductPrice(option.final_price) ||
+            parseProductPrice(option.consumer_price) ||
+            parseProductPrice(option.price) ||
+            parseProductPrice(option.mrp)
+          )
+          : (
+            parseProductPrice(option.final_price) ||
+            parseProductPrice(option.consumer_price) ||
+            parseProductPrice(option.price) ||
+            parseProductPrice(option.sale_price) ||
+            parseProductPrice(option.retail_price) ||
+            parseProductPrice(option.mrp)
+          )
+      ))
+      .find((price) => price > 0);
+
+    return (
+      quantityPrice ||
+      (isWholesaler
+        ? (
+          parseProductPrice(product.retail_price) ||
+          parseProductPrice(product.wholesale_price) ||
+          parseProductPrice(product.dealer_price) ||
+          parseProductPrice(product.consumer_price) ||
+          parseProductPrice(product.final_price) ||
+          parseProductPrice(product.price) ||
+          parseProductPrice(product.mrp)
+        )
+        : (
+          parseProductPrice(product.consumer_price) ||
+          parseProductPrice(product.final_price) ||
+          parseProductPrice(product.price) ||
+          parseProductPrice(product.sale_price) ||
+          parseProductPrice(product.retail_price) ||
+          parseProductPrice(product.mrp)
+        ))
+    );
+  };
+
+  const handleAddOrderFieldChange = (field, value) => {
+    setAddOrderForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleProductSelection = (productId) => {
+    const selectedProduct = products.find((product) => product._id === productId);
+    setAddOrderForm((prev) => ({
+      ...prev,
+      productId,
+      productName: selectedProduct?.name || prev.productName,
+      price: selectedProduct ? getProductPrice(selectedProduct, prev.isWholesaler) : prev.price
+    }));
+  };
+
+  const handleCustomerTypeChange = (isWholesaler) => {
+    setAddOrderForm((prev) => {
+      const selectedProduct = products.find((product) => product._id === prev.productId);
+      return {
+        ...prev,
+        isWholesaler,
+        price: selectedProduct ? getProductPrice(selectedProduct, isWholesaler) : prev.price
+      };
+    });
+  };
+
+  const handleOpenAddOrder = () => {
+    setAddOrderOpen(true);
+    if (products.length === 0) {
+      fetchProducts();
+    }
+  };
+
+  const resetAddOrderForm = () => {
+    setAddOrderForm({
+      customerName: '',
+      email: '',
+      phone: '',
+      address: '',
+      productId: '',
+      productName: '',
+      price: '',
+      quantity: 1,
+      codCharge: 99,
+      isWholesaler: false
+    });
+  };
+
+  const handleCloseAddOrder = () => {
+    if (addOrderSubmitting) return;
+    setAddOrderOpen(false);
+    resetAddOrderForm();
+  };
+
+  const addOrderBaseAmount = safeNumber(addOrderForm.price, 0) * safeNumber(addOrderForm.quantity, 1);
+  const addOrderTotalAmount = addOrderBaseAmount + safeNumber(addOrderForm.codCharge, 0);
+
+  const handleCreateManualOrder = async () => {
+    const phone = safeString(addOrderForm.phone).replace(/^\+91/, '').replace(/^91/, '').trim();
+    const price = safeNumber(addOrderForm.price, 0);
+    const quantity = safeNumber(addOrderForm.quantity, 0);
+
+    if (!addOrderForm.customerName.trim() || !addOrderForm.email.trim() || !addOrderForm.address.trim()) {
+      showSnackbar('Please fill customer name, email and address', 'warning');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(addOrderForm.email.trim())) {
+      showSnackbar('Please enter a valid email address', 'warning');
+      return;
+    }
+    if (!/^\d{10}$/.test(phone)) {
+      showSnackbar('Please enter a valid 10-digit phone number', 'warning');
+      return;
+    }
+    if (!addOrderForm.productId.trim() || !addOrderForm.productName.trim() || price <= 0 || quantity < 1) {
+      showSnackbar('Please select/enter a product with valid price and quantity', 'warning');
+      return;
+    }
+
+    const payload = {
+      userId: `guest_admin_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      userName: addOrderForm.customerName.trim(),
+      email: addOrderForm.email.trim(),
+      phone,
+      address: addOrderForm.address.trim(),
+      items: [{
+        productId: addOrderForm.productId.trim(),
+        name: addOrderForm.productName.trim(),
+        quantity,
+        price
+      }],
+      totalAmount: parseFloat(addOrderTotalAmount.toFixed(2)),
+      baseAmount: parseFloat(addOrderBaseAmount.toFixed(2)),
+      codCharge: safeNumber(addOrderForm.codCharge, 0),
+      isGuest: true,
+      isWholesaler: addOrderForm.isWholesaler,
+      paymentMethod: 'cod',
+      paymentStatus: 'pending'
+    };
+
+    setAddOrderSubmitting(true);
+    try {
+      await axiosInstance.post('/api/createCOD', payload);
+      showSnackbar('Order added successfully');
+      setAddOrderOpen(false);
+      resetAddOrderForm();
+      await fetchData();
+    } catch (error) {
+      console.error("Failed to add manual order:", error);
+      showSnackbar(error.response?.data?.message || 'Failed to add order', 'error');
+    } finally {
+      setAddOrderSubmitting(false);
+    }
   };
 
   const handleCloseSnackbar = () => {
@@ -786,6 +1011,15 @@ const PharmaOrder = () => {
             Orders Management
           </Typography>
           <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={<AddIcon />}
+              onClick={handleOpenAddOrder}
+              sx={{ fontSize: '11px', textTransform: 'none', py: 0.5 }}
+            >
+              Add Order
+            </Button>
             <Button 
               variant="outlined" 
               size="small" 
@@ -1176,6 +1410,206 @@ const PharmaOrder = () => {
           <Button onClick={() => setShowCancelDialog(false)} variant="outlined" size="small">Cancel</Button>
           <Button onClick={confirmCancelOrder} color={orderToCancel?.newStatus === 'Refunded' ? 'secondary' : 'error'} variant="contained" size="small" disabled={!cancelReason.trim()}>
             Confirm {orderToCancel?.newStatus === 'Refunded' ? 'Refund' : 'Cancellation'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Add Order Dialog */}
+      <Dialog open={addOrderOpen} onClose={handleCloseAddOrder} maxWidth="md" fullWidth>
+        <DialogTitle sx={{ fontSize: '16px', fontWeight: 600 }}>
+          Add Order
+        </DialogTitle>
+        <DialogContent dividers>
+          <Grid container spacing={2}>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                size="small"
+                label="Customer Name"
+                value={addOrderForm.customerName}
+                onChange={(e) => handleAddOrderFieldChange('customerName', e.target.value)}
+                required
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                size="small"
+                label="Customer Email"
+                type="email"
+                value={addOrderForm.email}
+                onChange={(e) => handleAddOrderFieldChange('email', e.target.value)}
+                required
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                size="small"
+                label="Phone Number"
+                value={addOrderForm.phone}
+                onChange={(e) => handleAddOrderFieldChange('phone', e.target.value.replace(/\D/g, '').slice(0, 10))}
+                required
+                inputProps={{ maxLength: 10 }}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={addOrderForm.isWholesaler}
+                    onChange={(e) => handleCustomerTypeChange(e.target.checked)}
+                    color="primary"
+                  />
+                }
+                label={addOrderForm.isWholesaler ? 'Wholesaler Price' : 'Customer Price'}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <Autocomplete
+                size="small"
+                disablePortal
+                openOnFocus
+                loading={productLoading}
+                loadingText="Loading products..."
+                noOptionsText={productLoading ? 'Loading products...' : 'No products found'}
+                options={products}
+                value={products.find((product) => product._id === addOrderForm.productId) || null}
+                getOptionLabel={(product) => product?.name || ''}
+                isOptionEqualToValue={(option, value) => option._id === value._id}
+                onChange={(event, selectedProduct) => handleProductSelection(selectedProduct?._id || '')}
+                renderOption={(props, product) => (
+                  <li {...props} key={product._id}>
+                    <Box>
+                      <Typography variant="body2" fontSize="13px">{product.name}</Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {safeString(product.category, 'Product')} {getProductPrice(product, addOrderForm.isWholesaler) ? `- ₹${getProductPrice(product, addOrderForm.isWholesaler)}` : ''}
+                      </Typography>
+                    </Box>
+                  </li>
+                )}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Search Product"
+                    placeholder="Type product name"
+                    InputProps={{
+                      ...params.InputProps,
+                      endAdornment: (
+                        <>
+                          {productLoading ? <CircularProgress color="inherit" size={16} /> : null}
+                          {params.InputProps.endAdornment}
+                        </>
+                      )
+                    }}
+                  />
+                )}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                size="small"
+                label="Address"
+                value={addOrderForm.address}
+                onChange={(e) => handleAddOrderFieldChange('address', e.target.value)}
+                multiline
+                rows={2}
+                required
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                size="small"
+                label="Product ID"
+                value={addOrderForm.productId}
+                onChange={(e) => handleAddOrderFieldChange('productId', e.target.value)}
+                required
+                helperText="Auto-filled after product selection"
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                size="small"
+                label="Product Name"
+                value={addOrderForm.productName}
+                onChange={(e) => handleAddOrderFieldChange('productName', e.target.value)}
+                required
+              />
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <TextField
+                fullWidth
+                size="small"
+                label="Price"
+                type="number"
+                value={addOrderForm.price}
+                onChange={(e) => handleAddOrderFieldChange('price', e.target.value)}
+                required
+                inputProps={{ min: 0, step: '0.01' }}
+              />
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <TextField
+                fullWidth
+                size="small"
+                label="Quantity"
+                type="number"
+                value={addOrderForm.quantity}
+                onChange={(e) => handleAddOrderFieldChange('quantity', e.target.value)}
+                required
+                inputProps={{ min: 1, step: 1 }}
+              />
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <TextField
+                fullWidth
+                size="small"
+                label="COD Charge"
+                type="number"
+                value={addOrderForm.codCharge}
+                onChange={(e) => handleAddOrderFieldChange('codCharge', e.target.value)}
+                inputProps={{ min: 0, step: '0.01' }}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <Paper variant="outlined" sx={{ p: 1.5, bgcolor: '#f8fafc' }}>
+                <Grid container spacing={1}>
+                  <Grid item xs={12} md={3}>
+                    <Typography variant="caption" color="text.secondary">Payment Method</Typography>
+                    <Typography variant="body2" fontWeight={600}>Cash on Delivery</Typography>
+                  </Grid>
+                  <Grid item xs={12} md={3}>
+                    <Typography variant="caption" color="text.secondary">Price Type</Typography>
+                    <Typography variant="body2" fontWeight={600}>{addOrderForm.isWholesaler ? 'Wholesaler' : 'Customer'}</Typography>
+                  </Grid>
+                  <Grid item xs={12} md={3}>
+                    <Typography variant="caption" color="text.secondary">Base Amount</Typography>
+                    <Typography variant="body2" fontWeight={600}>₹{addOrderBaseAmount.toFixed(2)}</Typography>
+                  </Grid>
+                  <Grid item xs={12} md={3}>
+                    <Typography variant="caption" color="text.secondary">Total Amount</Typography>
+                    <Typography variant="body2" fontWeight={700} color="primary">₹{addOrderTotalAmount.toFixed(2)}</Typography>
+                  </Grid>
+                </Grid>
+              </Paper>
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={handleCloseAddOrder} variant="outlined" size="small" disabled={addOrderSubmitting}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleCreateManualOrder}
+            variant="contained"
+            size="small"
+            startIcon={<AddIcon />}
+            disabled={addOrderSubmitting}
+          >
+            {addOrderSubmitting ? 'Adding...' : 'Add Order'}
           </Button>
         </DialogActions>
       </Dialog>
