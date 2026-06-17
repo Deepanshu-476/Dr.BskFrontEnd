@@ -2220,6 +2220,41 @@
   color: #c62828 !important;
 }
 
+.inline-address-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.inline-address-update-btn,
+.inline-address-cancel-btn {
+  min-height: 40px;
+  border-radius: 6px;
+  padding: 0 18px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.inline-address-update-btn {
+  border: 0;
+  background: var(--checkout-green);
+  color: #fff;
+}
+
+.inline-address-update-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.inline-address-cancel-btn {
+  border: 1px solid #dcdcdc;
+  background: #fff;
+  color: var(--checkout-text);
+}
+
 .mini-benefits,
 .bottom-benefits {
   justify-content: space-between;
@@ -3616,4 +3651,12 @@
   .desktop-order-label {
     display: none !important;
   }
+}
+
+/* Checkout page typography: keep all visible checkout content regular weight. */
+.checkout-container,
+.checkout-container *,
+.checkout-v2,
+.checkout-v2 * {
+  font-weight: 400 !important;
 }

@@ -34,6 +34,9 @@ import { toast } from 'react-toastify';
 import { DeleteOutlineRounded, Visibility, Description, Email, Person } from '@mui/icons-material';
 import JoinUrl from '../../../JoinUrl';
 
+const getPrescriptionDisplayId = (item = {}) =>
+    item.publicId || `BSK-RX-${String(item._id || '').slice(-8).toUpperCase()}`;
+
 const PharmaPrescription = () => {
     const [prescriptions, setPrescriptions] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -361,7 +364,7 @@ const PharmaPrescription = () => {
                                                                 {user?.name || 'Unknown User'}
                                                             </Typography>
                                                             <Typography variant="caption" color="text.secondary">
-                                                                ID: {item._id?.slice(-8) || 'N/A'}
+                                                                ID: {getPrescriptionDisplayId(item)}
                                                             </Typography>
                                                         </Box>
                                                     </Box>

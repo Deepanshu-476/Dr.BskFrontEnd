@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Trash2, ShoppingBag, ArrowLeft, CheckCircle, CreditCard, Wallet, X, MapPin, Home, Phone, Mail, Building2, Landmark, Globe, ChevronDown, Shield, RotateCcw, Truck, Plus, Lock, Edit3, Star, Headphones } from 'lucide-react';
+import { Trash2, ShoppingBag, ArrowLeft, CheckCircle, CreditCard, Wallet, X, MapPin, Home, Phone, Mail, Building2, Landmark, Globe, ChevronDown, Shield, RotateCcw, Truck, Plus, Lock, Edit3, Star, Headphones, User } from 'lucide-react';
 import './addToCart.css';
 import Footer from "./Footer/Footer";
 import Header from "./Header/Header";
@@ -67,17 +67,19 @@ const AddToCart = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [addresses, setAddresses] = useState([]);
+  const [editingAddressIndex, setEditingAddressIndex] = useState(null);
   const [loading, setLoading] = useState(false);
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [paymentProcessing, setPaymentProcessing] = useState(false);
   
-  const [paymentMethod, setPaymentMethod] = useState('cod');
+  const [paymentMethod, setPaymentMethod] = useState('online');
   const [codCharge] = useState(99);
   const [codProcessing, setCodProcessing] = useState(false);
   
   const [formData, setFormData] = useState({
+    fullName: '',
     flat: '',
     landmark: '',
     state: '',
@@ -302,6 +304,69 @@ const AddToCart = () => {
     }
   };
 
+  const parseAddressForEdit = (addr) => {
+    if (typeof addr === 'object') {
+      return {
+        flat: addr.flat || '',
+        landmark: addr.landmark || '',
+        state: addr.state || '',
+        city: addr.city || '',
+        country: addr.country || 'India',
+        phone: addr.phone || '',
+        email: addr.email || '',
+        fullAddress: addr.fullAddress || ''
+      };
+    }
+
+    const [flat = '', landmark = '', city = '', state = '', country = 'India'] = addr.split(',').map(part => part.trim());
+    return { flat, landmark, city, state, country, phone: '', email: '', fullAddress: addr };
+  };
+
+  const openAddAddressModal = () => {
+    setEditingAddressIndex(null);
+    setFormData(prev => ({
+      ...prev,
+      flat: '',
+      landmark: '',
+      state: '',
+      city: '',
+      country: 'India'
+    }));
+    setShowModal(true);
+  };
+
+  const openEditAddressModal = (addr, index) => {
+    const parsedAddress = parseAddressForEdit(addr);
+
+    setEditingAddressIndex(index);
+    setFormData(prev => ({
+      ...prev,
+      flat: parsedAddress.flat,
+      landmark: parsedAddress.landmark,
+      state: parsedAddress.state,
+      city: parsedAddress.city,
+      country: parsedAddress.country || 'India',
+      phone: parsedAddress.phone || prev.phone,
+      email: parsedAddress.email || prev.email,
+      selectedAddress: parsedAddress.fullAddress || prev.selectedAddress
+    }));
+    setShowModal(true);
+  };
+
+  const syncGuestAddressEdit = (oldAddressText, addressObject) => {
+    const guestAddresses = JSON.parse(localStorage.getItem('guestAddresses') || '[]');
+    const guestIndex = guestAddresses.findIndex(addr => {
+      const addressText = typeof addr === 'object' ? addr.fullAddress : addr;
+      return addressText === oldAddressText;
+    });
+
+    if (guestIndex !== -1) {
+      const nextGuestAddresses = [...guestAddresses];
+      nextGuestAddresses[guestIndex] = addressObject;
+      localStorage.setItem('guestAddresses', JSON.stringify(nextGuestAddresses));
+    }
+  };
+
   const handleAddAddress = async () => {
     setLoading(true);
     
@@ -318,6 +383,7 @@ const AddToCart = () => {
     }
 
     const addressObject = {
+      name: formData.fullName || userData.name || '',
       flat: formData.flat,
       landmark: formData.landmark,
       city: formData.city,
@@ -328,25 +394,36 @@ const AddToCart = () => {
       fullAddress: `${formData.flat}, ${formData.landmark}, ${formData.city}, ${formData.state}, ${formData.country}`
     };
     
-    const existingAddresses = JSON.parse(localStorage.getItem('guestAddresses') || '[]');
-    const updatedAddresses = [...existingAddresses, addressObject];
-    
-    localStorage.setItem('guestAddresses', JSON.stringify(updatedAddresses));
+    let updatedAddresses;
+
+    if (editingAddressIndex !== null) {
+      const oldAddress = addresses[editingAddressIndex];
+      const oldAddressText = typeof oldAddress === 'object' ? oldAddress.fullAddress : oldAddress;
+      updatedAddresses = addresses.map((addr, index) => index === editingAddressIndex ? addressObject : addr);
+      syncGuestAddressEdit(oldAddressText, addressObject);
+    } else {
+      const existingAddresses = JSON.parse(localStorage.getItem('guestAddresses') || '[]');
+      updatedAddresses = [...addresses, addressObject];
+      localStorage.setItem('guestAddresses', JSON.stringify([...existingAddresses, addressObject]));
+    }
+
     localStorage.setItem('guestEmail', formData.email);
     localStorage.setItem('guestPhone', formData.phone);
     
     setAddresses(updatedAddresses);
     setFormData(prev => ({
       ...prev,
-      selectedAddress: addressObject.fullAddress,
-      flat: '',
+        selectedAddress: addressObject.fullAddress,
+        fullName: '',
+        flat: '',
       landmark: '',
       state: '',
       city: ''
     }));
+    setEditingAddressIndex(null);
     setShowModal(false);
     setLoading(false);
-    toast.success("Address saved successfully!");
+    toast.success(editingAddressIndex !== null ? "Address updated successfully!" : "Address saved successfully!");
   };
 
   useEffect(() => {
@@ -469,29 +546,13 @@ const AddToCart = () => {
         return;
       }
 
-      const checkoutEmail = formData.email || localStorage.getItem('guestEmail') || '';
+      const { checkoutEmail, phoneNumber, customerName } = getCheckoutContactDetails();
       
       if (!checkoutEmail || !isValidEmail(checkoutEmail)) {
         toast.error('Please provide a valid email address');
         setCodProcessing(false);
         return;
       }
-
-      let phoneNumber = formData.phone?.toString().trim();
-
-      if (!phoneNumber) {
-        const selectedAddressObj = addresses.find(addr => 
-          typeof addr === 'object' ? addr.fullAddress === formData.selectedAddress : addr === formData.selectedAddress
-        );
-        
-        if (selectedAddressObj && typeof selectedAddressObj === 'object' && selectedAddressObj.phone) {
-          phoneNumber = selectedAddressObj.phone;
-        } else {
-          phoneNumber = localStorage.getItem('guestPhone') || '';
-        }
-      }
-
-      phoneNumber = phoneNumber.replace(/^\+91/, '').replace(/^91/, '').trim();
 
       if (!phoneNumber || !/^\d{10}$/.test(phoneNumber)) {
         toast.error('Please provide a valid 10-digit phone number');
@@ -525,6 +586,8 @@ const AddToCart = () => {
         address: formData.selectedAddress.trim(),
         phone: phoneNumber,
         email: checkoutEmail,
+        userName: customerName,
+        fullName: customerName,
         totalAmount: parseFloat(finalTotal.toFixed(2)),
         baseAmount: parseFloat(baseTotal.toFixed(2)),
         codCharge: codCharge,
@@ -630,29 +693,13 @@ const AddToCart = () => {
         return;
       }
 
-      const checkoutEmail = formData.email || localStorage.getItem('guestEmail') || '';
+      const { checkoutEmail, phoneNumber, customerName } = getCheckoutContactDetails();
       
       if (!checkoutEmail || !isValidEmail(checkoutEmail)) {
         toast.error('Please provide a valid email address');
         setCheckoutLoading(false);
         return;
       }
-
-      let phoneNumber = formData.phone?.toString().trim();
-
-      if (!phoneNumber) {
-        const selectedAddressObj = addresses.find(addr => 
-          typeof addr === 'object' ? addr.fullAddress === formData.selectedAddress : addr === formData.selectedAddress
-        );
-        
-        if (selectedAddressObj && typeof selectedAddressObj === 'object' && selectedAddressObj.phone) {
-          phoneNumber = selectedAddressObj.phone;
-        } else {
-          phoneNumber = localStorage.getItem('guestPhone') || '';
-        }
-      }
-
-      phoneNumber = phoneNumber.replace(/^\+91/, '').replace(/^91/, '').trim();
 
       if (!phoneNumber || !/^\d{10}$/.test(phoneNumber)) {
         toast.error('Please provide a valid 10-digit phone number');
@@ -686,6 +733,8 @@ const AddToCart = () => {
         address: formData.selectedAddress.trim(),
         phone: phoneNumber,
         email: checkoutEmail,
+        userName: customerName,
+        fullName: customerName,
         totalAmount: parseFloat(finalTotal.toFixed(2)),
         isGuest: !isAuthenticated,
         isWholesaler: isWholesaler
@@ -797,7 +846,7 @@ const AddToCart = () => {
           }
         },
         prefill: {
-          name: userData.name || checkoutEmail.split('@')[0],
+          name: customerName || checkoutEmail.split('@')[0],
           email: checkoutEmail,
           contact: `+91${phoneNumber}`
         },
@@ -961,6 +1010,9 @@ const AddToCart = () => {
             />
             <span className='address-text'>{addr}</span>
           </label>
+          <button type="button" className="cart1-edit-btn" onClick={() => openEditAddressModal(addr, index)}>
+            <Edit3 size={14} /> Edit
+          </button>
         </li>
       );
     } else {
@@ -987,6 +1039,9 @@ const AddToCart = () => {
               {addr.phone && <span className="address-phone">📱 {addr.phone}</span>}
             </div>
           </label>
+          <button type="button" className="cart1-edit-btn" onClick={() => openEditAddressModal(addr, index)}>
+            <Edit3 size={14} /> Edit
+          </button>
         </li>
       );
     }
@@ -1002,6 +1057,7 @@ const AddToCart = () => {
 
   const closeModal = () => {
     setShowModal(false);
+    setEditingAddressIndex(null);
     setFormData(prev => ({
       ...prev,
       flat: '',
@@ -1036,6 +1092,34 @@ const AddToCart = () => {
   const getAddressText = (addr) => (typeof addr === 'object' ? addr.fullAddress : addr);
   const getAddressPhone = (addr) => (typeof addr === 'object' ? addr.phone : '');
   const getAddressEmail = (addr) => (typeof addr === 'object' ? addr.email : '');
+  const getAddressName = (addr) => (typeof addr === 'object' ? addr.name : '');
+  const getSelectedAddress = () => addresses.find(addr => getAddressText(addr) === formData.selectedAddress);
+  const normalizePhoneNumber = (phone) => phone?.toString().trim().replace(/^\+91/, '').replace(/^91/, '').trim() || '';
+  const getCheckoutContactDetails = () => {
+    const selectedAddress = getSelectedAddress();
+    const checkoutEmail =
+      formData.email ||
+      getAddressEmail(selectedAddress) ||
+      localStorage.getItem('guestEmail') ||
+      userData.email ||
+      '';
+    const phoneNumber = normalizePhoneNumber(
+      formData.phone ||
+      getAddressPhone(selectedAddress) ||
+      localStorage.getItem('guestPhone') ||
+      userData.phone ||
+      userData.mobile ||
+      ''
+    );
+    const customerName =
+      userData.name ||
+      formData.fullName ||
+      getAddressName(selectedAddress) ||
+      '';
+
+    return { checkoutEmail, phoneNumber, customerName };
+  };
+  const checkoutContactDetails = getCheckoutContactDetails();
 
   const checkoutDisabled =
     !formData.selectedAddress ||
@@ -1043,10 +1127,10 @@ const AddToCart = () => {
     paymentProcessing ||
     isProcessing ||
     codProcessing ||
-    !formData.email ||
-    !isValidEmail(formData.email) ||
-    !formData.phone ||
-    formData.phone.length !== 10;
+    !checkoutContactDetails.checkoutEmail ||
+    !isValidEmail(checkoutContactDetails.checkoutEmail) ||
+    !checkoutContactDetails.phoneNumber ||
+    checkoutContactDetails.phoneNumber.length !== 10;
 
   const renderV2AddressCard = (addr, index) => {
     const addressText = getAddressText(addr);
@@ -1074,7 +1158,15 @@ const AddToCart = () => {
           <span>{addressText}</span>
           {index === 0 && <small>Default Address</small>}
         </span>
-        <button type="button" className="cart1-edit-btn" onClick={() => setShowModal(true)}>
+        <button
+          type="button"
+          className="cart1-edit-btn"
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            openEditAddressModal(addr, index);
+          }}
+        >
           <Edit3 size={14} /> Edit
         </button>
       </label>
@@ -1100,7 +1192,7 @@ const AddToCart = () => {
         <span>Processing...</span>
       ) : (
         <>
-          <strong><Lock size={17} /> Proceed to Checkout</strong>
+          <strong><Lock size={17} /> Buy Now</strong>
           <span>{paymentMethod === 'cod' ? 'Cash on Delivery Available' : 'Secure Online Payment'}</span>
         </>
       )}
@@ -1212,7 +1304,7 @@ const AddToCart = () => {
                         <span>No address saved yet. Please add your delivery address.</span>
                       </div>
                     )}
-                    <button className="cart1-link-btn" onClick={() => setShowModal(true)}>
+                    <button className="cart1-link-btn" onClick={openAddAddressModal}>
                       <Plus size={18} /> Add New Address
                     </button>
                   </section>
@@ -1489,7 +1581,7 @@ const AddToCart = () => {
 
                     <button
                       className="enhanced-add-address-btn"
-                      onClick={() => setShowModal(true)}
+                      onClick={openAddAddressModal}
                     >
                       ➕ {addresses.length > 0 ? 'Add Another Address' : 'Add Address'}
                     </button>
@@ -1601,17 +1693,7 @@ const AddToCart = () => {
                     <button
                       className={`checkout-btn ${paymentMethod === 'cod' ? 'cod-btn' : ''}`}
                       onClick={handleCheckout}
-                      disabled={
-                        !formData.selectedAddress || 
-                        checkoutLoading || 
-                        paymentProcessing || 
-                        isProcessing ||
-                        codProcessing ||
-                        !formData.email ||
-                        !isValidEmail(formData.email) ||
-                        !formData.phone ||
-                        formData.phone.length !== 10
-                      }
+                      disabled={checkoutDisabled}
                     >
                       {checkoutLoading ? (
                         <span>Creating Order...</span>
@@ -1632,7 +1714,7 @@ const AddToCart = () => {
                       )}
                     </button>
 
-                    {!isAuthenticated && (!formData.email || !isValidEmail(formData.email) || !formData.phone || formData.phone.length !== 10) && (
+                    {!isAuthenticated && (!checkoutContactDetails.checkoutEmail || !isValidEmail(checkoutContactDetails.checkoutEmail) || !checkoutContactDetails.phoneNumber || checkoutContactDetails.phoneNumber.length !== 10) && (
                       <div className="email-warning">
                         ⚠️ Email address and phone number are required for order confirmation
                       </div>
@@ -1697,7 +1779,7 @@ const AddToCart = () => {
               <div className="address-modal-header-content">
                 <MapPin size={24} />
                 <h2 className="address-modal-title">
-                  {isAuthenticated ? 'Add New Address' : 'Add Delivery Address'}
+                  {editingAddressIndex !== null ? 'Edit Address' : isAuthenticated ? 'Add New Address' : 'Add Delivery Address'}
                 </h2>
               </div>
               <button className="address-modal-close-btn" onClick={closeModal}>
@@ -1707,6 +1789,22 @@ const AddToCart = () => {
 
             <div className="address-modal-body">
               <div className="address-modal-grid">
+                <div className="address-modal-field address-modal-field-full">
+                  <label className="address-modal-label">
+                    <User size={18} />
+                    <span>Full Name</span>
+                  </label>
+                  <div className="address-modal-input-wrapper">
+                    <input
+                      type="text"
+                      className="address-modal-input"
+                      value={formData.fullName}
+                      onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                      placeholder="Enter customer full name"
+                    />
+                  </div>
+                </div>
+
                 {/* Email Field - Full Width */}
                 <div className="address-modal-field address-modal-field-full">
                   <label className="address-modal-label">
@@ -1894,7 +1992,7 @@ const AddToCart = () => {
                     <span>Saving...</span>
                   </>
                 ) : (
-                  isAuthenticated ? 'Add Address' : 'Save Address'
+                  editingAddressIndex !== null ? 'Update Address' : isAuthenticated ? 'Add Address' : 'Save Address'
                 )}
               </button>
             </div>

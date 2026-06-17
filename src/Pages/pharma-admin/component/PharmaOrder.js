@@ -182,6 +182,9 @@ const safeString = (value, defaultValue = '') => {
   return defaultValue;
 };
 
+const getOrderDisplayId = (order = {}) =>
+  order.orderId || `BSK-O-${safeString(order._id, '').slice(-8).toUpperCase()}`;
+
 const safeNumber = (value, defaultValue = 0) => {
   if (value === null || value === undefined) return defaultValue;
   const num = Number(value);
@@ -603,7 +606,7 @@ const PharmaOrder = () => {
         const productsList = order.items?.map(item => `${getProductName(item)} (x${item.quantity})`).join(', ') || '-';
         
         return [
-          safeString(order._id, '-').slice(-8),
+          getOrderDisplayId(order),
           getCustomerName(order),
           productsList.length > 50 ? productsList.substring(0, 50) + '...' : productsList,
           `₹${safeNumber(order.totalAmount, 0).toFixed(2)}`,
@@ -1228,7 +1231,7 @@ const PharmaOrder = () => {
                       <TableRow key={order._id} hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
                         <TableCell sx={{ py: 1, px: 1.5 }}>
                           <OrderIdCell onClick={() => handleViewOrder(order)}>
-                            {safeString(order._id, '-').slice(-8)}
+                            {getOrderDisplayId(order)}
                           </OrderIdCell>
                         </TableCell>
                         <TableCell sx={{ py: 1, px: 1.5 }}>
@@ -1365,7 +1368,7 @@ const PharmaOrder = () => {
               <Paper variant="outlined" sx={{ p: 1.5, bgcolor: '#fafafa' }}>
                 <Grid container spacing={1}>
                   <Grid item xs={4}><Typography variant="caption" color="text.secondary" fontSize="11px">Order ID:</Typography></Grid>
-                  <Grid item xs={8}><Typography variant="caption" fontSize="11px" sx={{ wordBreak: 'break-all' }}>{safeString(deleteDialog.orderDetails._id)}</Typography></Grid>
+                  <Grid item xs={8}><Typography variant="caption" fontSize="11px" sx={{ wordBreak: 'break-all' }}>{getOrderDisplayId(deleteDialog.orderDetails)}</Typography></Grid>
                   <Grid item xs={4}><Typography variant="caption" color="text.secondary" fontSize="11px">Customer:</Typography></Grid>
                   <Grid item xs={8}><Typography variant="caption" fontSize="11px">{getCustomerName(deleteDialog.orderDetails)}</Typography></Grid>
                   <Grid item xs={4}><Typography variant="caption" color="text.secondary" fontSize="11px">Amount:</Typography></Grid>
@@ -1620,7 +1623,7 @@ const PharmaOrder = () => {
           <>
             <DialogTitle sx={{ pb: 1 }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="h6" sx={{ fontSize: '16px', fontWeight: 600 }}>Order Details - #{safeString(selectedOrder._id, '').slice(-8)}</Typography>
+                <Typography variant="h6" sx={{ fontSize: '16px', fontWeight: 600 }}>Order Details - #{getOrderDisplayId(selectedOrder)}</Typography>
                 <StatusChip label={safeString(selectedOrder.status, 'Pending')} statuscolor={safeString(selectedOrder.status, '').toLowerCase()} size="small" />
               </Box>
             </DialogTitle>
@@ -1630,7 +1633,7 @@ const PharmaOrder = () => {
                   <Typography variant="subtitle2" fontWeight={600} gutterBottom fontSize="12px">Order Information</Typography>
                   <Divider sx={{ mb: 1 }} />
                   <Stack spacing={0.8}>
-                    <Typography variant="body2" fontSize="12px"><strong>Order ID:</strong> {safeString(selectedOrder._id)}</Typography>
+                    <Typography variant="body2" fontSize="12px"><strong>Order ID:</strong> {getOrderDisplayId(selectedOrder)}</Typography>
                     <Typography variant="body2" fontSize="12px"><strong>Customer:</strong> {getCustomerName(selectedOrder)}</Typography>
                     <Typography variant="body2" fontSize="12px"><strong>Total Amount:</strong> ₹{safeNumber(selectedOrder.totalAmount, 0).toFixed(2)}</Typography>
                     <Typography variant="body2" fontSize="12px"><strong>Date:</strong> {formatDate(selectedOrder.createdAt)}</Typography>

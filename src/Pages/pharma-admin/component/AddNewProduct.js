@@ -5,6 +5,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import JoinUrl from '../../../JoinUrl';
 
 const AddNewProduct = () => {
+    const MAX_MEDIA_FILES = 10;
+    const MAX_MEDIA_FILE_SIZE = 25 * 1024 * 1024;
     const { id } = useParams();
     const isEditMode = !!id;
     const navigate = useNavigate();
@@ -40,8 +42,17 @@ const AddNewProduct = () => {
     const [errors, setErrors] = useState({});
     const [isSubmitted, setIsSubmitted] = useState(false);
     const fileInputRef = useRef(null);
+    const objectUrlsRef = useRef(new Set());
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
     const [isTablet, setIsTablet] = useState(window.innerWidth >= 768 && window.innerWidth < 1024);
+
+    useEffect(() => {
+        const objectUrls = objectUrlsRef.current;
+        return () => {
+            objectUrls.forEach(url => URL.revokeObjectURL(url));
+            objectUrls.clear();
+        };
+    }, []);
 
     useEffect(() => {
         const handleResize = () => {
@@ -149,7 +160,8 @@ const AddNewProduct = () => {
                             ...m,
                             url: m.url?.startsWith?.('http') ? m.url : `${m.url}`,
                             type: m.type?.includes?.('video') ? 'video' : 'image',
-                            file: null
+                            file: null,
+                            objectUrl: null
                         })),
                         stock: (() => {
                             const s = (product.stock ?? '').toLowerCase().trim();
@@ -233,37 +245,72 @@ const AddNewProduct = () => {
     };
 
     const handleMediaChange = (e) => {
-        const files = Array.from(e.target.files);
+        const selectedFiles = Array.from(e.target.files || []);
+        const remainingSlots = MAX_MEDIA_FILES - formData.media.length;
+        const files = selectedFiles.slice(0, Math.max(remainingSlots, 0));
+
+        if (remainingSlots <= 0) {
+            toast.error(`You can upload up to ${MAX_MEDIA_FILES} media files per product`);
+            e.target.value = null;
+            return;
+        }
+
+        if (selectedFiles.length > remainingSlots) {
+            toast.warning(`Only ${remainingSlots} more media file${remainingSlots === 1 ? '' : 's'} can be added`);
+        }
+
         if (files.length === 0) return;
 
-        const mediaPromises = files.map(file => {
-            return new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                    resolve({
-                        url: reader.result,
-                        type: file.type.startsWith('video') ? 'video' : 'image',
-                        name: file.name,
-                        size: file.size,
-                        file: file
-                    });
-                };
-                reader.readAsDataURL(file);
-            });
+        const invalidFile = files.find(file => !(file.type.startsWith('image/') || file.type.startsWith('video/')));
+        if (invalidFile) {
+            toast.error(`${invalidFile.name} is not a supported image/video file`);
+            e.target.value = null;
+            return;
+        }
+
+        const oversizedFile = files.find(file => file.size > MAX_MEDIA_FILE_SIZE);
+        if (oversizedFile) {
+            toast.error(`${oversizedFile.name} is larger than 25MB`);
+            e.target.value = null;
+            return;
+        }
+
+        const newMedia = files.map(file => {
+            const objectUrl = URL.createObjectURL(file);
+            objectUrlsRef.current.add(objectUrl);
+
+            return {
+                url: objectUrl,
+                objectUrl,
+                type: file.type.startsWith('video') ? 'video' : 'image',
+                name: file.name,
+                size: file.size,
+                file
+            };
         });
 
-        Promise.all(mediaPromises).then(newMedia => {
-            setFormData(prev => ({
-                ...prev,
-                media: [...prev.media, ...newMedia]
-            }));
+        setFormData(prev => ({
+            ...prev,
+            media: [...prev.media, ...newMedia]
+        }));
+
+        setErrors(prev => {
+            const updated = { ...prev };
+            delete updated.media;
+            return updated;
         });
+
+        e.target.value = null;
     };
 
     const removeMedia = (index) => {
         setFormData(prev => {
             const updatedMedia = [...prev.media];
-            updatedMedia.splice(index, 1);
+            const [removed] = updatedMedia.splice(index, 1);
+            if (removed?.objectUrl) {
+                URL.revokeObjectURL(removed.objectUrl);
+                objectUrlsRef.current.delete(removed.objectUrl);
+            }
             return { ...prev, media: updatedMedia };
         });
     };
@@ -324,7 +371,7 @@ const AddNewProduct = () => {
 
             formData.media.forEach((mediaItem) => {
                 if (mediaItem.file) {
-                    formPayload.append('media', mediaItem.file);
+                    formPayload.append('media', mediaItem.file, mediaItem.file.name);
                 } else if (mediaItem.url) {
                     formPayload.append('existingMedia', mediaItem.url);
                 }
@@ -332,14 +379,10 @@ const AddNewProduct = () => {
 
             let response;
             if (isEditMode) {
-                response = await axiosInstance.put(`/user/updateProduct/${id}`, formPayload, {
-                    headers: { 'Content-Type': 'multipart/form-data' }
-                });
+                response = await axiosInstance.put(`/user/updateProduct/${id}`, formPayload);
                 toast.success('Product updated successfully!');
             } else {
-                response = await axiosInstance.post('/user/createProduct', formPayload, {
-                    headers: { 'Content-Type': 'multipart/form-data' }
-                });
+                response = await axiosInstance.post('/user/createProduct', formPayload);
                 toast.success('Product created successfully!');
             }
 
@@ -353,6 +396,9 @@ const AddNewProduct = () => {
     };
 
     const handleReset = () => {
+        objectUrlsRef.current.forEach(url => URL.revokeObjectURL(url));
+        objectUrlsRef.current.clear();
+
         setFormData({
             name: "",
             description: "",
@@ -854,7 +900,7 @@ const AddNewProduct = () => {
                                 >
                                     📁 Add Media
                                 </button>
-                                <p style={mediaHintStyle}>Supports JPG, PNG, GIF, MP4 (Max 10MB each)</p>
+                                <p style={mediaHintStyle}>Select multiple files at once. Supports JPG, PNG, GIF, MP4 (Max 25MB each, {MAX_MEDIA_FILES} total)</p>
                                 <div style={mediaPreviewContainerStyle}>
                                     {formData.media.length === 0 ? (
                                         <div style={emptyMediaPlaceholderStyle}>

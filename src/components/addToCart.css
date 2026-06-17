@@ -3753,3 +3753,11 @@ footer {
   }
 }
 
+/* Cart page typography: keep all visible cart content regular weight. */
+.cart1-page,
+.cart1-page *,
+.cart-container,
+.cart-container * {
+  font-weight: 400 !important;
+}
+

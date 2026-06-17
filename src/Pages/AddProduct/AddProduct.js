@@ -4,6 +4,9 @@ import Admin from '../../components/Admin/Admin';
 import { Link } from 'react-router-dom';
 import axiosInstance from '../../components/AxiosInstance';
 
+const getProductDisplayId = (product = {}) =>
+  product.publicId || `BSK-P-${String(product._id || product.id || '').slice(-8).toUpperCase()}`;
+
 const AddProduct = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -54,7 +57,7 @@ const AddProduct = () => {
               <tbody>
                 {products.map(product => (
                   <tr key={product.id}>
-                    <td data-label="ID">{product._id}</td>
+                    <td data-label="ID">{getProductDisplayId(product)}</td>
                     <td data-label="Name">{product.name}</td>
                     <td data-label="Price">${product.price}</td>
                     <td data-label="Stock">{product.quantity}</td>

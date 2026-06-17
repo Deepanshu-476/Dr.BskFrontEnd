@@ -30,7 +30,8 @@ import {
   AlertCircle,
   MessageCircle,
   Sparkles,
-  ZoomIn
+  ZoomIn,
+  Lock
 } from "lucide-react";
 
 import axiosInstance from "../../components/AxiosInstance";
@@ -1032,6 +1033,44 @@ const ProductPage = () => {
             ))}
           </div>
         </div>
+      </div>
+      <div className="product-sticky-order-bar">
+        <div className="product-secure-copy">
+          <Shield size={28} />
+          <div>
+            <strong>100% Safe & Secure</strong>
+            <span>Your order is protected</span>
+          </div>
+        </div>
+        {selectedImageUrl && !imageError ? (
+          <img src={selectedImageUrl} alt={product?.name || "Product"} />
+        ) : (
+          <div className="product-sticky-image-fallback">
+            <Package size={28} />
+          </div>
+        )}
+        <div className="product-sticky-total">
+          <span>Total Amount</span>
+          <strong>{money(unitPrice * toNum(units, 1), "Rs. 0")}</strong>
+          {unitMrp != null && unitMrp > unitPrice && (
+            <small>You Save {money((unitMrp - unitPrice) * toNum(units, 1), "Rs. 0")}</small>
+          )}
+        </div>
+        <button
+          type="button"
+          className="product-complete-order-btn"
+          onClick={handleBuyNow}
+          disabled={!canAddToCart}
+        >
+          <strong>
+            <Lock size={18} />
+            <span className="product-mobile-order-label">Buy Now</span>
+            <span className="product-desktop-order-label">
+              Buy Now {money(unitPrice * toNum(units, 1), "Rs. 0")}
+            </span>
+          </strong>
+          <span>Secure Online Payment</span>
+        </button>
       </div>
       <Footer />
     </>

@@ -102,6 +102,9 @@ const getQuantityDisplay = (quantity) => {
   return String(quantity);
 };
 
+const getProductDisplayId = (product = {}) =>
+  product.publicId || `BSK-P-${String(product._id || '').slice(-8).toUpperCase()}`;
+
 const PharmaProducts = () => {
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
@@ -278,7 +281,7 @@ const PharmaProducts = () => {
                       <TableCell>
                         <Typography fontWeight="medium">{product.name}</Typography>
                         <Typography variant="body2" color="textSecondary">
-                          {product._id}
+                          {getProductDisplayId(product)}
                         </Typography>
                       </TableCell>
                       <TableCell>

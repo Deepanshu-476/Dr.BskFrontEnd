@@ -14,6 +14,13 @@ const toNumber = (v) => {
   return Number.isFinite(n) ? n : 0;
 };
 
+const getOrderDisplayId = (orderId, orderDetails = {}) => {
+  const rawId = orderDetails.orderId || orderId;
+  if (!rawId) return "";
+  if (/^BSK-/i.test(rawId)) return rawId;
+  return `BSK-O-${String(rawId).slice(-8).toUpperCase()}`;
+};
+
 const OrderSuccessModal = ({ clearProducts, data: storeData }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -30,6 +37,7 @@ const OrderSuccessModal = ({ clearProducts, data: storeData }) => {
     state?.data ||
     storeData ||
     {};
+  const displayOrderId = getOrderDisplayId(orderId, orderDetails);
 
   const [showContent, setShowContent] = useState(false);
   const [showHurray, setShowHurray] = useState(false);
@@ -134,9 +142,9 @@ const OrderSuccessModal = ({ clearProducts, data: storeData }) => {
                 Order Placed Successfully!
               </Typography>
 
-              {!!orderId && (
+              {!!displayOrderId && (
                 <Typography variant="h6" sx={{ mt: 2 }}>
-                  Order ID: {orderId}
+                  Order ID: {displayOrderId}
                 </Typography>
               )}
 

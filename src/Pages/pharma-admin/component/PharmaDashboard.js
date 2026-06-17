@@ -8,6 +8,9 @@ import axiosInstance from '../../../components/AxiosInstance';
 import CustomLoader from '../../../components/CustomLoader';
 import './PharmaDashboard.css';
 
+const getOrderDisplayId = (order = {}) =>
+  order.orderId || `BSK-O-${String(order._id || '').slice(-8).toUpperCase()}`;
+
 const PharmaDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -179,7 +182,7 @@ const PharmaDashboard = () => {
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
       .slice(0, 5)
       .map(order => ({
-        id: order._id?.slice(-8).toUpperCase(),
+        id: getOrderDisplayId(order),
         fullId: order._id,
         customer: order.userName || order.userEmail?.split('@')[0] || 'Guest',
         amount: order.totalAmount || 0,
@@ -263,16 +266,19 @@ const PharmaDashboard = () => {
     return filteredOrders
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
       .slice(0, 5)
-      .map(order => ({
-        id: order._id,
-        text: order.status === 'Delivered' 
-          ? `Order ${order._id?.slice(-8).toUpperCase()} delivered to ${order.userName || order.userEmail?.split('@')[0]}`
-          : order.status === 'Cancelled'
-          ? `Order ${order._id?.slice(-8).toUpperCase()} was cancelled`
-          : `New order ${order._id?.slice(-8).toUpperCase()} placed by ${order.userName || order.userEmail?.split('@')[0]}`,
-        time: new Date(order.createdAt).toLocaleString('en-IN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' }),
-        type: order.status === 'Delivered' ? 'delivered' : order.status === 'Cancelled' ? 'cancelled' : 'order'
-      }));
+      .map(order => {
+        const displayId = getOrderDisplayId(order);
+        return {
+          id: order._id,
+          text: order.status === 'Delivered' 
+            ? `Order ${displayId} delivered to ${order.userName || order.userEmail?.split('@')[0]}`
+            : order.status === 'Cancelled'
+            ? `Order ${displayId} was cancelled`
+            : `New order ${displayId} placed by ${order.userName || order.userEmail?.split('@')[0]}`,
+          time: new Date(order.createdAt).toLocaleString('en-IN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' }),
+          type: order.status === 'Delivered' ? 'delivered' : order.status === 'Cancelled' ? 'cancelled' : 'order'
+        };
+      });
   }, [filteredOrders]);
 
   // Alerts based on filtered data

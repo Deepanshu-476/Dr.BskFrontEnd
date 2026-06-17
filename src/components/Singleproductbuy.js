@@ -21,7 +21,8 @@ import {
   Headphones,
   Package,
   AlertCircle,
-  Lock
+  Lock,
+  Edit3
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import Header from '../../src/components/Header/Header';
@@ -52,6 +53,7 @@ const SingleProductCheckout = () => {
   
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [addresses, setAddresses] = useState([]);
+  const [editingAddressIndex, setEditingAddressIndex] = useState(null);
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
   const [addressLoading, setAddressLoading] = useState(false);
@@ -69,7 +71,7 @@ const SingleProductCheckout = () => {
     selectedAddress: ''
   });
   
-  const [paymentMethod, setPaymentMethod] = useState(location.state?.paymentMethod === 'online' ? 'online' : 'cod');
+  const [paymentMethod, setPaymentMethod] = useState(location.state?.paymentMethod === 'cod' ? 'cod' : 'online');
   const [codCharge] = useState(0);
   const [paymentProcessing, setPaymentProcessing] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
@@ -294,8 +296,88 @@ const SingleProductCheckout = () => {
   const increaseQuantity = () => setQuantity(prev => prev + 1);
   const decreaseQuantity = () => setQuantity(prev => prev > 1 ? prev - 1 : 1);
 
+  const parseAddressForEdit = (addr) => {
+    if (typeof addr === 'object') {
+      return {
+        flat: addr.flat || '',
+        landmark: addr.landmark || '',
+        state: addr.state || '',
+        city: addr.city || '',
+        country: addr.country || 'India',
+        phone: addr.phone || '',
+        email: addr.email || '',
+        fullAddress: addr.fullAddress || ''
+      };
+    }
+
+    const [flat = '', landmark = '', city = '', state = '', country = 'India'] = addr.split(',').map(part => part.trim());
+    return { flat, landmark, city, state, country, phone: '', email: '', fullAddress: addr };
+  };
+
+  const openAddAddressModal = () => {
+    setEditingAddressIndex(null);
+    setFormData(prev => ({
+      ...prev,
+      flat: '',
+      landmark: '',
+      pincode: '',
+      state: '',
+      city: '',
+      country: 'India'
+    }));
+    setShowAddressModal(true);
+  };
+
+  const openEditAddressModal = (addr, index) => {
+    const parsedAddress = parseAddressForEdit(addr);
+
+    setEditingAddressIndex(index);
+    setFormData(prev => ({
+      ...prev,
+      flat: parsedAddress.flat,
+      landmark: parsedAddress.landmark,
+      state: parsedAddress.state,
+      city: parsedAddress.city,
+      country: parsedAddress.country || 'India',
+      phone: parsedAddress.phone || prev.phone,
+      email: parsedAddress.email || prev.email,
+      selectedAddress: parsedAddress.fullAddress || prev.selectedAddress
+    }));
+
+    if (!isMobile) {
+      setShowAddressModal(false);
+      requestAnimationFrame(() => {
+        document.querySelector('.delivery-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+      return;
+    }
+
+    setShowAddressModal(true);
+  };
+
+  const closeAddressModal = () => {
+    setShowAddressModal(false);
+    setEditingAddressIndex(null);
+  };
+
+  const syncGuestAddressEdit = (oldAddressText, addressObject) => {
+    const guestAddresses = JSON.parse(localStorage.getItem('guestAddresses') || '[]');
+    const guestIndex = guestAddresses.findIndex(addr => {
+      const addressText = typeof addr === 'object' ? addr.fullAddress : addr;
+      return addressText === oldAddressText;
+    });
+
+    if (guestIndex !== -1) {
+      const nextGuestAddresses = [...guestAddresses];
+      nextGuestAddresses[guestIndex] = addressObject;
+      localStorage.setItem('guestAddresses', JSON.stringify(nextGuestAddresses));
+    }
+  };
+
   const handleAddAddress = async () => {
     setAddressLoading(true);
+    const isEditingAddress = editingAddressIndex !== null;
+    const isInlineDesktopEdit = isEditingAddress && !isMobile;
     
     if (formData.email && !isValidEmail(formData.email)) {
       toast.error("Please enter a valid email address");
@@ -309,13 +391,22 @@ const SingleProductCheckout = () => {
       return;
     }
 
-    if (!formData.flat || !formData.landmark || !formData.city || !formData.state) {
+    if (!formData.flat || !formData.city || !formData.state) {
       toast.error("Please fill all address fields");
       setAddressLoading(false);
       return;
     }
 
+    const fullAddress = [
+      formData.flat,
+      formData.landmark,
+      formData.city,
+      formData.state,
+      formData.country
+    ].filter(Boolean).join(', ');
+
     const addressObject = {
+      name: formData.fullName || userData?.name || '',
       flat: formData.flat,
       landmark: formData.landmark,
       city: formData.city,
@@ -323,27 +414,44 @@ const SingleProductCheckout = () => {
       country: formData.country,
       phone: formData.phone,
       email: formData.email,
-      fullAddress: `${formData.flat}, ${formData.landmark}, ${formData.city}, ${formData.state}, ${formData.country}`
+      fullAddress
     };
     
-    const existingAddresses = JSON.parse(localStorage.getItem('guestAddresses') || '[]');
-    const updatedAddresses = [...existingAddresses, addressObject];
-    localStorage.setItem('guestAddresses', JSON.stringify(updatedAddresses));
+    let updatedAddresses;
+
+    if (isEditingAddress) {
+      const oldAddress = addresses[editingAddressIndex];
+      const oldAddressText = typeof oldAddress === 'object' ? oldAddress.fullAddress : oldAddress;
+      updatedAddresses = addresses.map((addr, index) => index === editingAddressIndex ? addressObject : addr);
+      syncGuestAddressEdit(oldAddressText, addressObject);
+    } else {
+      const existingAddresses = JSON.parse(localStorage.getItem('guestAddresses') || '[]');
+      updatedAddresses = [...addresses, addressObject];
+      localStorage.setItem('guestAddresses', JSON.stringify([...existingAddresses, addressObject]));
+    }
+
     localStorage.setItem('guestEmail', formData.email);
     localStorage.setItem('guestPhone', formData.phone);
     
     setAddresses(updatedAddresses);
-    setFormData(prev => ({
-      ...prev,
-      selectedAddress: addressObject.fullAddress,
-      flat: '',
-      landmark: '',
-      state: '',
-      city: ''
-    }));
+    setFormData(prev => isInlineDesktopEdit
+      ? {
+          ...prev,
+          selectedAddress: addressObject.fullAddress
+        }
+      : {
+          ...prev,
+          selectedAddress: addressObject.fullAddress,
+          flat: '',
+          landmark: '',
+          state: '',
+          city: ''
+        }
+    );
+    setEditingAddressIndex(null);
     setShowAddressModal(false);
     setAddressLoading(false);
-    toast.success("Address saved successfully!");
+    toast.success(isEditingAddress ? "Address updated successfully!" : "Address saved successfully!");
   };
 
   const loadRazorpayScript = () => {
@@ -361,6 +469,48 @@ const SingleProductCheckout = () => {
     });
   };
 
+  const getAddressText = (addr) => (typeof addr === 'object' ? addr.fullAddress : addr);
+  const getAddressPhone = (addr) => (typeof addr === 'object' ? addr.phone : '');
+  const getAddressEmail = (addr) => (typeof addr === 'object' ? addr.email : '');
+  const getAddressName = (addr) => (typeof addr === 'object' ? addr.name : '');
+  const getSelectedAddress = () => addresses.find(addr => getAddressText(addr) === formData.selectedAddress);
+  const normalizePhoneNumber = (phone) => phone?.toString().trim().replace(/^\+91/, '').replace(/^91/, '').trim() || '';
+  const getCheckoutContactDetails = () => {
+    const selectedAddress = getSelectedAddress();
+    const checkoutEmail =
+      formData.email ||
+      getAddressEmail(selectedAddress) ||
+      localStorage.getItem('guestEmail') ||
+      userData?.email ||
+      '';
+    const phoneNumber = normalizePhoneNumber(
+      formData.phone ||
+      getAddressPhone(selectedAddress) ||
+      localStorage.getItem('guestPhone') ||
+      userData?.phone ||
+      userData?.mobile ||
+      ''
+    );
+    const customerName =
+      userData?.name ||
+      formData.fullName ||
+      getAddressName(selectedAddress) ||
+      '';
+
+    return { checkoutEmail, phoneNumber, customerName };
+  };
+  const checkoutContactDetails = getCheckoutContactDetails();
+  const checkoutDisabled =
+    !formData.selectedAddress ||
+    checkoutLoading ||
+    paymentProcessing ||
+    isProcessing ||
+    codProcessing ||
+    !checkoutContactDetails.checkoutEmail ||
+    !isValidEmail(checkoutContactDetails.checkoutEmail) ||
+    !checkoutContactDetails.phoneNumber ||
+    checkoutContactDetails.phoneNumber.length !== 10;
+
   const handleCODCheckout = async () => {
     setCodProcessing(true);
 
@@ -377,29 +527,13 @@ const SingleProductCheckout = () => {
         return;
       }
 
-      const checkoutEmail = formData.email || localStorage.getItem('guestEmail') || '';
+      const { checkoutEmail, phoneNumber, customerName } = getCheckoutContactDetails();
       
       if (!checkoutEmail || !isValidEmail(checkoutEmail)) {
         toast.error('Please provide a valid email address');
         setCodProcessing(false);
         return;
       }
-
-      let phoneNumber = formData.phone?.toString().trim();
-
-      if (!phoneNumber) {
-        const selectedAddressObj = addresses.find(addr => 
-          typeof addr === 'object' ? addr.fullAddress === formData.selectedAddress : addr === formData.selectedAddress
-        );
-        
-        if (selectedAddressObj && typeof selectedAddressObj === 'object' && selectedAddressObj.phone) {
-          phoneNumber = selectedAddressObj.phone;
-        } else {
-          phoneNumber = localStorage.getItem('guestPhone') || '';
-        }
-      }
-
-      phoneNumber = phoneNumber.replace(/^\+91/, '').replace(/^91/, '').trim();
 
       if (!phoneNumber || !/^\d{10}$/.test(phoneNumber)) {
         toast.error('Please provide a valid 10-digit phone number');
@@ -429,6 +563,8 @@ const SingleProductCheckout = () => {
         address: formData.selectedAddress.trim(),
         phone: phoneNumber,
         email: checkoutEmail,
+        userName: customerName,
+        fullName: customerName,
         totalAmount: parseFloat((itemsTotal + codCharge).toFixed(2)),
         baseAmount: parseFloat(itemsTotal.toFixed(2)),
         codCharge: codCharge,
@@ -517,29 +653,13 @@ const SingleProductCheckout = () => {
         return;
       }
 
-      const checkoutEmail = formData.email || localStorage.getItem('guestEmail') || '';
+      const { checkoutEmail, phoneNumber, customerName } = getCheckoutContactDetails();
       
       if (!checkoutEmail || !isValidEmail(checkoutEmail)) {
         toast.error('Please provide a valid email address');
         setCheckoutLoading(false);
         return;
       }
-
-      let phoneNumber = formData.phone?.toString().trim();
-
-      if (!phoneNumber) {
-        const selectedAddressObj = addresses.find(addr => 
-          typeof addr === 'object' ? addr.fullAddress === formData.selectedAddress : addr === formData.selectedAddress
-        );
-        
-        if (selectedAddressObj && typeof selectedAddressObj === 'object' && selectedAddressObj.phone) {
-          phoneNumber = selectedAddressObj.phone;
-        } else {
-          phoneNumber = localStorage.getItem('guestPhone') || '';
-        }
-      }
-
-      phoneNumber = phoneNumber.replace(/^\+91/, '').replace(/^91/, '').trim();
 
       if (!phoneNumber || !/^\d{10}$/.test(phoneNumber)) {
         toast.error('Please provide a valid 10-digit phone number');
@@ -566,6 +686,8 @@ const SingleProductCheckout = () => {
         address: formData.selectedAddress.trim(),
         phone: phoneNumber,
         email: checkoutEmail,
+        userName: customerName,
+        fullName: customerName,
         totalAmount: parseFloat(finalTotal.toFixed(2)),
         isGuest: !isAuthenticated,
         productName: product.name,
@@ -669,7 +791,7 @@ const SingleProductCheckout = () => {
           }
         },
         prefill: {
-          name: userData?.name || checkoutEmail.split('@')[0],
+          name: customerName || checkoutEmail.split('@')[0],
           email: checkoutEmail,
           contact: `+91${phoneNumber}`
         },
@@ -747,10 +869,10 @@ const SingleProductCheckout = () => {
 
     const hasCheckoutDetails =
       formData.selectedAddress &&
-      formData.email &&
-      isValidEmail(formData.email) &&
-      formData.phone &&
-      formData.phone.length === 10;
+      checkoutContactDetails.checkoutEmail &&
+      isValidEmail(checkoutContactDetails.checkoutEmail) &&
+      checkoutContactDetails.phoneNumber &&
+      checkoutContactDetails.phoneNumber.length === 10;
 
     if (!hasCheckoutDetails) {
       if (!autoPaymentNoticeShownRef.current) {
@@ -772,8 +894,8 @@ const SingleProductCheckout = () => {
     product,
     paymentMethod,
     formData.selectedAddress,
-    formData.email,
-    formData.phone,
+    checkoutContactDetails.checkoutEmail,
+    checkoutContactDetails.phoneNumber,
     isValidEmail,
     checkoutLoading,
     paymentProcessing,
@@ -835,6 +957,9 @@ const SingleProductCheckout = () => {
             />
             <span className="address-text">{addr}</span>
           </label>
+          <button type="button" className="cart1-edit-btn" onClick={() => openEditAddressModal(addr, index)}>
+            <Edit3 size={14} /> Edit
+          </button>
         </li>
       );
     } else {
@@ -868,6 +993,9 @@ const SingleProductCheckout = () => {
               {addr.phone && <span className="address-phone"><Phone size={12} /> {addr.phone}</span>}
             </div>
           </label>
+          <button type="button" className="cart1-edit-btn" onClick={() => openEditAddressModal(addr, index)}>
+            <Edit3 size={14} /> Edit
+          </button>
         </li>
       );
     }
@@ -1109,6 +1237,34 @@ const SingleProductCheckout = () => {
                 </label>
               </div>
 
+              {!isMobile && editingAddressIndex !== null && (
+                <div className="inline-address-actions">
+                  <button
+                    type="button"
+                    className="inline-address-update-btn"
+                    onClick={handleAddAddress}
+                    disabled={
+                      addressLoading ||
+                      !formData.email ||
+                      !isValidEmail(formData.email) ||
+                      !formData.flat ||
+                      !formData.city ||
+                      !formData.state ||
+                      formData.phone.length !== 10
+                    }
+                  >
+                    {addressLoading ? 'Updating...' : 'Update Address'}
+                  </button>
+                  <button
+                    type="button"
+                    className="inline-address-cancel-btn"
+                    onClick={() => setEditingAddressIndex(null)}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+
               <div className="mini-benefits">
                 <span><Clock size={18} /> Easy Returns</span>
                 <span><CheckCircle size={18} /> 7 Day Return Policy</span>
@@ -1121,7 +1277,7 @@ const SingleProductCheckout = () => {
               <div className="checkout-panel saved-panel">
                 <div className="section-header compact">
                   <h2><MapPin size={18} /> Saved Addresses</h2>
-                  <button className="add-address-btn" onClick={() => setShowAddressModal(true)}>
+                  <button className="add-address-btn" onClick={openAddAddressModal}>
                     Add New
                   </button>
                 </div>
@@ -1325,21 +1481,7 @@ const SingleProductCheckout = () => {
           <button
             className="complete-order-btn"
             onClick={handleCheckout}
-            disabled={
-              !formData.selectedAddress ||
-              checkoutLoading ||
-              paymentProcessing ||
-              isProcessing ||
-              codProcessing ||
-              !formData.email ||
-              !isValidEmail(formData.email) ||
-              !formData.phone ||
-              formData.phone.length !== 10 ||
-              !formData.fullName ||
-              !formData.flat ||
-              !formData.city ||
-              !formData.pincode
-            }
+            disabled={checkoutDisabled}
           >
             {checkoutLoading || paymentProcessing || isProcessing || codProcessing ? (
               <span className="btn-loading"><div className="btn-spinner"></div> Processing...</span>
@@ -1359,7 +1501,7 @@ const SingleProductCheckout = () => {
 
       <Dialog
         open={showAddressModal}
-        onClose={() => setShowAddressModal(false)}
+        onClose={closeAddressModal}
         fullScreen={isMobile}
         fullWidth
         maxWidth="sm"
@@ -1377,9 +1519,9 @@ const SingleProductCheckout = () => {
         <DialogTitle className="address-modal-title">
           <div className="modal-title-content">
             <MapPin size={isMobile ? 20 : 24} />
-            <span>Add Delivery Address</span>
+            <span>{editingAddressIndex !== null ? 'Edit Address' : 'Add Delivery Address'}</span>
           </div>
-          <button className="modal-close-btn" onClick={() => setShowAddressModal(false)}>x</button>
+          <button className="modal-close-btn" onClick={closeAddressModal}>x</button>
         </DialogTitle>
 
         <DialogContent className={`address-modal-content ${isMobile ? 'mobile' : ''}`}>
@@ -1471,13 +1613,13 @@ const SingleProductCheckout = () => {
         </DialogContent>
 
         <DialogActions className={`address-modal-actions ${isMobile ? 'mobile' : ''}`}>
-          <button className="modal-cancel-btn" onClick={() => setShowAddressModal(false)}>Cancel</button>
+          <button className="modal-cancel-btn" onClick={closeAddressModal}>Cancel</button>
           <button
             className="modal-save-btn"
             onClick={handleAddAddress}
             disabled={addressLoading || !formData.email || !isValidEmail(formData.email) || !formData.flat || !formData.landmark || !formData.city || !formData.state || formData.phone.length !== 10}
           >
-            {addressLoading ? <span className="btn-loading"><div className="btn-spinner-small"></div> Saving...</span> : 'Save Address'}
+            {addressLoading ? <span className="btn-loading"><div className="btn-spinner-small"></div> Saving...</span> : editingAddressIndex !== null ? 'Update Address' : 'Save Address'}
           </button>
         </DialogActions>
       </Dialog>
@@ -1593,7 +1735,7 @@ const SingleProductCheckout = () => {
                   </h2>
                   <button
                     className="add-address-btn"
-                    onClick={() => setShowAddressModal(true)}
+                    onClick={openAddAddressModal}
                   >
                     + {addresses.length > 0 ? 'Add New' : 'Add Address'}
                   </button>
@@ -1612,7 +1754,7 @@ const SingleProductCheckout = () => {
                       <p>No address added yet</p>
                       <button 
                         className="add-first-address-btn"
-                        onClick={() => setShowAddressModal(true)}
+                        onClick={openAddAddressModal}
                       >
                         Add Delivery Address
                       </button>
@@ -1798,17 +1940,7 @@ const SingleProductCheckout = () => {
                 <button
                   className={`checkout-action-btn ${paymentMethod === 'cod' ? 'cod-btn' : ''} ${isMobile ? 'mobile' : ''}`}
                   onClick={handleCheckout}
-                  disabled={
-                    !formData.selectedAddress || 
-                    checkoutLoading || 
-                    paymentProcessing || 
-                    isProcessing ||
-                    codProcessing ||
-                    !formData.email ||
-                    !isValidEmail(formData.email) ||
-                    !formData.phone ||
-                    formData.phone.length !== 10
-                  }
+                  disabled={checkoutDisabled}
                 >
                   {checkoutLoading ? (
                     <span className="btn-loading">
@@ -1887,7 +2019,7 @@ const SingleProductCheckout = () => {
       {/* Address Modal - FIXED: Changed error prop to boolean */}
       <Dialog
         open={showAddressModal}
-        onClose={() => setShowAddressModal(false)}
+        onClose={closeAddressModal}
         fullScreen={isMobile}
         fullWidth
         maxWidth="sm"
@@ -1905,9 +2037,9 @@ const SingleProductCheckout = () => {
         <DialogTitle className="address-modal-title">
           <div className="modal-title-content">
             <MapPin size={isMobile ? 20 : 24} />
-            <span>Add Delivery Address</span>
+            <span>{editingAddressIndex !== null ? 'Edit Address' : 'Add Delivery Address'}</span>
           </div>
-          <button className="modal-close-btn" onClick={() => setShowAddressModal(false)}>×</button>
+          <button className="modal-close-btn" onClick={closeAddressModal}>×</button>
         </DialogTitle>
         
         <DialogContent className={`address-modal-content ${isMobile ? 'mobile' : ''}`}>
@@ -2087,7 +2219,7 @@ const SingleProductCheckout = () => {
         <DialogActions className={`address-modal-actions ${isMobile ? 'mobile' : ''}`}>
           <button
             className="modal-cancel-btn"
-            onClick={() => setShowAddressModal(false)}
+            onClick={closeAddressModal}
           >
             Cancel
           </button>
@@ -2112,7 +2244,7 @@ const SingleProductCheckout = () => {
                 Saving...
               </span>
             ) : (
-              'Save Address'
+              editingAddressIndex !== null ? 'Update Address' : 'Save Address'
             )}
           </button>
         </DialogActions>

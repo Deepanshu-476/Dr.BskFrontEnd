@@ -43,6 +43,10 @@ function formatDate(dateString) {
   });
 }
 
+function getOrderDisplayId(order = {}) {
+  return order.orderId || `BSK-O-${String(order._id || '').slice(-8).toUpperCase()}`;
+}
+
 function getEstimatedRefundDays(refundInfo) {
   if (!refundInfo || !refundInfo.estimatedSettlement) return null;
   const now = new Date();
@@ -442,7 +446,7 @@ const OrderPage = () => {
                             orders.map((order, index) => (
                               <tr key={order._id}>
                                 <td>{index + 1}</td>
-                                <td>{order._id.slice(-8)}</td>
+                                <td>{getOrderDisplayId(order)}</td>
                                 <td>
                                   <div className="product-names-container">
                                     {order.items && order.items.length > 0
@@ -583,7 +587,7 @@ const OrderPage = () => {
                         <div key={order._id} className="mobile-order-card-whatsapp">
                           <div className="mobile-order-header-whatsapp">
                             <div className="mobile-order-info-whatsapp">
-                              <div className="mobile-order-id-whatsapp">Order #{order._id.slice(-8)}</div>
+                              <div className="mobile-order-id-whatsapp">Order #{getOrderDisplayId(order)}</div>
                               <div className="mobile-order-date-whatsapp">{formatDate(order.createdAt)}</div>
                             </div>
                             <div className="mobile-order-amount-whatsapp">₹{order.totalAmount}</div>
@@ -694,7 +698,7 @@ const OrderPage = () => {
                 <div className="modal-header-info">
                   <h1 className="modal-main-title">Order Details</h1>
                   <div className="modal-order-info">
-                    <span className="modal-order-id-detail">#{selectedOrder._id.slice(-8)}</span>
+                    <span className="modal-order-id-detail">#{getOrderDisplayId(selectedOrder)}</span>
                     <span className="modal-order-date-detail">• {formatDate(selectedOrder.createdAt)}</span>
                   </div>
                 </div>

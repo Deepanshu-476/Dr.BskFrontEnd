@@ -32,6 +32,9 @@ import CloseIcon from '@mui/icons-material/Close';
 import { Add, Delete, Image, Visibility } from '@mui/icons-material';
 import JoinUrl from '../../../JoinUrl';
 
+const getBannerDisplayId = (item = {}) =>
+    item.publicId || `BSK-BN-${String(item._id || '').slice(-6).toUpperCase()}`;
+
 const PharmaBanner = () => {
     const [formData, setFormData] = useState({ image: '', banner_type: '' });
     const [showModal, setShowModal] = useState(false);
@@ -345,7 +348,7 @@ const PharmaBanner = () => {
                                                             {item.type}
                                                         </Typography>
                                                         <Typography variant="caption" color="text.secondary">
-                                                            ID: {item._id.slice(-6)}
+                                                            ID: {getBannerDisplayId(item)}
                                                         </Typography>
                                                     </Box>
                                                 </TableCell>

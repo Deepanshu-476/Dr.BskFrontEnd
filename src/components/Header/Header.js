@@ -12,9 +12,11 @@ const Header = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const dropdownRef = useRef(null);
+  const locationRef = useRef(null);
   const [showInput, setShowInput] = useState(false);
   const [pincode, setPincode] = useState('');
   const [locationName, setLocationName] = useState('');
+  const [locationError, setLocationError] = useState('');
   const [currentPincode, setCurrentPincode] = useState('');
   const storedUser = localStorage.getItem('userData');
   const userData = storedUser ? JSON.parse(storedUser) : null;
@@ -106,6 +108,10 @@ const Header = () => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowDropdown(false);
       }
+      if (locationRef.current && !locationRef.current.contains(event.target)) {
+        setShowInput(false);
+        setLocationError('');
+      }
     };
     
     document.addEventListener('mousedown', handleClickOutside);
@@ -122,6 +128,11 @@ const Header = () => {
     navigate(`/ProductPage/${productId}`);
     setSearchQuery('');
     setShowMobileSearch(false);
+  };
+
+  const toggleLocationInput = () => {
+    setShowInput(prev => !prev);
+    setLocationError('');
   };
 
   const handleLogout = (e) => {
@@ -146,11 +157,13 @@ const Header = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!pincode || pincode.length !== 6) {
-      alert("Please enter a valid 6-digit pincode");
+    if (!/^\d{6}$/.test(pincode)) {
+      setLocationError("Please enter a valid 6-digit pincode");
       return;
     }
     
+    let shouldCloseLocationPopup = false;
+
     try {
       const res = await fetch(`https://nominatim.openstreetmap.org/search?postalcode=${pincode}&country=India&format=json`);
       const data = await res.json();
@@ -160,18 +173,24 @@ const Header = () => {
         setCurrentPincode(pincode);
         localStorage.setItem('lastPincode', pincode);
         localStorage.setItem('lastLocation', location);
+        shouldCloseLocationPopup = true;
       } else {
         setLocationName("Enter valid pincode");
         setCurrentPincode("");
+        setLocationError("We couldn't find this pincode. Please check and try again.");
         localStorage.removeItem('lastPincode');
         localStorage.removeItem('lastLocation');
       }
     } catch (error) {
       setLocationName("Error fetching location");
       setCurrentPincode("");
+      setLocationError("Unable to fetch location right now. Please try again.");
     }
-    setShowInput(false);
-    setPincode('');
+
+    if (shouldCloseLocationPopup) {
+      setShowInput(false);
+      setPincode('');
+    }
   };
 
   // Fixed: Page refresh when subcategory is clicked
@@ -235,29 +254,55 @@ const Header = () => {
                 <img src={logo} alt="Logo" />
               </a>
               
-              <div className="location-container">
-                <div className="location-box" onClick={() => setShowInput(true)}>
+              <div className="location-container" ref={locationRef}>
+                <div
+                  className={`location-box ${showInput ? 'active' : ''}`}
+                  onClick={toggleLocationInput}
+                  role="button"
+                  tabIndex={0}
+                  aria-expanded={showInput}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      toggleLocationInput();
+                    }
+                  }}
+                >
                   <MapPin size={16} />
                   <div className="location-info">
                     <span className="pincode-text">{currentPincode || "Set location"}</span>
                     <span className="location-text">{locationName || "Enter pincode"}</span>
                   </div>
-                  <ChevronDown size={12} />
+                  <ChevronDown size={14} className={`location-chevron ${showInput ? 'open' : ''}`} />
                 </div>
                 
                 {showInput && (
-                  <div className="location-modal">
+                  <div className="location-modal" onClick={(e) => e.stopPropagation()}>
                     <div className="modal-content">
-                      <h3>Choose Location</h3>
-                      <form onSubmit={handleSubmit}>
+                      <div className="location-modal-header">
+                        <div>
+                          <h3>Choose Location</h3>
+                          <p>Check delivery availability for your area.</p>
+                        </div>
+                        <button type="button" className="location-close-btn" onClick={() => setShowInput(false)} aria-label="Close location popup">
+                          <X size={18} />
+                        </button>
+                      </div>
+                      <form onSubmit={handleSubmit} className="location-form">
                         <input
                           type="text"
                           placeholder="Enter 6-digit pincode"
                           value={pincode}
-                          onChange={(e) => setPincode(e.target.value)}
+                          onChange={(e) => {
+                            setPincode(e.target.value.replace(/\D/g, '').slice(0, 6));
+                            setLocationError('');
+                          }}
                           className="pincode-input"
+                          maxLength="6"
+                          autoFocus
                         />
-                        <button type="submit" className="submit-btn">Submit</button>
+                        {locationError && <span className="location-error">{locationError}</span>}
+                        <button type="submit" className="submit-btn">Apply Location</button>
                       </form>
                     </div>
                   </div>
