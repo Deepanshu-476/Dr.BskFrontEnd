@@ -1061,7 +1061,7 @@ const ProductPage = () => {
           <div>
             <strong>100% Safe & Secure</strong>
             <span>Your order is protected</span>
-          </div>
+          </div> 
         </div>
         {selectedImageUrl && !imageError ? (
           <img src={selectedImageUrl} alt={product?.name || "Product"} />
