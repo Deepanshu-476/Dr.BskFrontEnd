@@ -38,6 +38,7 @@ import axiosInstance from "../../components/AxiosInstance";
 import { toast } from "react-toastify";
 import CustomLoader from "../../components/CustomLoader";
 import JoinUrl from "../../JoinUrl";
+import { openMagicCheckout } from "../../utils/magicCheckout";
 
 /** ---------- helpers ---------- */
 const normalizeNumber = (val) => {
@@ -146,6 +147,7 @@ const ProductPage = () => {
   const [zoomPosition, setZoomPosition] = useState({ x: 0, y: 0 });
   const [imageError, setImageError] = useState(false);
   const [showZoom, setShowZoom] = useState(false);
+  const [buyNowLoading, setBuyNowLoading] = useState(false);
 
   const imageRef = useRef(null);
   const thumbnailRefs = useRef([]);
@@ -449,9 +451,10 @@ const ProductPage = () => {
     }
   };
 
-  const handleBuyNow = () => {
+  const handleBuyNow = async () => {
     if (!product || !selectedVariant) return;
     if (!selectedVariant.in_stock) return;
+    if (buyNowLoading) return;
 
     const pid = toStr(product._id || product.id);
     
@@ -461,28 +464,45 @@ const ProductPage = () => {
       
     const qty = toNum(units, 1);
 
-    const checkoutProduct = {
-      ...product,
-      _id: pid,
-      selectedVariant,
-      selectedVariantIndex,
-      price: price,
-      purchaseQuantity: qty,
-      unitPrice: price,
-      totalPrice: price * qty,
-      mrp: selectedVariant.mrp ?? product.mrp,
-      discount: selectedVariant.discount ?? product.discount,
-      gst: selectedVariant.gst ?? product.gst,
-      inStock: selectedVariant.in_stock ?? product.stock,
-      isWholesaler: isWholesaler,
-    };
+    const items = [{
+      productId: pid,
+      name: product.name,
+      quantity: qty,
+      price,
+      mrp: selectedVariant.mrp ?? product.mrp ?? price,
+      variant: selectedVariant.label || "Standard Pack",
+      description: product.description || product.name,
+      imageUrl: product.media?.[0]?.url || "",
+    }];
 
-    navigate("/checkout", {
-      state: {
-        product: checkoutProduct,
-        quantity: qty,
-      },
-    });
+    try {
+      setBuyNowLoading(true);
+      const result = await openMagicCheckout({
+        items,
+        totalAmount: price * qty,
+        userData,
+        description: `Payment for ${product.name}`,
+      });
+
+      if (!result) return;
+
+      toast.success("Order placed successfully!");
+      navigate("/success", {
+        state: {
+          orderId: result.orderId,
+          orderDetails: result.order,
+          isCOD: result.order?.paymentMethod === "cod",
+        },
+      });
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message ||
+        error.message ||
+        "Magic Checkout could not be started"
+      );
+    } finally {
+      setBuyNowLoading(false);
+    }
   };
 
   const handleShare = () => {
@@ -598,7 +618,8 @@ const ProductPage = () => {
                               alt={`Thumbnail ${index + 1}`}
                               onError={(e) => {
                                 console.error(`Thumbnail ${index} failed to load`);
-                                e.target.src = 'https://via.placeholder.com/80x80?text=No+Image';
+                                e.currentTarget.onerror = null;
+                                e.currentTarget.src = '/medicineFallbackImg.jpeg';
                               }}
                             />
                           </button>
@@ -648,7 +669,7 @@ const ProductPage = () => {
                         aria-label="No image available"
                       >
                         <img 
-                          src="https://via.placeholder.com/400x400?text=No+Image+Available" 
+                          src="/medicineFallbackImg.jpeg"
                           alt="Placeholder"
                           className="product-image1"
                         />
@@ -832,7 +853,7 @@ const ProductPage = () => {
                 <button
                   onClick={handleBuyNow}
                   className={`buy-now-btn-new ${isBlinking ? 'blink' : ''}`}
-                  disabled={!canAddToCart}
+                  disabled={!canAddToCart || buyNowLoading}
                 >
                   ⚡ BUY NOW
                 </button>
@@ -1060,7 +1081,7 @@ const ProductPage = () => {
           type="button"
           className="product-complete-order-btn"
           onClick={handleBuyNow}
-          disabled={!canAddToCart}
+          disabled={!canAddToCart || buyNowLoading}
         >
           <strong>
             <Lock size={18} />

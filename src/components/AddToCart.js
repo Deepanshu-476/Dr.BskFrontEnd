@@ -752,7 +752,7 @@ const AddToCart = () => {
         return;
       }
 
-      const { order: razorpayOrder } = orderResponse.data;
+      const { order: razorpayOrder, key_id: razorpayKey } = orderResponse.data;
       console.log("✅ Razorpay order created:", razorpayOrder.id);
 
       const razorpayLoaded = await loadRazorpayScript();
@@ -763,7 +763,7 @@ const AddToCart = () => {
       }
 
       const options = {
-        key: "rzp_live_RsAhVxy2ldrBIl", 
+        key: razorpayKey,
         amount: razorpayOrder.amount,
         currency: razorpayOrder.currency,
         name: "Dr BSK",

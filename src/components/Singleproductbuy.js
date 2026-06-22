@@ -704,7 +704,7 @@ const SingleProductCheckout = () => {
         return;
       }
 
-      const { order: razorpayOrder } = orderResponse.data;
+      const { order: razorpayOrder, key_id: razorpayKey } = orderResponse.data;
 
       const razorpayLoaded = await loadRazorpayScript();
       if (!razorpayLoaded) {
@@ -714,7 +714,7 @@ const SingleProductCheckout = () => {
       }
 
       const options = {
-        key: "rzp_live_RsAhVxy2ldrBIl",
+        key: razorpayKey,
         amount: razorpayOrder.amount,
         currency: razorpayOrder.currency,
         name: "Dr BSK",

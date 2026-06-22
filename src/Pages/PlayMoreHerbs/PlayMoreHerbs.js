@@ -23,6 +23,8 @@ import {
   Zap,
 } from "lucide-react";
 import axiosInstance from "../../components/AxiosInstance";
+import { toast } from "react-toastify";
+import { openMagicCheckout } from "../../utils/magicCheckout";
 import "./PlayMoreHerbs.css";
 
 const PRODUCT_ID = "69dc879900eb47d08aca547a";
@@ -135,6 +137,7 @@ function Stars() {
 export default function PlayMoreHerbs() {
   const navigate = useNavigate();
   const [product, setProduct] = useState(null);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -156,11 +159,12 @@ export default function PlayMoreHerbs() {
   const expiry = product?.expires_on || "3 Years";
   const category = [product?.category, product?.sub_category].filter(Boolean).join(" / ") || "Human Ayurvedic / Ayurvedic Capsule";
 
-  const startRazorpayCheckout = () => {
+  const startRazorpayCheckout = async () => {
     if (!product) {
       navigate(`/ProductPage/${PRODUCT_ID}`);
       return;
     }
+    if (checkoutLoading) return;
 
     const selectedVariant = variants.find((variant) => variant.in_stock) || variants[0] || null;
     const price = toNumber(
@@ -172,31 +176,44 @@ export default function PlayMoreHerbs() {
     );
     const productId = product._id || product.id || PRODUCT_ID;
 
-    const checkoutProduct = {
-      ...product,
-      _id: productId,
-      quantity: variants,
-      selectedVariant,
-      selectedVariantIndex: Math.max(0, variants.indexOf(selectedVariant)),
-      price,
-      purchaseQuantity: 1,
-      unitPrice: price,
-      totalPrice: price,
-      mrp: selectedVariant?.mrp ?? product.mrp,
-      discount: selectedVariant?.discount ?? product.discount,
-      gst: selectedVariant?.gst ?? product.gst,
-      inStock: selectedVariant?.in_stock ?? product.stock ?? true,
-    };
+    try {
+      setCheckoutLoading(true);
+      const userData = JSON.parse(localStorage.getItem("userData") || "null");
+      const result = await openMagicCheckout({
+        items: [{
+          productId,
+          name: product.name,
+          quantity: 1,
+          price,
+          mrp: selectedVariant?.mrp ?? product.mrp ?? price,
+          variant: selectedVariant?.label || "Standard Pack",
+          description: product.description || product.name,
+          imageUrl: product.media?.[0]?.url || PRODUCT_IMAGE,
+        }],
+        totalAmount: price,
+        userData,
+        description: `Payment for ${product.name}`,
+      });
 
-    navigate("/checkout", {
-      state: {
-        product: checkoutProduct,
-        quantity: 1,
-        paymentMethod: "online",
-        autoOpenPayment: true,
-        source: "play-more-herbs",
-      },
-    });
+      if (!result) return;
+
+      toast.success("Order placed successfully!");
+      navigate("/success", {
+        state: {
+          orderId: result.orderId,
+          orderDetails: result.order,
+          isCOD: result.order?.paymentMethod === "cod",
+        },
+      });
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message ||
+        error.message ||
+        "Magic Checkout could not be started"
+      );
+    } finally {
+      setCheckoutLoading(false);
+    }
   };
 
   return (
