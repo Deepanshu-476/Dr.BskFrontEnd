@@ -11,6 +11,7 @@ import { deleteProduct, updateData, clearProducts } from '../store/Action';
 import API_URL from '../config';
 import axiosInstance from './AxiosInstance';
 import JoinUrl from '../JoinUrl';
+import { openMagicCheckout } from '../utils/magicCheckout';
 
 /** ---------- Facebook Pixel Functions ---------- */
 const sendServerEvent = async (eventName, data) => {
@@ -259,7 +260,6 @@ const AddToCart = () => {
     if (newQuantity < 1) return;
     const updatedItem = cartItems.find((item) => item._id === itemId);
     if (updatedItem) {
-      const oldQuantity = updatedItem.quantity || 1;
       const updatedProduct = { ...updatedItem, quantity: newQuantity };
       dispatch(updateData(updatedProduct));
       toast.success('Item quantity updated!', { position: 'top-right', autoClose: 2000 });
@@ -456,22 +456,6 @@ const AddToCart = () => {
     };
     fetchCities();
   }, [formData.state]);
-
-  const loadRazorpayScript = () => {
-    return new Promise((resolve) => {
-      const script = document.createElement('script');
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-      script.onload = () => {
-        console.log("✅ Razorpay SDK loaded");
-        resolve(true);
-      };
-      script.onerror = () => {
-        console.error("❌ Failed to load Razorpay SDK");
-        resolve(false);
-      };
-      document.body.appendChild(script);
-    });
-  };
 
   const fetchData = useCallback(async () => {
     const guestAddresses = JSON.parse(localStorage.getItem('guestAddresses') || '[]');
@@ -674,19 +658,10 @@ const AddToCart = () => {
   };
 
   const handleOnlineCheckout = async () => {
-    console.log("=== STARTING ONLINE CHECKOUT PROCESS ===");
-    
     setCheckoutLoading(true);
-
     trackInitiateCheckout();
 
     try {
-      if (!formData.selectedAddress) {
-        toast.warn('Please select an address before checkout.');
-        setCheckoutLoading(false);
-        return;
-      }
-
       if (!cartItems || cartItems.length === 0) {
         toast.error('Your cart is empty');
         setCheckoutLoading(false);
@@ -694,207 +669,57 @@ const AddToCart = () => {
       }
 
       const { checkoutEmail, phoneNumber, customerName } = getCheckoutContactDetails();
-      
-      if (!checkoutEmail || !isValidEmail(checkoutEmail)) {
-        toast.error('Please provide a valid email address');
-        setCheckoutLoading(false);
-        return;
-      }
 
-      if (!phoneNumber || !/^\d{10}$/.test(phoneNumber)) {
-        toast.error('Please provide a valid 10-digit phone number');
-        setCheckoutLoading(false);
-        return;
-      }
-
-      const orderItems = cartItems.map((item) => {
-        const qty = parseInt(item.quantity) || 1;
-        const price = isWholesaler 
-          ? parseFloat(item.retail_price || item.final_price || 0)
-          : parseFloat(item.final_price || 0);
-
-        if (!item._id || !item.name || qty < 1 || price <= 0) {
-          throw new Error(`Invalid item data for: ${item.name || 'Unknown item'}`);
-        }
-
-        return {
-          productId: item._id,
-          name: item.name.trim(),
-          quantity: qty,
-          price: price
-        };
+      const result = await openMagicCheckout({
+        items: getMagicCheckoutItems(),
+        totalAmount: baseTotal,
+        userData: {
+          ...userData,
+          name: customerName || userData.name || '',
+          email: checkoutEmail || userData.email || '',
+          phone: phoneNumber || userData.phone || userData.mobile || ''
+        },
+        description: 'Order Payment'
       });
 
-      const userId = isAuthenticated ? userData._id : `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-
-      const orderPayload = {
-        userId: userId,
-        items: orderItems,
-        address: formData.selectedAddress.trim(),
-        phone: phoneNumber,
-        email: checkoutEmail,
-        userName: customerName,
-        fullName: customerName,
-        totalAmount: parseFloat(finalTotal.toFixed(2)),
-        isGuest: !isAuthenticated,
-        isWholesaler: isWholesaler
-      };
-
-      console.log("Step 1: Creating Razorpay order...");
-      
-      const orderResponse = await axiosInstance.post('/api/createPaymentOrder', orderPayload);
-
-      if (!orderResponse.data.success) {
-        const errorMsg = orderResponse.data?.message || 'Failed to create payment order';
-        console.error("❌ Razorpay order creation failed:", errorMsg);
-        toast.error(errorMsg);
+      if (!result) {
         setCheckoutLoading(false);
         return;
       }
 
-      const { order: razorpayOrder, key_id: razorpayKey } = orderResponse.data;
-      console.log("✅ Razorpay order created:", razorpayOrder.id);
+      trackPurchase(result.orderId || result.order?.orderId, 'online');
 
-      const razorpayLoaded = await loadRazorpayScript();
-      if (!razorpayLoaded) {
-        toast.error('Payment system failed to load. Please refresh the page.');
-        setCheckoutLoading(false);
-        return;
+      dispatch(clearProducts());
+      localStorage.removeItem('cartItems');
+
+      if (!isAuthenticated) {
+        localStorage.removeItem('guestAddresses');
+        localStorage.removeItem('guestEmail');
+        localStorage.removeItem('guestPhone');
       }
 
-      const options = {
-        key: razorpayKey,
-        amount: razorpayOrder.amount,
-        currency: razorpayOrder.currency,
-        name: "Dr BSK",
-        description: "Order Payment",
-        order_id: razorpayOrder.id,
-        handler: async function (response) {
-          console.log("✅ Payment successful, response:", response);
-          
-          setIsProcessing(true);
-          setProcessingMessage("Verifying your payment...");
-          setPaymentProcessing(true);
-          
-          try {
-            console.log("Step 2: Verifying payment and creating order...");
-            
-            const verifyPayload = {
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-              ...orderPayload
-            };
-
-            setProcessingMessage("Creating your order...");
-            
-            const verifyResponse = await axiosInstance.post('/api/verifyPayment', verifyPayload);
-            
-            if (verifyResponse.data.success) {
-              console.log("✅ Order created successfully:", verifyResponse.data.orderId);
-              
-              trackPurchase(verifyResponse.data.orderId, 'online');
-              
-              setProcessingMessage("Finalizing your order...");
-              
-              dispatch(clearProducts());
-              localStorage.removeItem('cartItems');
-              
-              if (!isAuthenticated) {
-                localStorage.removeItem('guestAddresses');
-                localStorage.removeItem('guestEmail');
-                localStorage.removeItem('guestPhone');
-              }
-              
-              toast.success(
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <CheckCircle size={20} />
-                  Order placed successfully! Redirecting...
-                </div>,
-                {
-                  position: 'top-right',
-                  autoClose: 2000,
-                  hideProgressBar: false,
-                  closeOnClick: true,
-                  pauseOnHover: true,
-                  draggable: true
-                }
-              );
-              
-              setTimeout(() => {
-                setIsProcessing(false);
-                navigate(`/success`, {
-                  state: {
-                    orderId: verifyResponse.data.orderId,
-                    orderDetails: verifyResponse.data.orderDetails
-                  }
-                });
-              }, 2000);
-              
-            } else {
-              console.error("❌ Order creation failed:", verifyResponse.data.message);
-              setIsProcessing(false);
-              toast.error(verifyResponse.data.message || 'Failed to create order');
-            }
-          } catch (error) {
-            console.error("❌ Payment verification error:", error);
-            setIsProcessing(false);
-            toast.error('Payment verification failed. Please contact support.');
-          } finally {
-            setPaymentProcessing(false);
-            setCheckoutLoading(false);
-          }
-        },
-        prefill: {
-          name: customerName || checkoutEmail.split('@')[0],
-          email: checkoutEmail,
-          contact: `+91${phoneNumber}`
-        },
-        theme: {
-          color: '#3f51b5'
-        },
-        modal: {
-          ondismiss: function() {
-            console.log("Payment modal closed by user");
-            if (!paymentProcessing) {
-              setCheckoutLoading(false);
-            }
-          }
+      toast.success(
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <CheckCircle size={20} />
+          Order placed successfully! Redirecting...
+        </div>,
+        {
+          position: 'top-right',
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true
         }
-      };
+      );
 
-      console.log("Opening Razorpay checkout...");
-      const rzp = new window.Razorpay(options);
-      
-      rzp.on('modal.closed', function() {
-        console.log("Razorpay modal closed");
-        if (!paymentProcessing) {
-          setCheckoutLoading(false);
+      navigate('/success', {
+        state: {
+          orderId: result.orderId || result.order?.orderId,
+          orderDetails: result.orderDetails || result.order,
+          isCOD: false
         }
       });
-      
-      rzp.open();
-
-      rzp.on('payment.failed', function (response) {
-        console.error("❌ Payment failed:", response.error);
-        setIsProcessing(false);
-        toast.error(`Payment failed: ${response.error.description || 'Unknown error'}`);
-        setCheckoutLoading(false);
-        setPaymentProcessing(false);
-        
-        if (window.fbq) {
-          window.fbq('track', 'ViewContent', {
-            content_name: 'Payment Failed',
-            value: Number(finalTotal || 0),
-            currency: 'INR',
-            content_ids: cartItems.map(item => item._id).filter(Boolean),
-            content_type: 'product',
-          });
-        }
-      });
-      
-      console.log("Razorpay Order ID received:", razorpayOrder.id);
-      console.log("Razorpay Order Amount:", razorpayOrder.amount);
 
     } catch (error) {
       console.error('=== CHECKOUT ERROR ===');
@@ -1075,10 +900,51 @@ const AddToCart = () => {
       : parseFloat(item.final_price || 0)
   );
 
-  const getItemImage = (item) => {
-    const imageUrl = item?.media?.[0]?.url;
-    return imageUrl ? JoinUrl(API_URL, imageUrl) : 'https://via.placeholder.com/120x120?text=Product';
+  const fallbackProductImage = `${process.env.PUBLIC_URL}/medicineFallbackImg.jpeg`;
+
+  const resolveImageUrl = (url) => {
+    if (!url) return fallbackProductImage;
+    const value = String(url).trim();
+    if (!value) return fallbackProductImage;
+    if (/^(https?:|data:|blob:)/i.test(value)) return value;
+    return JoinUrl(API_URL, value);
   };
+
+  const getItemImage = (item) => {
+    const media = Array.isArray(item?.media) ? item.media[0] : item?.media;
+    const imageUrl =
+      media?.url ||
+      media?.imageUrl ||
+      media?.image_url ||
+      item?.imageUrl ||
+      item?.image_url ||
+      item?.productImage ||
+      item?.thumbnail ||
+      item?.image;
+
+    return resolveImageUrl(imageUrl);
+  };
+
+  const getMagicCheckoutItems = () => cartItems.map((item) => {
+    const qty = parseInt(item.quantity, 10) || 1;
+    const price = getItemPrice(item);
+    const mrp = parseFloat(item.mrp || item.retail_price || price);
+
+    if (!item._id || !item.name || qty < 1 || price <= 0) {
+      throw new Error(`Invalid item data for: ${item.name || 'Unknown item'}`);
+    }
+
+    return {
+      productId: item._id,
+      name: item.name.trim(),
+      quantity: qty,
+      price,
+      mrp: Math.max(mrp, price),
+      variant: item.selectedVariant?.label || item.variant || item.variantLabel || 'Standard Pack',
+      description: item.description || item.name,
+      imageUrl: getItemImage(item)
+    };
+  });
 
   const getItemBadge = (item, index) => {
     if (item?.tag) return item.tag;
@@ -1122,15 +988,17 @@ const AddToCart = () => {
   const checkoutContactDetails = getCheckoutContactDetails();
 
   const checkoutDisabled =
-    !formData.selectedAddress ||
     checkoutLoading ||
     paymentProcessing ||
     isProcessing ||
     codProcessing ||
-    !checkoutContactDetails.checkoutEmail ||
-    !isValidEmail(checkoutContactDetails.checkoutEmail) ||
-    !checkoutContactDetails.phoneNumber ||
-    checkoutContactDetails.phoneNumber.length !== 10;
+    (paymentMethod === 'cod' && (
+      !formData.selectedAddress ||
+      !checkoutContactDetails.checkoutEmail ||
+      !isValidEmail(checkoutContactDetails.checkoutEmail) ||
+      !checkoutContactDetails.phoneNumber ||
+      checkoutContactDetails.phoneNumber.length !== 10
+    ));
 
   const renderV2AddressCard = (addr, index) => {
     const addressText = getAddressText(addr);
@@ -1182,6 +1050,74 @@ const AddToCart = () => {
     </>
   );
 
+  const renderDrawerCart = () => {
+    return (
+      <div className="cart-drawer-stage">
+        <div className="cart-drawer-backdrop" onClick={handleBackButtonClick} />
+        <aside className="cart-drawer-panel" aria-label="Shopping cart">
+          <header className="cart-drawer-header">
+            <h1>Cart <span>{cartItems.length}</span></h1>
+            <button type="button" aria-label="Close cart" onClick={handleBackButtonClick}>
+              <X size={24} />
+            </button>
+          </header>
+
+          <div className="cart-drawer-items">
+            {cartItems.map((item) => {
+              const qty = item.quantity || 1;
+              const itemPrice = getItemPrice(item);
+              const itemMrp = parseFloat(item.mrp || item.retail_price || itemPrice);
+
+              return (
+                <article className="cart-drawer-item" key={`${item._id}-${item.selectedVariant?.label || 'default'}`}>
+                  <Link to={`/ProductPage/${item._id}`} className="cart-drawer-image">
+                    <img src={getItemImage(item)} alt={item.name} onError={(event) => { event.currentTarget.src = fallbackProductImage; }} />
+                  </Link>
+                  <div className="cart-drawer-copy">
+                    <div className="cart-drawer-topline">
+                      <h2>{item.name}</h2>
+                      <strong>Rs. {(itemPrice * qty).toFixed(2)}</strong>
+                    </div>
+                    <div className="cart-drawer-price">
+                      <span>Rs. {itemPrice.toFixed(2)}</span>
+                      {itemMrp > itemPrice && <del>Rs. {itemMrp.toFixed(2)}</del>}
+                    </div>
+                    <div className="cart-drawer-controls">
+                      <div className="cart-drawer-qty">
+                        <button type="button" onClick={() => handleQuantityChange(item._id, qty - 1)} disabled={qty <= 1}>-</button>
+                        <span>{qty}</span>
+                        <button type="button" onClick={() => handleQuantityChange(item._id, qty + 1)}>+</button>
+                      </div>
+                      <button type="button" className="cart-drawer-remove" onClick={() => handleRemoveItem(item._id)} aria-label={`Remove ${item.name}`}>
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+
+          <div className="cart-drawer-footer">
+            <button type="button" className="cart-drawer-discount">
+              <span>Discount</span>
+              <Plus size={20} />
+            </button>
+            {renderV2SummaryRows()}
+            <div className="cart-drawer-total">
+              <span>Estimated total</span>
+              <strong>Rs. {finalTotal.toFixed(2)}</strong>
+            </div>
+            <p>Duties and taxes included. Shipping is calculated at checkout.</p>
+            <button className="cart-drawer-checkout" onClick={handleCheckout} disabled={checkoutDisabled}>
+              {checkoutLoading || paymentProcessing || isProcessing || codProcessing ? 'Processing...' : 'Check out'}
+            </button>
+          </div>
+        </aside>
+      </div>
+    );
+  };
+
   const renderV2CheckoutButton = () => (
     <button
       className="cart1-checkout-btn"
@@ -1204,7 +1140,9 @@ const AddToCart = () => {
       {renderProcessingLoader()}
       <Header />
 
-      <div className="cart1-page">
+      <div className={`cart1-page ${cartItems.length > 0 ? 'cart1-drawer-active' : ''}`}>
+        {cartItems.length > 0 && renderDrawerCart()}
+
         <div className="cart1-mobile-trust">
           <span><Shield size={29} /><strong>100% Safe & Secure</strong><small>Your data is protected</small></span>
           <span><RotateCcw size={29} /><strong>Easy Returns</strong><small>No hassle</small></span>
@@ -2006,4 +1944,3 @@ const AddToCart = () => {
 };
 
 export default AddToCart;
-

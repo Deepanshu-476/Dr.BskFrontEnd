@@ -2,13 +2,28 @@ import axiosInstance from "../components/AxiosInstance";
 
 let razorpayScriptPromise;
 
+const MAGIC_CHECKOUT_SCRIPT = "https://checkout.razorpay.com/v1/magic-checkout.js";
+
 const loadRazorpay = () => {
-  if (window.Razorpay) return Promise.resolve(true);
   if (razorpayScriptPromise) return razorpayScriptPromise;
 
   razorpayScriptPromise = new Promise((resolve) => {
+    const existingScript = document.querySelector(`script[src="${MAGIC_CHECKOUT_SCRIPT}"]`);
+    if (existingScript) {
+      if (window.Razorpay) {
+        resolve(true);
+        return;
+      }
+      existingScript.addEventListener("load", () => resolve(true), { once: true });
+      existingScript.addEventListener("error", () => {
+        razorpayScriptPromise = null;
+        resolve(false);
+      }, { once: true });
+      return;
+    }
+
     const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.src = MAGIC_CHECKOUT_SCRIPT;
     script.async = true;
     script.onload = () => resolve(true);
     script.onerror = () => {
@@ -76,6 +91,7 @@ export const openMagicCheckout = async ({
   return new Promise((resolve, reject) => {
     const checkout = new window.Razorpay({
       key,
+      one_click_checkout: true,
       amount: order.amount,
       currency: order.currency,
       order_id: order.id,
