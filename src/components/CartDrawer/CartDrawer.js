@@ -101,29 +101,29 @@ const CartDrawer = () => {
   return (
     <>
       <div
-        className={`cart-drawer-overlay ${isOpen ? "open" : ""}`}
+        className={`Sidecart-overlay ${isOpen ? "Sidecart-open" : ""}`}
         onClick={() => setIsOpen(false)}
         aria-hidden={!isOpen}
       />
-      <aside className={`cart-drawer ${isOpen ? "open" : ""}`} aria-hidden={!isOpen}>
-        <div className="cart-drawer-header">
-          <div className="cart-drawer-title">
-            <h2>Cart</h2>
-            <span>{cartItems.length}</span>
+      <aside className={`Sidecart-drawer ${isOpen ? "Sidecart-open" : ""}`} aria-hidden={!isOpen}>
+        <div className="Sidecart-header">
+          <div className="Sidecart-title">
+            <h2>Your cart</h2>
+            <span>({cartItems.length})</span>
           </div>
-          <button type="button" className="cart-drawer-close" onClick={() => setIsOpen(false)} aria-label="Close cart">
+          <button type="button" className="Sidecart-close" onClick={() => setIsOpen(false)} aria-label="Close cart">
             <X size={26} />
           </button>
         </div>
 
         {cartItems.length === 0 ? (
-          <div className="cart-drawer-empty">
+          <div className="Sidecart-empty">
             <h3>Your cart is empty</h3>
             <p>Add products to see them here.</p>
           </div>
         ) : (
           <>
-            <div className="cart-drawer-items">
+            <div className="Sidecart-items">
               {cartItems.map((item) => {
                 const price = getItemPrice(item);
                 const mrp = getItemMrp(item, price);
@@ -131,9 +131,9 @@ const CartDrawer = () => {
                 const key = `${item._id}-${item.selectedVariant?.label || "default"}`;
 
                 return (
-                  <div className="cart-drawer-item" key={key}>
+                  <div className="Sidecart-item" key={key}>
                     <img
-                      className="cart-drawer-item-img"
+                      className="Sidecart-item-img"
                       src={getItemImage(item)}
                       alt={item.name || "Cart item"}
                       onError={(event) => {
@@ -141,17 +141,17 @@ const CartDrawer = () => {
                         event.currentTarget.src = "/medicineFallbackImg.jpeg";
                       }}
                     />
-                    <div className="cart-drawer-item-main">
-                      <div className="cart-drawer-item-top">
+                    <div className="Sidecart-item-main">
+                      <div className="Sidecart-item-top">
                         <h3>{item.name}</h3>
                         <span>{formatPrice(price * qty)}</span>
                       </div>
-                      <div className="cart-drawer-price-line">
+                      <div className="Sidecart-price-line">
                         <span>{formatPrice(price)}</span>
                         {mrp > price && <del>{formatPrice(mrp)}</del>}
                       </div>
-                      <div className="cart-drawer-controls">
-                        <div className="cart-drawer-qty">
+                      <div className="Sidecart-controls">
+                        <div className="Sidecart-qty">
                           <button
                             type="button"
                             onClick={() => changeQuantity(item, qty - 1)}
@@ -171,7 +171,7 @@ const CartDrawer = () => {
                         </div>
                         <button
                           type="button"
-                          className="cart-drawer-delete"
+                          className="Sidecart-delete"
                           onClick={() => dispatch(deleteProduct(item._id))}
                           aria-label="Remove item"
                         >
@@ -184,31 +184,31 @@ const CartDrawer = () => {
               })}
             </div>
 
-            <div className="cart-drawer-summary">
-              <button type="button" className="cart-drawer-discount">
+            <div className="Sidecart-summary">
+              <button type="button" className="Sidecart-discount">
                 <span>Discount</span>
                 <Plus size={22} />
               </button>
-              <div className="cart-drawer-row">
+              <div className="Sidecart-row">
                 <span>Subtotal ({totals.quantity} Items)</span>
                 <strong>{formatPrice(totals.subtotal)}</strong>
               </div>
-              <div className="cart-drawer-row">
+              <div className="Sidecart-row">
                 <span>Shipping</span>
-                <strong>FREE</strong>
+                <strong className="Sidecart-free-shipping">FREE</strong>
               </div>
               {savings > 0 && (
-                <div className="cart-drawer-row">
+                <div className="Sidecart-row">
                   <span>You Save</span>
                   <strong>- {formatPrice(savings)}</strong>
                 </div>
               )}
-              <div className="cart-drawer-total">
+              <div className="Sidecart-total">
                 <span>Estimated total</span>
                 <strong>{formatPrice(totals.subtotal)}</strong>
               </div>
               <p>Duties and taxes included. Shipping is calculated at checkout.</p>
-              <button type="button" className="cart-drawer-checkout" onClick={handleCheckout}>
+              <button type="button" className="Sidecart-checkout" onClick={handleCheckout}>
                 Check out
               </button>
             </div>
