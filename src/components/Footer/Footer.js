@@ -217,7 +217,7 @@ const Footer = () => {
                 STAME LIFE
               </button> */}
             </li>
-          </ul>
+          </ul> 
         </div>
 
         {/* Column 3: Policies */}
