@@ -2,9 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import './Header.css';
 import logo from '../../logo/logo1.jpg';
 import { useSelector } from 'react-redux';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ShoppingCart, Phone, Mail, Smartphone, ChevronDown, Menu, Search, MapPin, Upload, User, X, ChevronRight } from 'lucide-react';
 import axiosInstance from '../AxiosInstance';
+import { openCartDrawer } from '../CartDrawer/CartDrawer';
 
 const Header = () => {
   const cartItems = useSelector((state) => state.app.data);
@@ -350,7 +351,7 @@ const Header = () => {
               
               <button 
                 className="cart-btn"
-                onClick={() => navigate('/cart')}
+                onClick={openCartDrawer}
               >
                 <ShoppingCart size={24} />
                 {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
@@ -477,7 +478,7 @@ const Header = () => {
               
               <button 
                 className="mobile-cart-btn"
-                onClick={() => navigate('/cart')}
+                onClick={openCartDrawer}
               >
                 <ShoppingCart size={24} />
                 {cartCount > 0 && <span className="mobile-cart-badge">{cartCount}</span>}

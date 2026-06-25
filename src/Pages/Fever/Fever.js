@@ -8,6 +8,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { addData } from "../../store/Action";
 import API_URL from "../../config";
 import { toast } from "react-toastify";
+import { openCartDrawer } from "../../components/CartDrawer/CartDrawer";
 import CustomLoader from "../../components/CustomLoader";
 import JoinUrl from "../../JoinUrl";
 import { Helmet } from "react-helmet-async";
@@ -530,8 +531,7 @@ const Fever = () => {
     };
 
     dispatch(addData(cartItem));
-
-    toast.success("Item added to cart!");
+    openCartDrawer();
   };
 
   const increaseQuantity = (id) => {

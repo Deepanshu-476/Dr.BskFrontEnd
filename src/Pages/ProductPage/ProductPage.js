@@ -39,6 +39,7 @@ import { toast } from "react-toastify";
 import CustomLoader from "../../components/CustomLoader";
 import JoinUrl from "../../JoinUrl";
 import { openMagicCheckout } from "../../utils/magicCheckout";
+import { openCartDrawer } from "../../components/CartDrawer/CartDrawer";
 
 /** ---------- helpers ---------- */
 const normalizeNumber = (val) => {
@@ -437,18 +438,11 @@ const ProductPage = () => {
           quantity: newQuantity,
         },
       });
-
-      toast.success(`Quantity increased to ${newQuantity}`, {
-        position: "top-right",
-        autoClose: 2000,
-      });
     } else {
       dispatch(addData(cartItem));
-      toast.success("Item added to cart!", {
-        position: "top-right",
-        autoClose: 2000,
-      });
     }
+
+    openCartDrawer();
   };
 
   const handleBuyNow = async () => {

@@ -1,0 +1,222 @@
+import React, { useEffect, useMemo, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { Minus, Plus, Trash2, X } from "lucide-react";
+import { deleteProduct } from "../../store/Action";
+import API_URL from "../../config";
+import JoinUrl from "../../JoinUrl";
+import "./CartDrawer.css";
+
+export const CART_DRAWER_EVENT = "bsk:open-cart-drawer";
+
+export const openCartDrawer = () => {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new CustomEvent(CART_DRAWER_EVENT));
+};
+
+const formatPrice = (value) => `Rs. ${Number(value || 0).toFixed(2)}`;
+
+const getItemPrice = (item) => {
+  if (item.isWholesaler) {
+    return Number(item.retail_price || item.unitPrice || item.price || item.final_price || 0);
+  }
+  return Number(item.unitPrice || item.price || item.final_price || item.consumer_price || 0);
+};
+
+const getItemMrp = (item, price) => {
+  const mrp = Number(item.mrp || item.retail_price || price || 0);
+  return Math.max(mrp, price);
+};
+
+const getItemImage = (item) => {
+  const url = item.media?.[0]?.url || item.imageUrl || item.image;
+  return url ? JoinUrl(API_URL, url) : "/medicineFallbackImg.jpeg";
+};
+
+const CartDrawer = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const cartItems = useSelector((state) => state.app.data);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleOpen = () => setIsOpen(true);
+    window.addEventListener(CART_DRAWER_EVENT, handleOpen);
+    return () => window.removeEventListener(CART_DRAWER_EVENT, handleOpen);
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") setIsOpen(false);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  const totals = useMemo(() => {
+    return cartItems.reduce(
+      (acc, item) => {
+        const qty = Number(item.quantity || 1);
+        const price = getItemPrice(item);
+        const mrp = getItemMrp(item, price);
+        acc.subtotal += price * qty;
+        acc.mrpTotal += mrp * qty;
+        acc.quantity += qty;
+        return acc;
+      },
+      { subtotal: 0, mrpTotal: 0, quantity: 0 }
+    );
+  }, [cartItems]);
+
+  const savings = Math.max(totals.mrpTotal - totals.subtotal, 0);
+
+  const changeQuantity = (item, nextQuantity) => {
+    if (nextQuantity < 1) return;
+    dispatch(
+      {
+        type: "UPDATE_QUANTITY",
+        payload: {
+          productId: item._id,
+          variantLabel: item.selectedVariant?.label,
+          quantity: nextQuantity,
+        },
+      }
+    );
+  };
+
+  const handleCheckout = () => {
+    setIsOpen(false);
+    navigate("/cart");
+  };
+
+  return (
+    <>
+      <div
+        className={`cart-drawer-overlay ${isOpen ? "open" : ""}`}
+        onClick={() => setIsOpen(false)}
+        aria-hidden={!isOpen}
+      />
+      <aside className={`cart-drawer ${isOpen ? "open" : ""}`} aria-hidden={!isOpen}>
+        <div className="cart-drawer-header">
+          <div className="cart-drawer-title">
+            <h2>Cart</h2>
+            <span>{cartItems.length}</span>
+          </div>
+          <button type="button" className="cart-drawer-close" onClick={() => setIsOpen(false)} aria-label="Close cart">
+            <X size={26} />
+          </button>
+        </div>
+
+        {cartItems.length === 0 ? (
+          <div className="cart-drawer-empty">
+            <h3>Your cart is empty</h3>
+            <p>Add products to see them here.</p>
+          </div>
+        ) : (
+          <>
+            <div className="cart-drawer-items">
+              {cartItems.map((item) => {
+                const price = getItemPrice(item);
+                const mrp = getItemMrp(item, price);
+                const qty = Number(item.quantity || 1);
+                const key = `${item._id}-${item.selectedVariant?.label || "default"}`;
+
+                return (
+                  <div className="cart-drawer-item" key={key}>
+                    <img
+                      className="cart-drawer-item-img"
+                      src={getItemImage(item)}
+                      alt={item.name || "Cart item"}
+                      onError={(event) => {
+                        event.currentTarget.onerror = null;
+                        event.currentTarget.src = "/medicineFallbackImg.jpeg";
+                      }}
+                    />
+                    <div className="cart-drawer-item-main">
+                      <div className="cart-drawer-item-top">
+                        <h3>{item.name}</h3>
+                        <span>{formatPrice(price * qty)}</span>
+                      </div>
+                      <div className="cart-drawer-price-line">
+                        <span>{formatPrice(price)}</span>
+                        {mrp > price && <del>{formatPrice(mrp)}</del>}
+                      </div>
+                      <div className="cart-drawer-controls">
+                        <div className="cart-drawer-qty">
+                          <button
+                            type="button"
+                            onClick={() => changeQuantity(item, qty - 1)}
+                            disabled={qty <= 1}
+                            aria-label="Decrease quantity"
+                          >
+                            <Minus size={16} />
+                          </button>
+                          <span>{qty}</span>
+                          <button
+                            type="button"
+                            onClick={() => changeQuantity(item, qty + 1)}
+                            aria-label="Increase quantity"
+                          >
+                            <Plus size={16} />
+                          </button>
+                        </div>
+                        <button
+                          type="button"
+                          className="cart-drawer-delete"
+                          onClick={() => dispatch(deleteProduct(item._id))}
+                          aria-label="Remove item"
+                        >
+                          <Trash2 size={19} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="cart-drawer-summary">
+              <button type="button" className="cart-drawer-discount">
+                <span>Discount</span>
+                <Plus size={22} />
+              </button>
+              <div className="cart-drawer-row">
+                <span>Subtotal ({totals.quantity} Items)</span>
+                <strong>{formatPrice(totals.subtotal)}</strong>
+              </div>
+              <div className="cart-drawer-row">
+                <span>Shipping</span>
+                <strong>FREE</strong>
+              </div>
+              {savings > 0 && (
+                <div className="cart-drawer-row">
+                  <span>You Save</span>
+                  <strong>- {formatPrice(savings)}</strong>
+                </div>
+              )}
+              <div className="cart-drawer-total">
+                <span>Estimated total</span>
+                <strong>{formatPrice(totals.subtotal)}</strong>
+              </div>
+              <p>Duties and taxes included. Shipping is calculated at checkout.</p>
+              <button type="button" className="cart-drawer-checkout" onClick={handleCheckout}>
+                Check out
+              </button>
+            </div>
+          </>
+        )}
+      </aside>
+    </>
+  );
+};
+
+export default CartDrawer;

@@ -55,6 +55,7 @@ import ReturnsPolicy from "./Pages/footerLinksPages/ReturnsPolicy";
 
 import { MobileBottomNav } from "./components/MobileBottomNav";
 import ScrollToTop from "./components/ScrollToTop";
+import CartDrawer from "./components/CartDrawer/CartDrawer";
 
 function App() {
   const [layoutReady, setLayoutReady] = useState(null);
@@ -237,6 +238,7 @@ function App() {
         </Route>
       </Routes>
 
+      <CartDrawer />
       <div className="pt_h"></div>
       <MobileBottomNav />
     </>
