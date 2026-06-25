@@ -1067,7 +1067,7 @@ const ProductPage = () => {
           <img src={selectedImageUrl} alt={product?.name || "Product"} />
         ) : (
           <div className="product-sticky-image-fallback">
-            <Package size={28} />
+            <Package size={28} /> 
           </div>
         )}
         <div className="product-sticky-total">
