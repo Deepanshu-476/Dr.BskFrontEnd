@@ -2,9 +2,11 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Minus, Plus, Trash2, X } from "lucide-react";
-import { deleteProduct } from "../../store/Action";
+import { toast } from "react-toastify";
+import { clearProducts, deleteProduct } from "../../store/Action";
 import API_URL from "../../config";
 import JoinUrl from "../../JoinUrl";
+import { openMagicCheckout } from "../../utils/magicCheckout";
 import "./CartDrawer.css";
 
 export const CART_DRAWER_EVENT = "bsk:open-cart-drawer";
@@ -33,11 +35,16 @@ const getItemImage = (item) => {
   return url ? JoinUrl(API_URL, url) : "/medicineFallbackImg.jpeg";
 };
 
+const normalizePhoneNumber = (phone) =>
+  phone?.toString().trim().replace(/^\+91/, "").replace(/^91/, "").trim() || "";
+
 const CartDrawer = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
   const cartItems = useSelector((state) => state.app.data);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const userData = JSON.parse(localStorage.getItem("userData") || "{}");
 
   useEffect(() => {
     const handleOpen = () => setIsOpen(true);
@@ -93,9 +100,73 @@ const CartDrawer = () => {
     );
   };
 
-  const handleCheckout = () => {
-    setIsOpen(false);
-    navigate("/cart");
+  const getMagicCheckoutItems = () =>
+    cartItems.map((item) => {
+      const qty = parseInt(item.quantity, 10) || 1;
+      const price = getItemPrice(item);
+      const mrp = Number(item.mrp || item.retail_price || price);
+
+      if (!item._id || !item.name || qty < 1 || price <= 0) {
+        throw new Error(`Invalid item data for: ${item.name || "Unknown item"}`);
+      }
+
+      return {
+        productId: item._id,
+        name: item.name.trim(),
+        quantity: qty,
+        price,
+        mrp: Math.max(mrp, price),
+        variant: item.selectedVariant?.label || item.variant || item.variantLabel || "Standard Pack",
+        description: item.description || item.name,
+        imageUrl: getItemImage(item),
+      };
+    });
+
+  const handleCheckout = async () => {
+    if (checkoutLoading) return;
+    if (!cartItems.length) {
+      toast.error("Your cart is empty");
+      return;
+    }
+
+    setCheckoutLoading(true);
+
+    try {
+      const result = await openMagicCheckout({
+        items: getMagicCheckoutItems(),
+        totalAmount: totals.subtotal,
+        userData: {
+          ...userData,
+          email: userData.email || localStorage.getItem("guestEmail") || "",
+          phone: normalizePhoneNumber(
+            userData.phone || userData.mobile || localStorage.getItem("guestPhone") || ""
+          ),
+        },
+        description: "Order Payment",
+      });
+
+      if (!result) {
+        setCheckoutLoading(false);
+        return;
+      }
+
+      dispatch(clearProducts());
+      localStorage.removeItem("cartItems");
+      toast.success("Order placed successfully!");
+      setIsOpen(false);
+      navigate("/success", {
+        state: {
+          orderId: result.orderId || result.order?.orderId,
+          orderDetails: result.orderDetails || result.order,
+          isCOD: false,
+        },
+      });
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || error.message || "Checkout failed. Please try again.";
+      toast.error(errorMessage);
+      setCheckoutLoading(false);
+    }
   };
 
   return (
@@ -208,8 +279,13 @@ const CartDrawer = () => {
                 <strong>{formatPrice(totals.subtotal)}</strong>
               </div>
               <p>Duties and taxes included. Shipping is calculated at checkout.</p>
-              <button type="button" className="Sidecart-checkout" onClick={handleCheckout}>
-                Check out
+              <button
+                type="button"
+                className="Sidecart-checkout"
+                onClick={handleCheckout}
+                disabled={checkoutLoading}
+              >
+                {checkoutLoading ? "Proceed..." : "Check out"}
               </button>
             </div>
           </>

@@ -209,13 +209,13 @@ const Footer = () => {
             <li><a onClick={() => navigate('/blogs')}>Blogs</a></li>
             <li><a onClick={() => navigate('/contactus')}>Contact us</a></li>
             <li>
-              <button
+              {/* <button
                 className="footer-playmore-btn"
                 type="button"
                 onClick={() => navigate('/Stame-Life')}
               >
                 STAME LIFE
-              </button>
+              </button> */}
             </li>
           </ul>
         </div>
