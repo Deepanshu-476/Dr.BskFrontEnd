@@ -14,7 +14,7 @@ import {
   REGISTER,
 } from "redux-persist";
 
-const initialState = {
+const initialState = { 
   data: [],
 };
 
