@@ -1,12 +1,12 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { toast } from 'react-toastify';
 import './BestSellerProducts.css';
 import axiosInstance from '../AxiosInstance';
 import API_URL from '../../config';
 import JoinUrl from '../../JoinUrl';
 import { addData } from '../../store/Action';
+import { openCartDrawer } from '../CartDrawer/CartDrawer';
 
 // HELPER: Parse quantity variants
 const parseQuantityVariants = (raw) => {
@@ -169,7 +169,7 @@ const BestSellerProducts = () => {
     };
 
     dispatch(addData(cartItem));
-    toast.success("Item added to cart!");
+    openCartDrawer();
   };
 
   // Increase quantity
