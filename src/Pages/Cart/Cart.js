@@ -25,7 +25,8 @@ const Cart = () => {
 
   // Email OTP send function
   const handleSendEmailOtp = async () => {
-    if (!validateEmail(email)) {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!validateEmail(normalizedEmail)) {
       setErrors({ email: 'Please enter a valid email address' });
       return;
     }
@@ -33,7 +34,7 @@ const Cart = () => {
     setIsLoading(true);
     try {
       const response = await axiosInstance.post('/admin/send-otp', {
-        email: email
+        email: normalizedEmail
       });
       
       if (response.data.success) {
@@ -61,8 +62,9 @@ const Cart = () => {
 
     const newErrors = {};
 
-    if (!email) newErrors.email = 'Email is required';
-    else if (!validateEmail(email)) newErrors.email = 'Please enter a valid email address';
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail) newErrors.email = 'Email is required';
+    else if (!validateEmail(normalizedEmail)) newErrors.email = 'Please enter a valid email address';
     if (!otp) newErrors.otp = 'OTP is required';
 
     if (Object.keys(newErrors).length > 0) {
@@ -73,7 +75,7 @@ const Cart = () => {
 
     try {
       const response = await axiosInstance.post('/admin/login-with-otp', {
-        email,
+        email: normalizedEmail,
         otp
       });
 
@@ -83,10 +85,10 @@ const Cart = () => {
         localStorage.setItem('userData', JSON.stringify(response.data.data));
 
         // Link guest orders to this user
-        if (email) {
+        if (normalizedEmail) {
           try {
             const linkResponse = await axiosInstance.post('/api/link-guest-orders', {
-              email: email,
+              email: normalizedEmail,
               userId: response.data.data._id
             }, {
               headers: { 

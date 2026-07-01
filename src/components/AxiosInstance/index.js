@@ -8,7 +8,12 @@ const axiosInstance = axios.create({
 
 axiosInstance.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("userToken");
+    // Login currently stores the JWT as authToken. Keep the older keys as
+    // fallbacks so existing sessions continue to work.
+    const token =
+      localStorage.getItem("authToken") ||
+      localStorage.getItem("userToken") ||
+      localStorage.getItem("token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
