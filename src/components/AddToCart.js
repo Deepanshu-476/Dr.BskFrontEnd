@@ -50,13 +50,13 @@ const getCookie = (name) => {
 };
 
 const AddToCart = () => {
-  const [codEnabled, setCodEnabled] = useState(true);
+  const [codEnabled, setCodEnabled] = useState(false);
   
   useEffect(() => {
     const fetchPaymentSettings = async () => {
       try {
         const res = await axiosInstance.get('/api/cash-on-delivery');
-        setCodEnabled(res.data.data.codEnabled);
+        setCodEnabled(Boolean(res.data.data.codEnabled));
       } catch (err) {
         console.error("Failed to fetch payment settings");
       }
@@ -116,8 +116,9 @@ const AddToCart = () => {
     return acc + price * (item.quantity || 1);
   }, 0);
 
-  const codTotal = paymentMethod === 'cod' ? baseTotal + codCharge : baseTotal;
-  const finalTotal = paymentMethod === 'cod' ? codTotal : baseTotal;
+  const isCodSelected = codEnabled && paymentMethod === 'cod';
+  const codTotal = isCodSelected ? baseTotal + codCharge : baseTotal;
+  const finalTotal = isCodSelected ? codTotal : baseTotal;
   const mrpTotal = cartItems.reduce((acc, item) => {
     const price = isWholesaler 
       ? parseFloat(item.retail_price || item.final_price || 0)
@@ -752,7 +753,7 @@ const AddToCart = () => {
       return;
     }
 
-    if (paymentMethod === 'cod') {
+    if (paymentMethod === 'cod' && codEnabled) {
       await handleCODCheckout();
     } else {
       await handleOnlineCheckout();
@@ -992,7 +993,7 @@ const AddToCart = () => {
     paymentProcessing ||
     isProcessing ||
     codProcessing ||
-    (paymentMethod === 'cod' && (
+    (isCodSelected && (
       !formData.selectedAddress ||
       !checkoutContactDetails.checkoutEmail ||
       !isValidEmail(checkoutContactDetails.checkoutEmail) ||
@@ -1045,7 +1046,7 @@ const AddToCart = () => {
     <>
       <div className="cart1-summary-row"><span>Subtotal ({cartItems.length} Items)</span><strong>Rs. {baseTotal.toFixed(2)}</strong></div>
       <div className="cart1-summary-row"><span>Shipping</span><strong className="cart1-free">FREE</strong></div>
-      {paymentMethod === 'cod' && <div className="cart1-summary-row"><span>COD Charges</span><strong>Rs. {codCharge.toFixed(2)}</strong></div>}
+      {isCodSelected && <div className="cart1-summary-row"><span>COD Charges</span><strong>Rs. {codCharge.toFixed(2)}</strong></div>}
       {cartSavings > 0 && <div className="cart1-summary-row"><span>You Save</span><strong className="cart1-save">- Rs. {cartSavings.toFixed(2)}</strong></div>}
     </>
   );
@@ -1129,7 +1130,7 @@ const AddToCart = () => {
       ) : (
         <>
           <strong><Lock size={17} /> Buy Now</strong>
-          <span>{paymentMethod === 'cod' ? 'Cash on Delivery Available' : 'Secure Online Payment'}</span>
+          <span>Secure Online Payment</span>
         </>
       )}
     </button>
@@ -1595,7 +1596,7 @@ const AddToCart = () => {
                         <span>₹{baseTotal.toFixed(2)}</span>
                       </div>
                       
-                      {paymentMethod === 'cod' && (
+                      {isCodSelected && (
                         <div className="summary-row cod-charge-row">
                           <span>COD Charge</span>
                           <span>+ ₹{codCharge.toFixed(2)}</span>
@@ -1622,14 +1623,14 @@ const AddToCart = () => {
                       <span>₹{finalTotal.toFixed(2)}</span>
                     </div>
 
-                    {paymentMethod === 'cod' && (
+                    {isCodSelected && (
                       <div className="cod-note">
                         <p>💡 <strong>Note:</strong> You'll pay ₹{finalTotal.toFixed(2)} (including ₹{codCharge} COD charge) when your order is delivered.</p>
                       </div>
                     )}
 
                     <button
-                      className={`checkout-btn ${paymentMethod === 'cod' ? 'cod-btn' : ''}`}
+                      className={`checkout-btn ${isCodSelected ? 'cod-btn' : ''}`}
                       onClick={handleCheckout}
                       disabled={checkoutDisabled}
                     >
@@ -1641,7 +1642,7 @@ const AddToCart = () => {
                         <span>Creating COD Order...</span>
                       ) : (
                         <>
-                          {paymentMethod === 'cod' 
+                          {isCodSelected 
                             ? `Place COD Order (₹${finalTotal.toFixed(2)})`
                             : isAuthenticated 
                               ? 'Proceed to Payment' 

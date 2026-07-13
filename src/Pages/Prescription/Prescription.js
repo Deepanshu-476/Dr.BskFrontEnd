@@ -2,8 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import './Prescription.css';
 import prescription from "../../logo/Prescription.webp";
 import Header from '../../components/Header/Header';
-import axios from 'axios';
-import API_URL from '../../config';
+import axiosInstance from '../../components/AxiosInstance';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 
@@ -60,7 +59,7 @@ const Prescription = () => {
 
     try {
       setUploading(true);
-      const response = await axios.post(`${API_URL}user/createPrescription`, formData, {
+      const response = await axiosInstance.post('/user/createPrescription', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

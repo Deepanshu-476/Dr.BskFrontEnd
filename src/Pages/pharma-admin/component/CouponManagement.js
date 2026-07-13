@@ -33,15 +33,6 @@ const CouponManagement = () => {
     status: 'active'
   });
 
-  // Get token from localStorage
-const getToken = () => localStorage.getItem('authToken');
-
-  // Headers for API calls
-  const getHeaders = () => ({
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${getToken()}`
-  });
-
   useEffect(() => {
     fetchCoupons();
     fetchProducts();
@@ -50,9 +41,8 @@ const getToken = () => localStorage.getItem('authToken');
   const fetchCoupons = async () => {
     try {
       setLoading(true);
-      const response = await fetch(
-        `/api/coupons?page=${pagination.page}&limit=${pagination.limit}`,
-        { headers: getHeaders() }
+      const response = await axiosInstance.get(
+        `/api/coupons?page=${pagination.page}&limit=${pagination.limit}`
       );
       const data = response.data;
       
@@ -74,9 +64,7 @@ const getToken = () => localStorage.getItem('authToken');
 
   const fetchProducts = async () => {
     try {
-      const response = await fetch('/api/products/coupon-list', {
-        headers: getHeaders()
-      });
+      const response = await axiosInstance.get('/api/products/coupon-list');
      const data = response.data;
       
       if (data.success) {
@@ -160,11 +148,7 @@ const getToken = () => localStorage.getItem('authToken');
       setLoading(true);
       setError('');
       
-      const response = await fetch(`/api/coupons/${selectedCoupon._id}`, {
-        method: 'PUT',
-        headers: getHeaders(),
-        body: JSON.stringify(couponForm)
-      });
+      const response = await axiosInstance.put(`/api/coupons/${selectedCoupon._id}`, couponForm);
       
       const data = response.data;
       
@@ -191,10 +175,7 @@ const getToken = () => localStorage.getItem('authToken');
     try {
       setLoading(true);
       
-      const response = await fetch(`/api/coupons/${couponId}/toggle-status`, {
-        method: 'PATCH',
-        headers: getHeaders()
-      });
+      const response = await axiosInstance.patch(`/api/coupons/${couponId}/toggle-status`);
       
       const data = response.data;
       
@@ -219,10 +200,7 @@ const getToken = () => localStorage.getItem('authToken');
     try {
       setLoading(true);
       
-      const response = await fetch(`/api/coupons/${couponId}`, {
-        method: 'DELETE',
-        headers: getHeaders()
-      });
+      const response = await axiosInstance.delete(`/api/coupons/${couponId}`);
       
       const data = response.data;
       

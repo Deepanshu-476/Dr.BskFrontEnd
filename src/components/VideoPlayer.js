@@ -2,6 +2,10 @@ import React, { useState, useRef, useEffect } from "react";
 import PropTypes from "prop-types";
 import { Box, styled, Typography, CircularProgress } from "@mui/material";
 import { PlayArrow, VolumeOff, VolumeUp, Replay } from "@mui/icons-material";
+import API_URL from "../config";
+import JoinUrl from "../JoinUrl";
+
+const DEFAULT_VIDEO_URL = JoinUrl(API_URL, "/uploads/intro-video.mp4");
 
 const VideoContainer = styled(Box)({
   position: "relative",
@@ -58,7 +62,7 @@ const LoadingSpinner = styled(CircularProgress)({
 });
 
 const VideoPlayer = ({
-  videoUrl = "https://drbskhealthcare.com/uploads/intro-video.mp4",
+  videoUrl = DEFAULT_VIDEO_URL,
   autoPlay = true,
   showControls = false,
   fullWidth = true,
@@ -584,7 +588,7 @@ VideoPlayer.propTypes = {
 };
 
 VideoPlayer.defaultProps = {
-  videoUrl: "https://drbskhealthcare.com/uploads/intro-video.mp4",
+  videoUrl: DEFAULT_VIDEO_URL,
   autoPlay: true,
   showControls: false,
   fullWidth: true,

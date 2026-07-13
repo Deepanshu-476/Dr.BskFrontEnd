@@ -218,7 +218,7 @@ const ProductPage = () => {
     { id: 2, icon: <Leaf size={20} />, label: "100% Herbal" },
     { id: 3, icon: <FlaskConical size={20} />, label: "Quality Tested" },
     { id: 4, icon: <Truck size={20} />, label: "Free Delivery" },
-    { id: 5, icon: <CreditCard size={20} />, label: "Cash on Delivery" },
+    { id: 5, icon: <CreditCard size={20} />, label: "Online Payment" },
     { id: 6, icon: <Shield size={20} />, label: "Secure Payment" }
   ];
 

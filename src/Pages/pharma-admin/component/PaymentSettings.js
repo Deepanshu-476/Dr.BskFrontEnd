@@ -4,7 +4,7 @@ import API_URL from '../../../config';
 import { toast } from "react-toastify";
 
 function PaymentSettings() {
-  const [codEnabled, setCodEnabled] = useState(true);
+  const [codEnabled, setCodEnabled] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -14,7 +14,7 @@ function PaymentSettings() {
   const fetchSettings = async () => {
     try {
       const res = await axiosInstance.get("/api/cash-on-delivery");
-      setCodEnabled(res?.data?.data?.codEnabled ?? true);
+      setCodEnabled(Boolean(res?.data?.data?.codEnabled));
     } catch (error) {
       toast.error("Failed to fetch payment settings");
     }
