@@ -50,6 +50,7 @@ import RemoveShoppingCartIcon from '@mui/icons-material/RemoveShoppingCart';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import jsPDF from 'jspdf';
 import autoTable from "jspdf-autotable";
+import { downloadInvoicePDF } from '../../../utils/invoiceGenerator';
 
 // Styled components
 const PageContainer = styled(Box)(({ theme }) => ({
@@ -1762,6 +1763,7 @@ const PharmaOrder = () => {
               </Grid>
             </DialogContent>
             <DialogActions>
+              <Button onClick={() => downloadInvoicePDF(selectedOrder)} color="secondary" variant="outlined" size="small">Download Invoice</Button>
               <Button onClick={handleCloseDialog} variant="contained" size="small">Close</Button>
             </DialogActions>
           </>
