@@ -180,13 +180,13 @@ export const downloadInvoicePDF = (order) => {
     const tableColumns = [
       { header: 'SL\nNo', dataKey: 'sl' },
       { header: 'Description', dataKey: 'desc' },
-      { header: 'Unit\nPrice (₹)', dataKey: 'unit' },
+      { header: 'Unit Price\n(Rs.)', dataKey: 'unit' },
       { header: 'Qty', dataKey: 'qty' },
-      { header: 'Net\nAmount (₹)', dataKey: 'net' },
+      { header: 'Net Amt\n(Rs.)', dataKey: 'net' },
       { header: 'Tax\nRate', dataKey: 'taxRate' },
       { header: 'Tax\nType', dataKey: 'taxType' },
-      { header: 'Tax\nAmount (₹)', dataKey: 'taxVal' },
-      { header: 'Total\nAmount (₹)', dataKey: 'total' }
+      { header: 'Tax Amt\n(Rs.)', dataKey: 'taxVal' },
+      { header: 'Total\n(Rs.)', dataKey: 'total' }
     ];
 
     const tableRows = [];
@@ -267,14 +267,14 @@ export const downloadInvoicePDF = (order) => {
       },
       columnStyles: {
         sl: { cellWidth: 8, halign: 'center' },
-        desc: { cellWidth: 58 },
-        unit: { cellWidth: 16, halign: 'right' },
+        desc: { cellWidth: 54 },
+        unit: { cellWidth: 18, halign: 'right' },
         qty: { cellWidth: 10, halign: 'center' },
         net: { cellWidth: 18, halign: 'right' },
         taxRate: { cellWidth: 14, halign: 'center' },
-        taxType: { cellWidth: 18, halign: 'center' },
-        taxVal: { cellWidth: 16, halign: 'right' },
-        total: { cellWidth: 20, halign: 'right' }
+        taxType: { cellWidth: 20, halign: 'center' },
+        taxVal: { cellWidth: 18, halign: 'right' },
+        total: { cellWidth: 22, halign: 'right' }
       },
       didDrawPage: (data) => {
         currentY = data.cursor.y + 4;
@@ -317,24 +317,24 @@ export const downloadInvoicePDF = (order) => {
     doc.rect(rightBoxX, currentY, totalBoxWidth - 2, 22);
 
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
+    doc.setFontSize(8.5);
     doc.setTextColor(80, 80, 80);
     
     doc.text('Net Subtotal:', rightBoxX + 3, currentY + 5);
-    doc.text(`₹${grandSubtotal.toFixed(2)}`, pageWidth - margin - 3, currentY + 5, { align: 'right' });
+    doc.text(`Rs. ${grandSubtotal.toFixed(2)}`, pageWidth - margin - 3, currentY + 5, { align: 'right' });
 
     doc.text('GST Tax Amount:', rightBoxX + 3, currentY + 10);
-    doc.text(`₹${grandTax.toFixed(2)}`, pageWidth - margin - 3, currentY + 10, { align: 'right' });
+    doc.text(`Rs. ${grandTax.toFixed(2)}`, pageWidth - margin - 3, currentY + 10, { align: 'right' });
 
     // Summary divider line
     doc.setDrawColor(220, 220, 220);
     doc.line(rightBoxX, currentY + 13.5, pageWidth - margin, currentY + 13.5);
 
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9);
+    doc.setFontSize(9.5);
     doc.setTextColor(33, 33, 33);
     doc.text('Grand Total:', rightBoxX + 3, currentY + 18.5);
-    doc.text(`₹${parseFloat(order.totalAmount || grandTotal).toFixed(2)}`, pageWidth - margin - 3, currentY + 18.5, { align: 'right' });
+    doc.text(`Rs. ${parseFloat(order.totalAmount || grandTotal).toFixed(2)}`, pageWidth - margin - 3, currentY + 18.5, { align: 'right' });
 
     currentY += 28;
 
@@ -346,9 +346,9 @@ export const downloadInvoicePDF = (order) => {
 
     // Tax payable under reverse charge note
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
+    doc.setFontSize(8.5);
     doc.setTextColor(100, 100, 100);
-    doc.text('Whether tax is payable under reverse charge - No', margin, currentY);
+    doc.text('Whether tax is payable under reverse charge - No', margin, currentY + 6);
 
     // Signature Area
     const sigX = pageWidth - margin - 50;
