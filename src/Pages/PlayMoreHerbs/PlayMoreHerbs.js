@@ -82,11 +82,32 @@ const compareRows = [
   "Ayurvedic & Safe",
 ];
 
+const reconstructStringFromObject = (obj) => {
+  if (typeof obj === 'object' && obj !== null && !Array.isArray(obj) && obj["0"] !== undefined) {
+    let s = "";
+    for (let i = 0; obj[String(i)] !== undefined; i++) {
+      s += obj[String(i)];
+    }
+    return s;
+  }
+  return null;
+};
+
 const parseQuantityVariants = (raw) => {
   try {
+    const reconstructedRaw = reconstructStringFromObject(raw);
+    if (reconstructedRaw !== null) {
+      raw = reconstructedRaw;
+    }
+
     let value = raw;
-    if (Array.isArray(value) && value.length === 1 && typeof value[0] === "string") {
-      value = JSON.parse(value[0]);
+    if (Array.isArray(value) && value.length === 1) {
+      const innerReconstructed = reconstructStringFromObject(value[0]);
+      if (innerReconstructed !== null) {
+        value = JSON.parse(innerReconstructed);
+      } else if (typeof value[0] === "string") {
+        value = JSON.parse(value[0]);
+      }
     }
     if (Array.isArray(value) && Array.isArray(value[0])) value = value.flat();
     if (!Array.isArray(value)) return [];
