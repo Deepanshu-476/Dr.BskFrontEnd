@@ -178,8 +178,16 @@ const Cart = () => {
                 <form onSubmit={handleSubmit} noValidate>
                   {/* Email Login */}
                   <div className="Login-form-group">
-                    <label className="Login-form-label" htmlFor="email">
-                      <Mail size={14} /> Email
+                    <label className="Login-form-label" htmlFor="email" style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Mail size={14} /> Email</span>
+                      {otpSent && (
+                        <span 
+                          onClick={() => { setOtpSent(false); setOtp(""); }} 
+                          style={{ color: '#2563eb', cursor: 'pointer', fontSize: '12px', fontWeight: '500' }}
+                        >
+                          Change Email
+                        </span>
+                      )}
                     </label>
                     <div className={`Login-input-container ${errors.email ? 'error' : ''}`}>
                       <input
@@ -192,7 +200,7 @@ const Cart = () => {
                         }}
                         placeholder="Enter your email"
                         className="Login-form-control"
-                        disabled={isLoading}
+                        disabled={isLoading || otpSent}
                         autoComplete="email"
                       />
                     </div>

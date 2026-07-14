@@ -39,6 +39,8 @@ import { styled } from '@mui/material/styles';
 import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import SearchIcon from '@mui/icons-material/Search';
+import EmailIcon from '@mui/icons-material/Email';
+import CloseIcon from '@mui/icons-material/Close';
 import GetAppIcon from '@mui/icons-material/GetApp';
 import AddIcon from '@mui/icons-material/Add';
 import InventoryIcon from '@mui/icons-material/Inventory';
@@ -225,6 +227,13 @@ const PharmaOrder = () => {
   const [deleteDialog, setDeleteDialog] = useState({ open: false, orderId: null, orderDetails: null });
   const [selectedOrders, setSelectedOrders] = useState([]);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [emailModalOpen, setEmailModalOpen] = useState(false);
+  const [emailSubject, setEmailSubject] = useState("");
+  const [emailBody, setEmailBody] = useState("");
+  const [emailAttachments, setEmailAttachments] = useState([]);
+  const [emailSending, setEmailSending] = useState(false);
+  const [recipientEmail, setRecipientEmail] = useState("");
+  const [recipientName, setRecipientName] = useState("");
   const [products, setProducts] = useState([]);
   const [productLoading, setProductLoading] = useState(false);
   const [addOrderOpen, setAddOrderOpen] = useState(false);
@@ -352,6 +361,65 @@ const PharmaOrder = () => {
 
   const showSnackbar = (message, severity = 'success') => {
     setSnackbar({ open: true, message, severity });
+  };
+
+  const startCustomEmail = (order) => {
+    const emailToUse = order.userEmail || order.email || '';
+    const nameToUse = getCustomerName(order);
+    
+    setRecipientEmail(emailToUse);
+    setRecipientName(nameToUse);
+    setEmailSubject("");
+    setEmailBody("");
+    setEmailAttachments([]);
+    setEmailModalOpen(true);
+  };
+
+  const handleSendCustomEmail = async (e) => {
+    e.preventDefault();
+    if (!emailSubject || !emailBody) {
+      showSnackbar("Subject and body are required", "error");
+      return;
+    }
+    if (!recipientEmail) {
+      showSnackbar("Recipient email is missing", "error");
+      return;
+    }
+
+    setEmailSending(true);
+    try {
+      const formDataToSend = new FormData();
+      formDataToSend.append("to", recipientEmail);
+      formDataToSend.append("subject", emailSubject);
+      formDataToSend.append("body", emailBody);
+      
+      if (emailAttachments && emailAttachments.length > 0) {
+        for (let i = 0; i < emailAttachments.length; i++) {
+          formDataToSend.append("attachments", emailAttachments[i]);
+        }
+      }
+
+      const res = await axiosInstance.post("/admin/send-custom-email", formDataToSend, {
+        headers: {
+          "Content-Type": "multipart/form-data"
+        }
+      });
+
+      if (res?.data?.success) {
+        showSnackbar("Custom email sent successfully!", "success");
+        setEmailModalOpen(false);
+        setEmailSubject("");
+        setEmailBody("");
+        setEmailAttachments([]);
+      } else {
+        showSnackbar(res?.data?.message || "Failed to send email", "error");
+      }
+    } catch (err) {
+      console.error("Error sending custom email:", err);
+      showSnackbar(err?.response?.data?.message || "Failed to send custom email", "error");
+    } finally {
+      setEmailSending(false);
+    }
   };
 
   const parseProductPrice = (value) => {
@@ -1323,6 +1391,11 @@ const PharmaOrder = () => {
                                 <VisibilityIcon sx={{ fontSize: '14px' }} />
                               </IconButton>
                             </Tooltip>
+                            <Tooltip title="Send Custom Email">
+                              <IconButton size="small" onClick={() => startCustomEmail(order)} sx={{ p: 0.3, color: '#2563eb' }}>
+                                <EmailIcon sx={{ fontSize: '14px' }} />
+                              </IconButton>
+                            </Tooltip>
                             <Tooltip title={canDeleteOrder(order) ? "Delete Order" : "Cannot delete"}>
                               <span>
                                 <IconButton size="small" color="error" onClick={() => handleDeleteClick(order)} disabled={!canDeleteOrder(order)} sx={{ p: 0.3 }}>
@@ -1693,6 +1766,90 @@ const PharmaOrder = () => {
             </DialogActions>
           </>
         )}
+      </Dialog>
+
+      {/* Send Custom Email Dialog */}
+      <Dialog open={emailModalOpen} onClose={() => setEmailModalOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          Send Custom Email to {recipientName || 'Customer'}
+          <IconButton
+            aria-label="close"
+            onClick={() => setEmailModalOpen(false)}
+            sx={{
+              position: 'absolute',
+              right: 8,
+              top: 8,
+              color: (theme) => theme.palette.grey[500],
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <form onSubmit={handleSendCustomEmail}>
+          <DialogContent dividers>
+            <TextField
+              margin="dense"
+              label="Recipient Email"
+              type="email"
+              fullWidth
+              variant="outlined"
+              value={recipientEmail}
+              onChange={(e) => setRecipientEmail(e.target.value)}
+              required
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              margin="dense"
+              name="subject"
+              label="Email Subject"
+              type="text"
+              fullWidth
+              variant="outlined"
+              value={emailSubject}
+              onChange={(e) => setEmailSubject(e.target.value)}
+              required
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              margin="dense"
+              name="body"
+              label="Email Message / Body"
+              multiline
+              rows={6}
+              fullWidth
+              variant="outlined"
+              value={emailBody}
+              onChange={(e) => setEmailBody(e.target.value)}
+              required
+              sx={{ mb: 2 }}
+            />
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="body2" color="textSecondary" sx={{ mb: 1, fontWeight: 'medium' }}>
+                Attachments (PDF, Images, etc. - Max 5 files, 10MB total)
+              </Typography>
+              <input
+                type="file"
+                multiple
+                onChange={(e) => setEmailAttachments(e.target.files)}
+                style={{ width: '100%', padding: '8px 0' }}
+              />
+            </Box>
+          </DialogContent>
+          <DialogActions sx={{ p: 2 }}>
+            <Button onClick={() => setEmailModalOpen(false)} color="inherit">
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              color="primary"
+              variant="contained"
+              disabled={emailSending}
+              sx={{ minWidth: '120px' }}
+            >
+              {emailSending ? 'Sending...' : 'Send Email'}
+            </Button>
+          </DialogActions>
+        </form>
       </Dialog>
 
       {/* Snackbar */}

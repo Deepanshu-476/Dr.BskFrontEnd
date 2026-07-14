@@ -32,12 +32,20 @@ import {
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloseIcon from '@mui/icons-material/Close';
+import EmailIcon from '@mui/icons-material/Email';
+import SearchIcon from '@mui/icons-material/Search';
 
 const PharmaUser = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [emailModalOpen, setEmailModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [emailSubject, setEmailSubject] = useState("");
+  const [emailBody, setEmailBody] = useState("");
+  const [emailAttachments, setEmailAttachments] = useState([]);
+  const [emailSending, setEmailSending] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -71,9 +79,11 @@ const PharmaUser = () => {
     page * rowsPerPage + rowsPerPage
   );
 
-  const fetchUsers = async () => {
+  const fetchUsers = async (search = "") => {
     try {
-      const response = await axiosInstance.get('/admin/read-all');
+      setLoading(true);
+      const url = search ? `/admin/read-all?search=${encodeURIComponent(search)}` : '/admin/read-all';
+      const response = await axiosInstance.get(url);
       setUsers(response.data.data);
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -83,9 +93,14 @@ const PharmaUser = () => {
     }
   };
 
+  // Debounced search effect
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    const delayDebounceFn = setTimeout(() => {
+      fetchUsers(searchQuery);
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -107,10 +122,61 @@ const PharmaUser = () => {
     setShowModal(true);
   };
 
+  const startCustomEmail = (user) => {
+    setSelectedUser(user);
+    setEmailSubject("");
+    setEmailBody("");
+    setEmailAttachments([]);
+    setEmailModalOpen(true);
+  };
+
+  const handleSendCustomEmail = async (e) => {
+    e.preventDefault();
+    if (!emailSubject || !emailBody) {
+      toast.error("Subject and body are required");
+      return;
+    }
+
+    setEmailSending(true);
+    try {
+      const formDataToSend = new FormData();
+      formDataToSend.append("to", selectedUser.email);
+      formDataToSend.append("subject", emailSubject);
+      formDataToSend.append("body", emailBody);
+      
+      if (emailAttachments && emailAttachments.length > 0) {
+        for (let i = 0; i < emailAttachments.length; i++) {
+          formDataToSend.append("attachments", emailAttachments[i]);
+        }
+      }
+
+      const res = await axiosInstance.post("/admin/send-custom-email", formDataToSend, {
+        headers: {
+          "Content-Type": "multipart/form-data"
+        }
+      });
+
+      if (res?.data?.success) {
+        toast.success("Custom email sent successfully!");
+        setEmailModalOpen(false);
+        setEmailSubject("");
+        setEmailBody("");
+        setEmailAttachments([]);
+      } else {
+        toast.error(res?.data?.message || "Failed to send email");
+      }
+    } catch (err) {
+      console.error("Error sending custom email:", err);
+      toast.error(err?.response?.data?.message || "Failed to send custom email");
+    } finally {
+      setEmailSending(false);
+    }
+  };
+
   const handleUpdateUser = async (e) => {
     e.preventDefault();
     try {
-      await axiosInstance.put(`/admin/updateAdmin/${selectedUser._id}`, formData);
+      await axiosInstance.put(`/admin/update/${selectedUser._id}`, formData);
       setShowModal(false);
       setSelectedUser(null);
       fetchUsers();
@@ -126,7 +192,7 @@ const PharmaUser = () => {
       const confirmDelete = window.confirm("Are you sure you want to delete this user?");
       if (!confirmDelete) return;
 
-      await axiosInstance.delete(`/admin/deleteAdmin/${userId}`);
+      await axiosInstance.delete(`/admin/delete/${userId}`);
       fetchUsers();
       toast.success("User deleted successfully!");
     } catch (error) {
@@ -147,6 +213,21 @@ const PharmaUser = () => {
         <Typography variant="h4" component="h1" className='fontSize25sml'>
           User Management
         </Typography>
+      </Box>
+
+      {/* Search Input Bar */}
+      <Box sx={{ display: 'flex', gap: 2, mb: 3, maxWidth: '400px' }}>
+        <TextField
+          size="small"
+          placeholder="Search by name, email, or mobile..."
+          fullWidth
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          InputProps={{
+            startAdornment: <SearchIcon sx={{ fontSize: '18px', color: '#94a3b8', mr: 0.5 }} />,
+            sx: { fontSize: '13px' }
+          }}
+        />
       </Box>
 
       <Box variant="outlined">
@@ -200,6 +281,13 @@ const PharmaUser = () => {
                           aria-label="edit"
                         >
                           <EditIcon />
+                        </IconButton>
+                        <IconButton
+                          onClick={() => startCustomEmail(user)}
+                          aria-label="send mail"
+                          style={{ color: '#2563eb' }}
+                        >
+                          <EmailIcon />
                         </IconButton>
                         <IconButton
                           color="error"
@@ -308,6 +396,89 @@ const PharmaUser = () => {
             <Button onClick={resetForm}>Cancel</Button>
             <Button type="submit" variant="contained" color="primary">
               Update User
+            </Button>
+          </DialogActions>
+        </form>
+      </Dialog>
+
+      {/* Send Custom Email Dialog */}
+      <Dialog open={emailModalOpen} onClose={() => setEmailModalOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          Send Custom Email to {selectedUser?.name || 'User'}
+          <IconButton
+            aria-label="close"
+            onClick={() => setEmailModalOpen(false)}
+            sx={{
+              position: 'absolute',
+              right: 8,
+              top: 8,
+              color: (theme) => theme.palette.grey[500],
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <form onSubmit={handleSendCustomEmail}>
+          <DialogContent dividers>
+            <TextField
+              margin="dense"
+              label="Recipient Email"
+              type="email"
+              fullWidth
+              variant="outlined"
+              value={selectedUser?.email || ''}
+              disabled
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              margin="dense"
+              name="subject"
+              label="Email Subject"
+              type="text"
+              fullWidth
+              variant="outlined"
+              value={emailSubject}
+              onChange={(e) => setEmailSubject(e.target.value)}
+              required
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              margin="dense"
+              name="body"
+              label="Email Message / Body"
+              multiline
+              rows={6}
+              fullWidth
+              variant="outlined"
+              value={emailBody}
+              onChange={(e) => setEmailBody(e.target.value)}
+              required
+              sx={{ mb: 2 }}
+            />
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="body2" color="textSecondary" sx={{ mb: 1, fontWeight: 'medium' }}>
+                Attachments (PDF, Images, etc. - Max 5 files, 10MB total)
+              </Typography>
+              <input
+                type="file"
+                multiple
+                onChange={(e) => setEmailAttachments(e.target.files)}
+                style={{ width: '100%', padding: '8px 0' }}
+              />
+            </Box>
+          </DialogContent>
+          <DialogActions sx={{ p: 2 }}>
+            <Button onClick={() => setEmailModalOpen(false)} color="inherit">
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              color="primary"
+              variant="contained"
+              disabled={emailSending}
+              sx={{ minWidth: '120px' }}
+            >
+              {emailSending ? 'Sending...' : 'Send Email'}
             </Button>
           </DialogActions>
         </form>

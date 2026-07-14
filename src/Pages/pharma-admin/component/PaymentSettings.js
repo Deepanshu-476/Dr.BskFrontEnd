@@ -6,6 +6,10 @@ import { toast } from "react-toastify";
 function PaymentSettings() {
   const [codEnabled, setCodEnabled] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [razorpayKeyId, setRazorpayKeyId] = useState("");
+  const [razorpayKeySecret, setRazorpayKeySecret] = useState("");
+  const [razorpayWebhookSecret, setRazorpayWebhookSecret] = useState("");
+  const [razorpayLoading, setRazorpayLoading] = useState(false);
 
   useEffect(() => {
     fetchSettings();
@@ -15,8 +19,32 @@ function PaymentSettings() {
     try {
       const res = await axiosInstance.get("/api/cash-on-delivery");
       setCodEnabled(Boolean(res?.data?.data?.codEnabled));
+
+      const rzpRes = await axiosInstance.get("/api/razorpay-credentials");
+      if (rzpRes?.data?.success) {
+        setRazorpayKeyId(rzpRes.data.data.razorpayKeyId || "");
+        setRazorpayKeySecret(rzpRes.data.data.razorpayKeySecret || "");
+        setRazorpayWebhookSecret(rzpRes.data.data.razorpayWebhookSecret || "");
+      }
     } catch (error) {
       toast.error("Failed to fetch payment settings");
+    }
+  };
+
+  const handleSaveRazorpay = async (e) => {
+    e.preventDefault();
+    setRazorpayLoading(true);
+    try {
+      await axiosInstance.put("/api/razorpay-credentials", {
+        razorpayKeyId,
+        razorpayKeySecret,
+        razorpayWebhookSecret,
+      });
+      toast.success("Razorpay credentials saved successfully");
+    } catch (err) {
+      toast.error("Failed to save credentials");
+    } finally {
+      setRazorpayLoading(false);
     }
   };
 
@@ -263,6 +291,110 @@ function PaymentSettings() {
             </p>
           </div>
         </div>
+      </div>
+
+      {/* Razorpay Settings Card */}
+      <div style={{ ...styles.card, marginTop: "24px" }}>
+        <div style={styles.header}>
+          <h2 style={styles.headerTitle}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.79 13.73l-1.79.88-1.79-.88c-.68-.33-1-1.02-1-1.73V8.88c0-.71.32-1.4 1-1.73l1.79-.88 1.79.88c.68.33 1 1.02 1 1.73v4.12c0 .71-.32 1.4-1 1.73z" fill="#2563eb"/>
+            </svg>
+            Razorpay Integration Settings
+          </h2>
+          <p style={styles.headerSubtitle}>Configure your online payment gateway credentials</p>
+        </div>
+
+        <form onSubmit={handleSaveRazorpay} style={styles.content}>
+          <div style={{ marginBottom: "20px" }}>
+            <label style={{ display: "block", fontSize: "14px", fontWeight: "500", color: "#1e293b", marginBottom: "6px" }}>
+              Razorpay Key ID
+            </label>
+            <input
+              type="text"
+              placeholder="rzp_live_..."
+              value={razorpayKeyId}
+              onChange={(e) => setRazorpayKeyId(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "10px 14px",
+                borderRadius: "8px",
+                border: "1px solid #cbd5e1",
+                fontSize: "14px",
+                outline: "none",
+                transition: "border-color 0.2s",
+                boxSizing: "border-box"
+              }}
+              required
+            />
+          </div>
+
+          <div style={{ marginBottom: "20px" }}>
+            <label style={{ display: "block", fontSize: "14px", fontWeight: "500", color: "#1e293b", marginBottom: "6px" }}>
+              Razorpay Key Secret
+            </label>
+            <input
+              type="password"
+              placeholder={razorpayKeySecret ? "********" : "Enter Key Secret"}
+              value={razorpayKeySecret}
+              onChange={(e) => setRazorpayKeySecret(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "10px 14px",
+                borderRadius: "8px",
+                border: "1px solid #cbd5e1",
+                fontSize: "14px",
+                outline: "none",
+                transition: "border-color 0.2s",
+                boxSizing: "border-box"
+              }}
+              required
+            />
+          </div>
+
+          <div style={{ marginBottom: "24px" }}>
+            <label style={{ display: "block", fontSize: "14px", fontWeight: "500", color: "#1e293b", marginBottom: "6px" }}>
+              Razorpay Webhook Secret
+            </label>
+            <input
+              type="password"
+              placeholder={razorpayWebhookSecret ? "********" : "Enter Webhook Secret"}
+              value={razorpayWebhookSecret}
+              onChange={(e) => setRazorpayWebhookSecret(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "10px 14px",
+                borderRadius: "8px",
+                border: "1px solid #cbd5e1",
+                fontSize: "14px",
+                outline: "none",
+                transition: "border-color 0.2s",
+                boxSizing: "border-box"
+              }}
+              required
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={razorpayLoading}
+            style={{
+              padding: "11px 24px",
+              borderRadius: "8px",
+              border: "none",
+              fontSize: "14px",
+              fontWeight: "600",
+              cursor: "pointer",
+              backgroundColor: "#2563eb",
+              color: "#ffffff",
+              boxShadow: "0 2px 4px rgba(37, 99, 235, 0.2)",
+              transition: "background-color 0.2s",
+              width: "100%"
+            }}
+          >
+            {razorpayLoading ? "Saving Credentials..." : "Save Razorpay Settings"}
+          </button>
+        </form>
       </div>
     </div>
   );
