@@ -71,7 +71,7 @@ const SingleProductCheckout = () => {
     selectedAddress: ''
   });
   
-  const [paymentMethod, setPaymentMethod] = useState(location.state?.paymentMethod === 'cod' ? 'cod' : 'online');
+  const [paymentMethod, setPaymentMethod] = useState('online');
   const [codCharge] = useState(0);
   const [paymentProcessing, setPaymentProcessing] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
@@ -85,6 +85,7 @@ const SingleProductCheckout = () => {
   const storedUser = localStorage.getItem('userData');
   const userData = storedUser ? JSON.parse(storedUser) : null;
   const isWholesaler = userData?.type === "wholesalePartner";
+  const [codEnabled, setCodEnabled] = useState(false);
 
   // Screen size detection
   useEffect(() => {
@@ -119,8 +120,9 @@ const SingleProductCheckout = () => {
   const mrpPrice = selectedVariant?.mrp || product?.mrp || unitPrice;
   const discount = selectedVariant?.discount || product?.discount || 0;
   const baseTotal = unitPrice * quantity;
-  const codTotal = paymentMethod === 'cod' ? baseTotal + codCharge : baseTotal;
-  const finalTotal = paymentMethod === 'cod' ? codTotal : baseTotal;
+  const isCodSelected = codEnabled && paymentMethod === 'cod';
+  const codTotal = isCodSelected ? baseTotal + codCharge : baseTotal;
+  const finalTotal = isCodSelected ? codTotal : baseTotal;
   const savingsAmount = (mrpPrice - unitPrice) * quantity;
   const savingsPercent = mrpPrice > unitPrice ? Math.round(((mrpPrice - unitPrice) / mrpPrice) * 100) : 0;
 
@@ -148,8 +150,6 @@ const SingleProductCheckout = () => {
   useEffect(() => {
     fetchProduct();
   }, [fetchProduct]);
-
-  const [codEnabled, setCodEnabled] = useState(true);
 
   const fetchUserData = useCallback(async () => {
     try {
@@ -194,7 +194,7 @@ const SingleProductCheckout = () => {
     const fetchPaymentSettings = async () => {
       try {
         const res = await axiosInstance.get('/api/cash-on-delivery');
-        setCodEnabled(res.data.data.codEnabled);
+        setCodEnabled(Boolean(res.data.data.codEnabled));
       } catch (err) {
         console.error("Failed to fetch payment settings");
       }
@@ -202,6 +202,12 @@ const SingleProductCheckout = () => {
 
     fetchPaymentSettings();
   }, []);
+
+  useEffect(() => {
+    if (!codEnabled && paymentMethod === 'cod') {
+      setPaymentMethod('online');
+    }
+  }, [codEnabled, paymentMethod]);
 
   useEffect(() => {
     const storedUserData = localStorage.getItem('userData');
@@ -849,7 +855,7 @@ const SingleProductCheckout = () => {
       return;
     }
 
-    if (paymentMethod === 'cod') {
+    if (paymentMethod === 'cod' && codEnabled) {
       await handleCODCheckout();
     } else {
       await handleOnlineCheckout();
@@ -1108,8 +1114,8 @@ const SingleProductCheckout = () => {
               <div className="promise-tile">
                 <Wallet size={30} />
                 <div>
-                  <strong>Cash On Delivery Available</strong>
-                  <span>Pay when you receive your order</span>
+                  <strong>{codEnabled ? 'Cash On Delivery Available' : 'Secure Online Payment'}</strong>
+                  <span>{codEnabled ? 'Pay when you receive your order' : 'UPI, cards and netbanking accepted'}</span>
                 </div>
               </div>
               <div className="promise-tile">
@@ -1355,7 +1361,7 @@ const SingleProductCheckout = () => {
               <div className="price-breakdown">
                 <div className="price-row"><span>Price ({quantity} item{quantity > 1 ? 's' : ''})</span><strong>Rs. {baseTotal.toFixed(2)}</strong></div>
                 {savingsAmount > 0 && <div className="price-row savings-row"><span>You Save</span><strong>- Rs. {savingsAmount.toFixed(2)}</strong></div>}
-                {paymentMethod === 'cod' && codCharge > 0 && <div className="price-row cod-row"><span>COD Charge</span><strong>+ Rs. {codCharge.toFixed(2)}</strong></div>}
+                {isCodSelected && codCharge > 0 && <div className="price-row cod-row"><span>COD Charge</span><strong>+ Rs. {codCharge.toFixed(2)}</strong></div>}
                 <div className="price-row"><span>Shipping</span><strong className="free-shipping">FREE</strong></div>
               </div>
 
@@ -1492,7 +1498,7 @@ const SingleProductCheckout = () => {
                   <span className="mobile-order-label">Complete Order</span>
                   <span className="desktop-order-label">Buy Now Rs. {finalTotal.toFixed(2)}</span>
                 </strong>
-                <span>{paymentMethod === 'cod' ? 'Cash on Delivery Available' : 'Secure Online Payment'}</span>
+                <span>Secure Online Payment</span>
               </>
             )}
           </button>
@@ -1908,7 +1914,7 @@ const SingleProductCheckout = () => {
                     </div>
                   )}
                   
-                  {paymentMethod === 'cod' && (
+                  {isCodSelected && (
                     <div className="price-row cod-row">
                       <span>COD Charge</span>
                       <span>+₹{codCharge.toFixed(2)}</span>
@@ -1938,7 +1944,7 @@ const SingleProductCheckout = () => {
 
                 {/* Checkout Button */}
                 <button
-                  className={`checkout-action-btn ${paymentMethod === 'cod' ? 'cod-btn' : ''} ${isMobile ? 'mobile' : ''}`}
+                  className={`checkout-action-btn ${isCodSelected ? 'cod-btn' : ''} ${isMobile ? 'mobile' : ''}`}
                   onClick={handleCheckout}
                   disabled={checkoutDisabled}
                 >
@@ -1959,7 +1965,7 @@ const SingleProductCheckout = () => {
                     </span>
                   ) : (
                     <>
-                      {paymentMethod === 'cod' 
+                      {isCodSelected 
                         ? `Place COD Order • ₹${finalTotal.toFixed(2)}`
                         : 'Proceed to Payment'
                       }

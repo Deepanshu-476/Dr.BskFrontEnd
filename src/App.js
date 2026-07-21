@@ -39,6 +39,8 @@ import ProtectedRoute from "./Pages/pharma-admin/page/ProtectedRoute";
 import CouponManagement from "./Pages/pharma-admin/component/CouponManagement";
 import PaymentSettings from "./Pages/pharma-admin/component/PaymentSettings";
 import PharmaPrescription from "./Pages/pharma-admin/component/PharmaPrescription";
+import EmailSettings from "./Pages/pharma-admin/component/EmailSettings";
+import FacebookSettings from "./Pages/pharma-admin/component/FacebookSettings";
 
 
 import AboutUs from "./Pages/footerLinksPages/AboutUs";
@@ -59,6 +61,25 @@ import CartDrawer from "./components/CartDrawer/CartDrawer";
 
 function App() {
   const [layoutReady, setLayoutReady] = useState(null);
+
+  useEffect(() => {
+    const initFacebookPixel = async () => {
+      try {
+        const res = await axiosInstance.get("/api/facebook-settings/active");
+        if (res?.data?.success && res.data.pixelId) {
+          const pixelId = res.data.pixelId;
+          console.log("Initializing Meta Pixel dynamically:", pixelId);
+          if (window.fbq) {
+            window.fbq('init', pixelId);
+            window.fbq('track', 'PageView');
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load active Facebook Pixel:", err);
+      }
+    };
+    initFacebookPixel();
+  }, []);
 
   useEffect(() => {
     const checkConfig = async () => {
@@ -232,6 +253,8 @@ function App() {
             <Route path="prescriptions" element={<PharmaPrescription />} />
             <Route path="couponManagement" element={<CouponManagement />}/>
             <Route path="PaymentSettings" element={<PaymentSettings />} />
+            <Route path="EmailSettings" element={<EmailSettings />} />
+            <Route path="FacebookSettings" element={<FacebookSettings />} />
 
 
           </Route>

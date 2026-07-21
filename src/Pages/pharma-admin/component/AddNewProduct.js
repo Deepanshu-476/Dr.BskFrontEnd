@@ -1108,7 +1108,6 @@ const AddNewProduct = () => {
                                         type="number"
                                         value={q.retail_price}
                                         onChange={(e) => handleQuantityRowChange(i, 'retail_price', e.target.value)}
-                                        placeholder="Optional"
                                         min="0" 
                                         step="0.01"
                                         style={inputStyle}

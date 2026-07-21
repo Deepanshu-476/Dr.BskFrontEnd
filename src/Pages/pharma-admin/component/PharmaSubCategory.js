@@ -255,7 +255,7 @@ const handleCreateOrUpdate = async (e) => {
     });
 
     // Set image preview from existing image
-    const previewUrl = item.image ? `${API_URL}/${item.image}` : null;
+    const previewUrl = item.image ? JoinUrl(API_URL, item.image) : null;
     console.log("Setting image preview:", previewUrl);
     setImagePreview(previewUrl);
     setFilteredCategories(filtered);

@@ -37,7 +37,7 @@ const HeroSection2 = () => {
           </h1>
 
           <p className="hero-section2-description">
-            100% Genuine Products | COD Available | Fast Delivery
+            100% Genuine Products | Secure Online Payment | Fast Delivery
           </p>
 
           <div className="hero-section2-buttons">

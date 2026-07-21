@@ -5,6 +5,7 @@ import Footer from '../../components/Footer/Footer';
 import axiosInstance from '../../components/AxiosInstance';
 import CustomLoader from '../../components/CustomLoader';
 import { useNavigate } from 'react-router-dom';
+import { downloadInvoicePDF } from '../../utils/invoiceGenerator';
 
 // Add a default image import
 import noImage from '../../assets/no-image.png';
@@ -840,6 +841,12 @@ const OrderPage = () => {
 
             {/* Close Button */}
             <div className="modal-bottom-actions">
+              <button 
+                className="download-invoice-button"
+                onClick={() => downloadInvoicePDF(selectedOrder)}
+              >
+                Download Invoice
+              </button>
               <button 
                 className="close-modal-button"
                 onClick={closeOrderDetails}

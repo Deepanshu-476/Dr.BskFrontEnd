@@ -938,10 +938,12 @@
     background: white;
     position: sticky;
     bottom: 0;
+    display: flex;
+    gap: 12px;
 }
 
 .close-modal-button {
-    width: 100%;
+    flex: 1;
     padding: 16px;
     background: #68171b;
     color: white;
@@ -958,6 +960,26 @@
     transform: translateY(-1px);
     box-shadow: 0 2px 8px rgba(104, 23, 27, 0.2);
 }
+
+.download-invoice-button {
+    flex: 1;
+    padding: 16px;
+    background: transparent;
+    color: #68171b;
+    border: 2px solid #68171b;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+}
+
+.download-invoice-button:hover {
+    background: rgba(104, 23, 27, 0.05);
+    transform: translateY(-1px);
+}
+
 
 /* ============================================
    DESKTOP STYLES - UNCHANGED

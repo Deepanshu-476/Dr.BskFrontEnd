@@ -125,12 +125,6 @@ const ShippingPolicy = () => {
                   sx={{ bgcolor: 'primary.light', color: 'primary.contrastText' }}
                 />
               ))}
-              <Chip 
-                label="Cash on Delivery" 
-                color="success" 
-                size="small"
-                icon={<Star fontSize="small" />}
-              />
             </Box>
             <Typography variant="body1" sx={{ mt: 2 }}>
               No additional charges apply.

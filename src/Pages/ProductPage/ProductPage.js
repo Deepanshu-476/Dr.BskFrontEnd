@@ -54,8 +54,24 @@ const money = (n, fallback = "—") => {
   return `₹${num % 1 === 0 ? num.toFixed(0) : num.toFixed(2)}`;
 };
 
+const reconstructStringFromObject = (obj) => {
+  if (typeof obj === 'object' && obj !== null && !Array.isArray(obj) && obj["0"] !== undefined) {
+    let s = "";
+    for (let i = 0; obj[String(i)] !== undefined; i++) {
+      s += obj[String(i)];
+    }
+    return s;
+  }
+  return null;
+};
+
 const parseQuantityVariants = (raw) => {
   try {
+    const reconstructedRaw = reconstructStringFromObject(raw);
+    if (reconstructedRaw !== null) {
+      raw = reconstructedRaw;
+    }
+
     let arr = [];
 
     if (Array.isArray(raw)) {
@@ -65,6 +81,21 @@ const parseQuantityVariants = (raw) => {
         } else {
           arr = raw;
         }
+      }
+
+      if (arr.length > 0 && typeof arr[0] === 'object' && arr[0] !== null && arr[0]["0"] !== undefined) {
+        arr = arr.flatMap((item) => {
+          const s = reconstructStringFromObject(item);
+          if (s !== null) {
+            try {
+              const parsed = JSON.parse(s);
+              return Array.isArray(parsed) ? parsed : [];
+            } catch {
+              return [];
+            }
+          }
+          return [item];
+        });
       }
 
       if (arr.length > 0 && typeof arr[0] === "string") {
@@ -218,7 +249,7 @@ const ProductPage = () => {
     { id: 2, icon: <Leaf size={20} />, label: "100% Herbal" },
     { id: 3, icon: <FlaskConical size={20} />, label: "Quality Tested" },
     { id: 4, icon: <Truck size={20} />, label: "Free Delivery" },
-    { id: 5, icon: <CreditCard size={20} />, label: "Cash on Delivery" },
+    { id: 5, icon: <CreditCard size={20} />, label: "Online Payment" },
     { id: 6, icon: <Shield size={20} />, label: "Secure Payment" }
   ];
 

@@ -119,7 +119,7 @@ const Footer = () => {
               UK German Pharmaceuticals,
               <br /> Akal Academy Road,
               <br />
-              Opp. Malwa Gramin Bank,
+              Opp. Punjab Gramin Bank,
               <br /> Cheema Mandi -148029,
               <br />
               Distt. Sangrur (Punjab) India
@@ -217,7 +217,7 @@ const Footer = () => {
                 STAME LIFE
               </button> */}
             </li>
-          </ul>
+          </ul> 
         </div>
 
         {/* Column 3: Policies */}
@@ -247,7 +247,7 @@ const Footer = () => {
             UK German Pharmaceuticals,
             <br /> Akal Academy Road,
             <br />
-            Opp. Malwa Gramin Bank,
+            Opp. Punjab Gramin Bank,
             <br /> Cheema Mandi -148029,
             <br />
             Distt. Sangrur (Punjab) India
