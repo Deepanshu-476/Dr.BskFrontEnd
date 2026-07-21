@@ -7,6 +7,8 @@ import JoinUrl from '../../../JoinUrl';
 const AddNewProduct = () => {
     const MAX_MEDIA_FILES = 10;
     const MAX_MEDIA_FILE_SIZE = 25 * 1024 * 1024;
+    const MAX_COMPRESSED_IMAGE_SIZE = 1.2 * 1024 * 1024;
+    const MAX_IMAGE_DIMENSION = 1400;
     const { id } = useParams();
     const isEditMode = !!id;
     const navigate = useNavigate();
@@ -41,6 +43,7 @@ const AddNewProduct = () => {
 
     const [errors, setErrors] = useState({});
     const [isSubmitted, setIsSubmitted] = useState(false);
+    const [isProcessingMedia, setIsProcessingMedia] = useState(false);
     const fileInputRef = useRef(null);
     const objectUrlsRef = useRef(new Set());
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -244,7 +247,63 @@ const AddNewProduct = () => {
         });
     };
 
-    const handleMediaChange = (e) => {
+    const shouldCompressImage = (file) => {
+        if (!file.type.startsWith('image/')) return false;
+        if (file.type === 'image/gif' || file.type === 'image/svg+xml') return false;
+        return file.size > MAX_COMPRESSED_IMAGE_SIZE;
+    };
+
+    const loadImage = (file) => new Promise((resolve, reject) => {
+        const objectUrl = URL.createObjectURL(file);
+        const image = new Image();
+        image.onload = () => {
+            URL.revokeObjectURL(objectUrl);
+            resolve(image);
+        };
+        image.onerror = () => {
+            URL.revokeObjectURL(objectUrl);
+            reject(new Error(`Could not read ${file.name}`));
+        };
+        image.src = objectUrl;
+    });
+
+    const canvasToBlob = (canvas, quality) => new Promise((resolve, reject) => {
+        canvas.toBlob(
+            (blob) => blob ? resolve(blob) : reject(new Error('Image compression failed')),
+            'image/jpeg',
+            quality
+        );
+    });
+
+    const compressImageFile = async (file) => {
+        if (!shouldCompressImage(file)) return file;
+
+        const image = await loadImage(file);
+        const scale = Math.min(1, MAX_IMAGE_DIMENSION / Math.max(image.width, image.height));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(image.width * scale));
+        canvas.height = Math.max(1, Math.round(image.height * scale));
+
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+        let quality = 0.82;
+        let blob = await canvasToBlob(canvas, quality);
+        while (blob.size > MAX_COMPRESSED_IMAGE_SIZE && quality > 0.6) {
+            quality -= 0.08;
+            blob = await canvasToBlob(canvas, quality);
+        }
+
+        if (blob.size >= file.size) return file;
+
+        const extensionSafeName = file.name.replace(/\.[^.]+$/, '');
+        return new File([blob], `${extensionSafeName}.jpg`, {
+            type: 'image/jpeg',
+            lastModified: Date.now()
+        });
+    };
+
+    const handleMediaChange = async (e) => {
         const selectedFiles = Array.from(e.target.files || []);
         const remainingSlots = MAX_MEDIA_FILES - formData.media.length;
         const files = selectedFiles.slice(0, Math.max(remainingSlots, 0));
@@ -275,32 +334,41 @@ const AddNewProduct = () => {
             return;
         }
 
-        const newMedia = files.map(file => {
-            const objectUrl = URL.createObjectURL(file);
-            objectUrlsRef.current.add(objectUrl);
+        try {
+            setIsProcessingMedia(true);
+            const uploadFiles = await Promise.all(files.map(compressImageFile));
+            const newMedia = uploadFiles.map(file => {
+                const objectUrl = URL.createObjectURL(file);
+                objectUrlsRef.current.add(objectUrl);
 
-            return {
-                url: objectUrl,
-                objectUrl,
-                type: file.type.startsWith('video') ? 'video' : 'image',
-                name: file.name,
-                size: file.size,
-                file
-            };
-        });
+                return {
+                    url: objectUrl,
+                    objectUrl,
+                    type: file.type.startsWith('video') ? 'video' : 'image',
+                    name: file.name,
+                    size: file.size,
+                    file
+                };
+            });
 
-        setFormData(prev => ({
-            ...prev,
-            media: [...prev.media, ...newMedia]
-        }));
+            setFormData(prev => ({
+                ...prev,
+                media: [...prev.media, ...newMedia]
+            }));
 
-        setErrors(prev => {
-            const updated = { ...prev };
-            delete updated.media;
-            return updated;
-        });
+            setErrors(prev => {
+                const updated = { ...prev };
+                delete updated.media;
+                return updated;
+            });
+        } catch (error) {
+            console.error('Error processing media:', error);
+            toast.error(error.message || 'Failed to process selected media');
+        } finally {
+            setIsProcessingMedia(false);
+            e.target.value = null;
+        }
 
-        e.target.value = null;
     };
 
     const removeMedia = (index) => {
@@ -316,6 +384,7 @@ const AddNewProduct = () => {
     };
 
     const triggerFileInput = () => {
+        if (isProcessingMedia) return;
         fileInputRef.current.value = null;
         fileInputRef.current.click();
     };
@@ -368,6 +437,12 @@ const AddNewProduct = () => {
             });
 
             formPayload.append('quantity', JSON.stringify(formData.quantity));
+
+            const mediaToUpload = formData.media.filter(mediaItem => mediaItem.file);
+            if (mediaToUpload.length + formData.media.filter(mediaItem => !mediaItem.file && mediaItem.url).length > MAX_MEDIA_FILES) {
+                toast.error(`You can upload up to ${MAX_MEDIA_FILES} media files per product`);
+                return;
+            }
 
             formData.media.forEach((mediaItem) => {
                 if (mediaItem.file) {
@@ -893,14 +968,19 @@ const AddNewProduct = () => {
                                 />
                                 <button 
                                     type="button" 
-                                    style={mediaUploadButtonStyle}
+                                    style={{
+                                        ...mediaUploadButtonStyle,
+                                        opacity: isProcessingMedia ? 0.65 : 1,
+                                        cursor: isProcessingMedia ? 'not-allowed' : 'pointer'
+                                    }}
                                     onClick={triggerFileInput}
                                     onMouseEnter={(e) => e.target.style.backgroundColor = '#700000'}
                                     onMouseLeave={(e) => e.target.style.backgroundColor = '#8B0000'}
+                                    disabled={isProcessingMedia}
                                 >
                                     📁 Add Media
                                 </button>
-                                <p style={mediaHintStyle}>Select multiple files at once. Supports JPG, PNG, GIF, MP4 (Max 25MB each, {MAX_MEDIA_FILES} total)</p>
+                                <p style={mediaHintStyle}>Select 5 or more images at once. Large images are optimized before upload. Supports JPG, PNG, GIF, MP4 (Max 25MB each, {MAX_MEDIA_FILES} total)</p>
                                 <div style={mediaPreviewContainerStyle}>
                                     {formData.media.length === 0 ? (
                                         <div style={emptyMediaPlaceholderStyle}>
