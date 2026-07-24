@@ -200,18 +200,33 @@ export const downloadInvoicePDF = (order) => {
     // Populate order items
     if (order.items && Array.isArray(order.items)) {
       order.items.forEach((item, index) => {
+        const gstRate = item.productId && item.productId.gst ? parseFloat(item.productId.gst) : 0;
+        const finalGstRate = isNaN(gstRate) ? 0 : gstRate;
+
         const itemQty = item.quantity || 1;
         const itemPrice = item.price || 0; // Inclusive of GST
         const rowTotal = itemPrice * itemQty;
         
-        // standard 12% GST calculation
-        const netPrice = itemPrice / 1.12;
-        const netAmount = netPrice * itemQty;
-        const taxAmount = rowTotal - netAmount;
+        let netPrice = itemPrice;
+        let taxAmount = 0;
+        let netAmount = rowTotal;
+        
+        if (finalGstRate > 0) {
+          netPrice = itemPrice / (1 + (finalGstRate / 100));
+          netAmount = netPrice * itemQty;
+          taxAmount = rowTotal - netAmount;
+        }
         
         grandSubtotal += netAmount;
         grandTax += taxAmount;
         grandTotal += rowTotal;
+
+        const cgstSgstRate = (finalGstRate / 2).toFixed(1).replace(/\.0$/, '');
+        const taxRateStr = finalGstRate > 0 ? `${finalGstRate}%` : '0%';
+        const taxTypeStr = finalGstRate > 0 
+          ? (isPunjab ? `CGST(${cgstSgstRate}%)\nSGST(${cgstSgstRate}%)` : `IGST(${finalGstRate}%)`)
+          : '—';
+        const taxValStr = finalGstRate > 0 ? taxAmount.toFixed(2) : '0.00';
 
         tableRows.push({
           sl: index + 1,
@@ -219,9 +234,9 @@ export const downloadInvoicePDF = (order) => {
           unit: netPrice.toFixed(2),
           qty: itemQty,
           net: netAmount.toFixed(2),
-          taxRate: '12%',
-          taxType: isPunjab ? 'CGST(6%)\nSGST(6%)' : 'IGST(12%)',
-          taxVal: taxAmount.toFixed(2),
+          taxRate: taxRateStr,
+          taxType: taxTypeStr,
+          taxVal: taxValStr,
           total: rowTotal.toFixed(2)
         });
       });
